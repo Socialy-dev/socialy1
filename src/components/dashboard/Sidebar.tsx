@@ -36,10 +36,9 @@ const menuItems: MenuItem[] = [
 
 interface SidebarProps {
   collapsed: boolean;
-  onToggle: () => void;
 }
 
-export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+export const Sidebar = ({ collapsed }: SidebarProps) => {
   return (
     <aside
       className={cn(
@@ -62,17 +61,6 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         )}
       </div>
 
-      {/* Toggle Button */}
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-7 w-7 h-7 bg-white rounded-full border-2 border-border flex items-center justify-center shadow-lg hover:bg-secondary transition-colors z-[60]"
-      >
-        {collapsed ? (
-          <ChevronRight className="w-4 h-4 text-foreground" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-foreground" />
-        )}
-      </button>
 
       {/* Create New Project Button */}
       <div className={cn("px-4 mb-4", collapsed && "px-2")}>
