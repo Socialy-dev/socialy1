@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   LayoutGrid,
   Briefcase,
@@ -15,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import socialyLogo from "@/assets/socialy-logo.png";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -23,11 +23,11 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutGrid, label: "Dashboard", active: true },
-  { icon: Briefcase, label: "Projects" },
-  { icon: ListTodo, label: "Tasks" },
+  { icon: LayoutGrid, label: "Accueil", active: true },
+  { icon: Briefcase, label: "Studio" },
+  { icon: ListTodo, label: "Concurrent" },
   { icon: Globe, label: "Dashboard" },
-  { icon: Clock, label: "Time log" },
+  { icon: Clock, label: "Création" },
   { icon: Users2, label: "Resource mgmt" },
   { icon: UserCog, label: "Users" },
   { icon: FileText, label: "Project template" },
@@ -52,18 +52,20 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         "flex items-center gap-3 p-6",
         collapsed && "justify-center px-4"
       )}>
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-          <Settings className="w-5 h-5 text-primary-foreground" />
-        </div>
+        <img 
+          src={socialyLogo} 
+          alt="Socialy" 
+          className="w-10 h-10 rounded-full flex-shrink-0"
+        />
         {!collapsed && (
-          <span className="text-sidebar-foreground font-bold text-xl">Promage</span>
+          <span className="text-sidebar-foreground font-bold text-xl">Socialy</span>
         )}
       </div>
 
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-7 w-6 h-6 bg-background rounded-full border border-border flex items-center justify-center shadow-sm hover:bg-secondary transition-colors z-10"
+        className="absolute -right-3 top-7 w-7 h-7 bg-white rounded-full border-2 border-border flex items-center justify-center shadow-lg hover:bg-secondary transition-colors z-[60]"
       >
         {collapsed ? (
           <ChevronRight className="w-4 h-4 text-foreground" />
