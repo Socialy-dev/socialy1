@@ -84,7 +84,10 @@ export const Header = () => {
           </PopoverTrigger>
           <PopoverContent align="end" className="w-48 p-2 bg-white border border-border shadow-lg z-50">
             <div className="flex flex-col">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left">
+              <button 
+                onClick={() => { setIsOpen(false); navigate("/profile"); }}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full"
+              >
                 <User className="w-4 h-4" />
                 Mon profil
               </button>
