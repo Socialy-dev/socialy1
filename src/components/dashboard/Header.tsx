@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, LogOut, User, Settings } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -9,12 +9,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ProfileModal } from "@/components/profile/ProfileModal";
+import { useAuth } from "@/hooks/useAuth";
 
-export const Header = () => {
+interface HeaderProps {
+  title?: string;
+}
+
+export const Header = ({ title = "Dashboard" }: HeaderProps) => {
   const [userName, setUserName] = useState("Utilisateur");
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -54,7 +60,7 @@ export const Header = () => {
   return (
     <>
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
         
         <div className="flex items-center gap-4">
           {/* Search Bar */}
@@ -99,14 +105,29 @@ export const Header = () => {
                   <User className="w-4 h-4" />
                   Mon profil
                 </button>
-                <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left">
+                <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full">
                   <Settings className="w-4 h-4" />
                   Paramètres
                 </button>
+                {isAdmin && (
+                  <>
+                    <div className="h-px bg-border my-1" />
+                    <button 
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/admin");
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Administration
+                    </button>
+                  </>
+                )}
                 <div className="h-px bg-border my-1" />
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-danger rounded-md hover:bg-danger/10 transition-colors text-left"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-danger rounded-md hover:bg-danger/10 transition-colors text-left w-full"
                 >
                   <LogOut className="w-4 h-4" />
                   Se déconnecter
