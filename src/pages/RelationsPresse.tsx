@@ -552,45 +552,86 @@ const RelationsPresse = () => {
               </div>
 
               {isLoadingJournalists ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="bg-secondary/30 rounded-2xl overflow-hidden">
                   {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="flex items-center gap-4 p-5 bg-secondary/30 rounded-2xl animate-pulse">
-                      <div className="w-14 h-14 bg-secondary rounded-full flex-shrink-0" />
+                    <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-b-0 animate-pulse">
+                      <div className="w-10 h-10 bg-secondary rounded-full flex-shrink-0" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-5 bg-secondary rounded w-3/4" />
-                        <div className="h-4 bg-secondary rounded w-1/2" />
+                        <div className="h-4 bg-secondary rounded w-1/4" />
                       </div>
+                      <div className="h-4 bg-secondary rounded w-1/6" />
+                      <div className="h-4 bg-secondary rounded w-1/5" />
+                      <div className="h-4 bg-secondary rounded w-1/6" />
                     </div>
                   ))}
                 </div>
               ) : journalists.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {journalists.map((journalist) => (
-                    <button
-                      key={journalist.id}
-                      onClick={() => toggleJournalist(journalist.id)}
-                      className={cn(
-                        "flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 border-2 text-left",
-                        journalist.selected
-                          ? "bg-primary/10 border-primary shadow-lg"
-                          : "bg-secondary/40 border-transparent hover:bg-secondary/70 hover:border-primary/20"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0",
-                        journalist.selected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-foreground"
-                      )}>
-                        {journalist.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate">{journalist.name}</h4>
-                        <p className="text-sm text-muted-foreground">{journalist.media || "Média inconnu"}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-[auto_1.5fr_1fr_1.5fr_1fr_1fr_60px] gap-4 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <div className="w-10" />
+                    <div>Contact</div>
+                    <div>Média</div>
+                    <div>Email</div>
+                    <div>Téléphone</div>
+                    <div>Source</div>
+                    <div className="text-center">Sélect.</div>
+                  </div>
+                  
+                  {/* Table Body */}
+                  <div className="divide-y divide-border/50">
+                    {journalists.map((journalist) => (
+                      <button
+                        key={journalist.id}
+                        onClick={() => toggleJournalist(journalist.id)}
+                        className={cn(
+                          "w-full grid grid-cols-[auto_1.5fr_1fr_1.5fr_1fr_1fr_60px] gap-4 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          journalist.selected && "bg-primary/5"
+                        )}
+                      >
+                        {/* Avatar */}
+                        <div className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
+                          journalist.selected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-secondary text-foreground"
+                        )}>
+                          {journalist.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                        </div>
+                        
+                        {/* Contact Name */}
+                        <div className="flex items-center min-w-0">
+                          <span className="font-semibold text-foreground truncate">{journalist.name}</span>
+                        </div>
+                        
+                        {/* Media */}
+                        <div className="flex items-center min-w-0">
+                          <span className="text-sm text-muted-foreground truncate">{journalist.media || "—"}</span>
+                        </div>
+                        
+                        {/* Email */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.email ? (
+                            <span className="text-sm text-primary truncate">{journalist.email}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                        
+                        {/* Phone */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.phone ? (
+                            <span className="text-sm text-foreground truncate">{journalist.phone}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                        
+                        {/* Source */}
+                        <div className="flex items-center min-w-0">
                           {journalist.source_type === "competitor" && journalist.competitor_name ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-600 text-xs font-medium">
-                              <Building2 className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-600 text-xs font-medium truncate">
+                              <Building2 className="w-3 h-3 flex-shrink-0" />
                               {journalist.competitor_name}
                             </span>
                           ) : journalist.source_type === "socialy" ? (
@@ -598,22 +639,25 @@ const RelationsPresse = () => {
                               <Zap className="w-3 h-3" />
                               Socialy
                             </span>
-                          ) : null}
-                          {journalist.email && (
-                            <span className="text-xs text-primary truncate max-w-32">{journalist.email}</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
                           )}
                         </div>
-                      </div>
-                      <div className={cn(
-                        "w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                        journalist.selected
-                          ? "bg-primary border-primary"
-                          : "border-muted-foreground/30"
-                      )}>
-                        {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
-                      </div>
-                    </button>
-                  ))}
+                        
+                        {/* Checkbox */}
+                        <div className="flex items-center justify-center">
+                          <div className={cn(
+                            "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                            journalist.selected
+                              ? "bg-primary border-primary"
+                              : "border-muted-foreground/30 hover:border-primary/50"
+                          )}>
+                            {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
