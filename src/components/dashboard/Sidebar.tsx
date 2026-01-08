@@ -1,18 +1,18 @@
 import {
   LayoutGrid,
-  Briefcase,
-  ListTodo,
-  Globe,
-  Clock,
-  Users2,
-  UserCog,
-  FileText,
-  Settings,
   HelpCircle,
-  Plus,
   ChevronLeft,
   ChevronRight,
   Newspaper,
+  TrendingUp,
+  Handshake,
+  FileBarChart,
+  Share2,
+  Search,
+  BarChart3,
+  Users,
+  Leaf,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -28,14 +28,15 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { icon: LayoutGrid, label: "Accueil", path: "/dashboard" },
   { icon: Newspaper, label: "Relations Presse", path: "/relations-presse" },
-  { icon: Briefcase, label: "Studio", path: "/studio" },
-  { icon: ListTodo, label: "Concurrent", path: "/concurrent" },
-  { icon: Globe, label: "Dashboard", path: "/analytics" },
-  { icon: Clock, label: "Création", path: "/creation" },
-  { icon: Users2, label: "Resource mgmt", path: "/resources" },
-  { icon: UserCog, label: "Users", path: "/users" },
-  { icon: FileText, label: "Project template", path: "/templates" },
-  { icon: Settings, label: "Menu settings", path: "/settings" },
+  { icon: TrendingUp, label: "Growth Marketing", path: "/growth-marketing" },
+  { icon: Handshake, label: "Biz Dev", path: "/biz-dev" },
+  { icon: FileBarChart, label: "Reporting Client", path: "/reporting-client" },
+  { icon: Share2, label: "Social Media", path: "/social-media" },
+  { icon: Search, label: "SEO / GEO", path: "/seo-geo" },
+  { icon: BarChart3, label: "Reporting Interne", path: "/reporting-interne" },
+  { icon: Users, label: "RH", path: "/rh" },
+  { icon: Leaf, label: "RSE", path: "/rse" },
+  { icon: Package, label: "Fournisseurs", path: "/fournisseurs" },
 ];
 
 interface SidebarProps {
@@ -88,21 +89,6 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         )}
       </div>
 
-
-      {/* Create New Project Button */}
-      <div className={cn("px-4 mb-4", collapsed && "px-2")}>
-        <button
-          className={cn(
-            "w-full bg-card text-foreground rounded-xl py-3 flex items-center gap-3 hover:bg-secondary transition-colors font-medium",
-            collapsed ? "px-3 justify-center" : "px-4"
-          )}
-        >
-          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <Plus className="w-4 h-4 text-primary-foreground" />
-          </div>
-          {!collapsed && <span className="text-sm">Create new project</span>}
-        </button>
-      </div>
 
       {/* Navigation Menu */}
       <nav className="flex-1 px-3 overflow-y-auto scrollbar-hide">
