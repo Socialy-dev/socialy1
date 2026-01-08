@@ -36,9 +36,10 @@ const menuItems: MenuItem[] = [
 
 interface SidebarProps {
   collapsed: boolean;
+  onToggle: () => void;
 }
 
-export const Sidebar = ({ collapsed }: SidebarProps) => {
+export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   return (
     <aside
       className={cn(
@@ -46,9 +47,27 @@ export const Sidebar = ({ collapsed }: SidebarProps) => {
         collapsed ? "w-20" : "w-64"
       )}
     >
+      {/* Toggle Button - Inside sidebar at top */}
+      <div className={cn(
+        "flex items-center px-4 pt-4",
+        collapsed ? "justify-center" : "justify-end"
+      )}>
+        <button
+          onClick={onToggle}
+          className="w-8 h-8 rounded-lg bg-sidebar-foreground/10 hover:bg-sidebar-foreground/20 flex items-center justify-center transition-colors group"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+          ) : (
+            <ChevronLeft className="w-4 h-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+          )}
+        </button>
+      </div>
+
       {/* Logo */}
       <div className={cn(
-        "flex items-center gap-3 p-6",
+        "flex items-center gap-3 px-6 pb-4 pt-2",
         collapsed && "justify-center px-4"
       )}>
         <img 
