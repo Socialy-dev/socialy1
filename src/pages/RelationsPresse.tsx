@@ -19,7 +19,8 @@ import {
   Newspaper,
   Zap,
   X,
-  Paperclip
+  Paperclip,
+  Linkedin
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -92,6 +93,8 @@ const RelationsPresse = () => {
   const [emailMessage, setEmailMessage] = useState("");
   const [emailAttachment, setEmailAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
+  const [showMediaDropdown, setShowMediaDropdown] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -194,6 +197,22 @@ const RelationsPresse = () => {
   };
 
   const selectedJournalists = journalists.filter(j => j.selected);
+
+  // Get unique medias for filter dropdown (sanitized)
+  const uniqueMedias = Array.from(
+    new Set(
+      journalists
+        .map(j => j.media)
+        .filter((m): m is string => m !== null && m.trim() !== "")
+    )
+  ).sort((a, b) => a.localeCompare(b, 'fr'));
+
+  // Filter journalists by selected media
+  const filteredJournalists = selectedMedia
+    ? journalists.filter(j => j.media === selectedMedia)
+    : journalists;
+
+  const selectedMediaLabel = selectedMedia || "Tous les médias";
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -531,13 +550,76 @@ const RelationsPresse = () => {
           {activeSubTab === "journalistes" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                  <UserCircle className="w-5 h-5 text-primary" />
-                  Vos contacts journalistes
-                </p>
+                <div className="flex items-center gap-4">
+                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                    <UserCircle className="w-5 h-5 text-primary" />
+                    Vos contacts journalistes
+                  </p>
+                  
+                  {/* Media Filter Dropdown */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowMediaDropdown(!showMediaDropdown)}
+                      className="flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                    >
+                      <Filter className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-foreground">{selectedMediaLabel}</span>
+                      <ChevronDown className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                        showMediaDropdown && "rotate-180"
+                      )} />
+                    </button>
+
+                    {showMediaDropdown && (
+                      <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-2 max-h-80 overflow-y-auto">
+                          <button
+                            onClick={() => {
+                              setSelectedMedia(null);
+                              setShowMediaDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                              !selectedMedia 
+                                ? "bg-primary/10 text-primary" 
+                                : "text-foreground hover:bg-secondary"
+                            )}
+                          >
+                            <Newspaper className="w-5 h-5" />
+                            Tous les médias
+                            {!selectedMedia && <Check className="w-5 h-5 ml-auto" />}
+                          </button>
+                          
+                          {uniqueMedias.length > 0 && <div className="border-t border-border my-2" />}
+                          
+                          {uniqueMedias.map(media => (
+                            <button
+                              key={media}
+                              onClick={() => {
+                                setSelectedMedia(media);
+                                setShowMediaDropdown(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                selectedMedia === media 
+                                  ? "bg-primary/10 text-primary" 
+                                  : "text-foreground hover:bg-secondary"
+                              )}
+                            >
+                              <Newspaper className="w-5 h-5" />
+                              {media}
+                              {selectedMedia === media && <Check className="w-5 h-5 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                    {journalists.length} journaliste{journalists.length !== 1 ? "s" : ""}
+                    {filteredJournalists.length} journaliste{filteredJournalists.length !== 1 ? "s" : ""}
                   </span>
                   {selectedJournalists.length > 0 && (
                     <button
@@ -565,13 +647,14 @@ const RelationsPresse = () => {
                     </div>
                   ))}
                 </div>
-              ) : journalists.length > 0 ? (
+              ) : filteredJournalists.length > 0 ? (
                 <div className="bg-card rounded-2xl border border-border overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.5fr_1fr_1.5fr_1fr_1fr_60px] gap-4 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className="grid grid-cols-[auto_1.2fr_1fr_0.5fr_1.2fr_0.8fr_1fr_60px] gap-4 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     <div className="w-10" />
                     <div>Contact</div>
                     <div>Média</div>
+                    <div>LinkedIn</div>
                     <div>Email</div>
                     <div>Téléphone</div>
                     <div>Source</div>
@@ -580,12 +663,12 @@ const RelationsPresse = () => {
                   
                   {/* Table Body */}
                   <div className="divide-y divide-border/50">
-                    {journalists.map((journalist) => (
+                    {filteredJournalists.map((journalist) => (
                       <button
                         key={journalist.id}
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
-                          "w-full grid grid-cols-[auto_1.5fr_1fr_1.5fr_1fr_1fr_60px] gap-4 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          "w-full grid grid-cols-[auto_1.2fr_1fr_0.5fr_1.2fr_0.8fr_1fr_60px] gap-4 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
                           journalist.selected && "bg-primary/5"
                         )}
                       >
@@ -604,9 +687,33 @@ const RelationsPresse = () => {
                           <span className="font-semibold text-foreground truncate">{journalist.name}</span>
                         </div>
                         
-                        {/* Media */}
+                        {/* Media - Modern Tag */}
                         <div className="flex items-center min-w-0">
-                          <span className="text-sm text-muted-foreground truncate">{journalist.media || "—"}</span>
+                          {journalist.media ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 truncate">
+                              <Newspaper className="w-3 h-3 flex-shrink-0" />
+                              {journalist.media}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                        
+                        {/* LinkedIn */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.linkedin ? (
+                            <a
+                              href={journalist.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A66C2]/15 text-[#0A66C2] hover:bg-[#0A66C2]/25 transition-colors"
+                            >
+                              <Linkedin className="w-4 h-4" />
+                            </a>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
                         </div>
                         
                         {/* Email */}
