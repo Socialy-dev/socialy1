@@ -1,6 +1,49 @@
-import { Search, Bell, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Header = () => {
+  const [userName, setUserName] = useState("Utilisateur");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (profile) {
+          const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ");
+          setUserName(fullName || "Utilisateur");
+        }
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Erreur lors de la déconnexion");
+    } else {
+      toast.success("Déconnexion réussie");
+      navigate("/auth");
+    }
+  };
+
   return (
     <header className="flex items-center justify-between mb-8">
       <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
@@ -21,21 +64,41 @@ export const Header = () => {
           <Bell className="w-5 h-5 text-foreground" />
         </button>
         
-        {/* User Profile */}
-        <div className="flex items-center gap-3 pl-3">
-          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-warning overflow-hidden">
-            <img 
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-              alt="Alex meian"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-sm text-foreground">Alex meian</span>
-            <span className="text-xs text-muted-foreground">Product manager</span>
-          </div>
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        </div>
+        {/* User Profile with Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 pl-3 hover:opacity-80 transition-opacity">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-warning overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+                  alt={userName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-sm text-foreground">{userName}</span>
+                <span className="text-xs text-muted-foreground">Product manager</span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="cursor-pointer">
+              Mon profil
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              Paramètres
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="cursor-pointer text-danger focus:text-danger focus:bg-danger/10"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Se déconnecter
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
