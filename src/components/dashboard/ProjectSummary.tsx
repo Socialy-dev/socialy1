@@ -74,7 +74,7 @@ const CircularProgress = ({
 export const ProjectSummary = () => {
   return <div className="glass-card rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">RP</h3>
+        <h3 className="text-lg font-bold text-foreground">Relation Presse</h3>
         <div className="flex gap-2">
           {["Project", "Project manager", "Status"].map(filter => <button key={filter} className="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground bg-background/50 rounded-lg hover:bg-background transition-colors">
               {filter}
