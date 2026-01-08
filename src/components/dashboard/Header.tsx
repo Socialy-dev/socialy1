@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export const Header = () => {
   const [userName, setUserName] = useState("Utilisateur");
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +34,7 @@ export const Header = () => {
   }, []);
 
   const handleLogout = async () => {
+    setIsOpen(false);
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast.error("Erreur lors de la déconnexion");
@@ -64,9 +64,9 @@ export const Header = () => {
           <Bell className="w-5 h-5 text-foreground" />
         </button>
         
-        {/* User Profile with Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        {/* User Profile with Popover */}
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
             <button className="flex items-center gap-3 pl-3 hover:opacity-80 transition-opacity">
               <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-warning overflow-hidden">
                 <img 
@@ -81,24 +81,28 @@ export const Header = () => {
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem className="cursor-pointer">
-              Mon profil
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              Paramètres
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="cursor-pointer text-danger focus:text-danger focus:bg-danger/10"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Se déconnecter
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-48 p-2 bg-white border border-border shadow-lg z-50">
+            <div className="flex flex-col">
+              <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left">
+                <User className="w-4 h-4" />
+                Mon profil
+              </button>
+              <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left">
+                <Settings className="w-4 h-4" />
+                Paramètres
+              </button>
+              <div className="h-px bg-border my-1" />
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-danger rounded-md hover:bg-danger/10 transition-colors text-left"
+              >
+                <LogOut className="w-4 h-4" />
+                Se déconnecter
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </header>
   );
