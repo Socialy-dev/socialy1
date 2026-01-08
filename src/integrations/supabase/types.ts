@@ -53,6 +53,71 @@ export type Database = {
         }
         Relationships: []
       }
+      competitor_articles: {
+        Row: {
+          agency_id: string
+          article_date: string | null
+          article_iso_date: string | null
+          authors: string[] | null
+          created_at: string
+          id: string
+          link: string
+          position: number | null
+          snippet: string | null
+          source_icon: string | null
+          source_name: string | null
+          thumbnail: string | null
+          thumbnail_small: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string[] | null
+          created_at?: string
+          id?: string
+          link: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string[] | null
+          created_at?: string
+          id?: string
+          link?: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitor_articles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "competitor_agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journalists: {
         Row: {
           created_at: string
