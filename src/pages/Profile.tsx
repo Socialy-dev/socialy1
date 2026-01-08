@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Radar, Building2 } from "lucide-react";
+import { Plus, Trash2, Building2, Globe, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [agencies, setAgencies] = useState<string[]>([]);
   const [newAgency, setNewAgency] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    const checkAuthAndFetch = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         navigate("/auth");
         return;
       }
@@ -24,7 +26,7 @@ const Profile = () => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("competitor_agencies")
-        .eq("user_id", user.id)
+        .eq("user_id", session.user.id)
         .single();
 
       if (profile?.competitor_agencies) {
@@ -33,7 +35,7 @@ const Profile = () => {
       setIsLoading(false);
     };
 
-    fetchProfile();
+    checkAuthAndFetch();
   }, [navigate]);
 
   const handleAddAgency = async () => {
@@ -69,13 +71,8 @@ const Profile = () => {
       toast.error("Erreur lors de la sauvegarde");
     } else {
       setAgencies(updatedAgencies);
-      toast.success("Modifications enregistrées");
     }
     setIsSaving(false);
-  };
-
-  const handleLaunchVeille = () => {
-    toast.info("La veille automatique sera configurée prochainement");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -84,147 +81,153 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Chargement...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="p-2 rounded-xl hover:bg-secondary transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-foreground">Mon profil</h1>
-            <p className="text-sm text-muted-foreground">Gérez vos préférences et paramètres</p>
-          </div>
+      <Sidebar collapsed={sidebarCollapsed} />
+      
+      {/* Toggle Button */}
+      <button
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        className={cn(
+          "fixed top-7 w-7 h-7 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-all duration-300 z-[100]",
+          sidebarCollapsed ? "left-[68px]" : "left-[252px]"
+        )}
+      >
+        {sidebarCollapsed ? (
+          <ChevronRight className="w-4 h-4 text-foreground" />
+        ) : (
+          <ChevronLeft className="w-4 h-4 text-foreground" />
+        )}
+      </button>
+      
+      <main
+        className={cn(
+          "min-h-screen p-8 content-transition",
+          sidebarCollapsed ? "ml-20" : "ml-64"
+        )}
+      >
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold text-foreground">Mon profil</h1>
+          <p className="text-muted-foreground mt-1">Gérez vos préférences et paramètres</p>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        {/* Veille Concurrentielle Section */}
-        <section className="bg-card rounded-2xl border border-border/50 overflow-hidden">
-          {/* Section Header */}
-          <div className="p-6 border-b border-border/40 bg-gradient-to-r from-primary/5 to-transparent">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <Radar className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-foreground mb-1">
-                  Veille Concurrentielle
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Ajoutez les agences concurrentes que vous souhaitez surveiller. 
-                  Nous identifierons automatiquement les médias qui publient leurs 
-                  communiqués de presse et récupérerons les contacts journalistes pertinents.
-                </p>
-              </div>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-pulse text-muted-foreground">Chargement...</div>
           </div>
-
-          {/* Section Content */}
-          <div className="p-6 space-y-6">
-            {/* Add Agency Input */}
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Nom de l'agence (ex: BETC, Publicis, DDB...)"
-                  value={newAgency}
-                  onChange={(e) => setNewAgency(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="pl-11 h-12 rounded-xl border-border/60 bg-background focus:border-primary/50 focus:ring-primary/20"
-                />
-              </div>
-              <Button
-                onClick={handleAddAgency}
-                disabled={!newAgency.trim() || isSaving}
-                className="h-12 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Ajouter</span>
-              </Button>
-            </div>
-
-            {/* Agencies List */}
-            <div className="space-y-2">
-              {agencies.length === 0 ? (
-                <div className="py-12 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary/50 flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-muted-foreground/50" />
+        ) : (
+          <div className="max-w-4xl">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-card rounded-2xl p-5 border border-border/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-muted-foreground text-sm">
-                    Aucune agence ajoutée pour le moment
-                  </p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">
-                    Commencez par ajouter une agence concurrente ci-dessus
-                  </p>
+                  <span className="text-sm text-muted-foreground">Agences suivies</span>
                 </div>
-              ) : (
-                <div className="grid gap-2">
-                  {agencies.map((agency, index) => (
-                    <div
-                      key={index}
-                      className="group flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-medium text-primary">
-                            {agency.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="font-medium text-foreground">{agency}</span>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveAgency(agency)}
-                        disabled={isSaving}
-                        className="p-2 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                <p className="text-3xl font-bold text-foreground">{agencies.length}</p>
+              </div>
+              
+              <div className="bg-card rounded-2xl p-5 border border-border/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-success" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Journalistes trouvés</span>
                 </div>
-              )}
+                <p className="text-3xl font-bold text-foreground">—</p>
+              </div>
+              
+              <div className="bg-card rounded-2xl p-5 border border-border/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-warning" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Médias identifiés</span>
+                </div>
+                <p className="text-3xl font-bold text-foreground">—</p>
+              </div>
             </div>
 
-            {/* Launch Button */}
-            <div className="pt-4 border-t border-border/40">
-              <Button
-                onClick={handleLaunchVeille}
-                disabled={agencies.length === 0}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-medium gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Radar className="w-5 h-5" />
-                Lancer la veille automatique
-              </Button>
-              {agencies.length === 0 && (
-                <p className="text-center text-xs text-muted-foreground mt-2">
-                  Ajoutez au moins une agence pour activer la veille
+            {/* Main Section */}
+            <div className="bg-card rounded-2xl border border-border/30 overflow-hidden">
+              {/* Section Header */}
+              <div className="px-6 py-5 border-b border-border/30">
+                <h2 className="text-lg font-semibold text-foreground">Veille Concurrentielle</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Ajoutez les agences concurrentes que vous souhaitez surveiller
                 </p>
-              )}
+              </div>
+
+              {/* Add Agency Input */}
+              <div className="p-6 border-b border-border/30 bg-secondary/20">
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Nom de l'agence (ex: BETC, Publicis, DDB...)"
+                      value={newAgency}
+                      onChange={(e) => setNewAgency(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      disabled={isSaving}
+                      className="w-full h-12 px-4 rounded-xl border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={handleAddAgency}
+                    disabled={!newAgency.trim() || isSaving}
+                    className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Ajouter</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Agencies List */}
+              <div className="p-6">
+                {agencies.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-secondary/50 flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-muted-foreground/40" />
+                    </div>
+                    <p className="text-muted-foreground font-medium">Aucune agence ajoutée</p>
+                    <p className="text-sm text-muted-foreground/60 mt-1">
+                      Commencez par ajouter une agence concurrente
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {agencies.map((agency, index) => (
+                      <div
+                        key={index}
+                        className="group flex items-center justify-between p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            <span className="text-sm font-semibold text-primary">
+                              {agency.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="font-medium text-foreground">{agency}</span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveAgency(agency)}
+                          disabled={isSaving}
+                          className="p-2.5 rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </section>
-
-        {/* Future Sections Placeholder */}
-        <div className="mt-6 p-6 rounded-2xl border border-dashed border-border/40 bg-card/30">
-          <p className="text-center text-sm text-muted-foreground">
-            D'autres paramètres seront disponibles prochainement
-          </p>
-        </div>
+        )}
       </main>
     </div>
   );
