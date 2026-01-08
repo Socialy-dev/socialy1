@@ -1,15 +1,28 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import socialyLogo from "@/assets/socialy-logo.png";
 
+interface InvitationData {
+  id: string;
+  email: string;
+  role: string;
+  pages: string[];
+  token: string;
+  expires_at: string;
+  used_at: string | null;
+}
+
 const Auth = () => {
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get("token");
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,8 +30,77 @@ const Auth = () => {
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingInvitation, setCheckingInvitation] = useState(!!inviteToken);
+  const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [invitationError, setInvitationError] = useState<string | null>(null);
+  const [isFirstUser, setIsFirstUser] = useState(false);
+  const [checkingFirstUser, setCheckingFirstUser] = useState(true);
   const navigate = useNavigate();
 
+  // Check if first user
+  useEffect(() => {
+    const checkFirstUser = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("user_roles")
+          .select("*", { count: "exact", head: true });
+
+        if (error) throw error;
+        setIsFirstUser(count === 0);
+      } catch (error) {
+        console.error("Error checking first user:", error);
+      } finally {
+        setCheckingFirstUser(false);
+      }
+    };
+    checkFirstUser();
+  }, []);
+
+  // Check invitation token
+  useEffect(() => {
+    if (!inviteToken) {
+      setCheckingInvitation(false);
+      return;
+    }
+
+    const checkInvitation = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("invitations")
+          .select("*")
+          .eq("token", inviteToken)
+          .single();
+
+        if (error || !data) {
+          setInvitationError("Invitation invalide ou non trouvée");
+          return;
+        }
+
+        if (data.used_at) {
+          setInvitationError("Cette invitation a déjà été utilisée");
+          return;
+        }
+
+        if (new Date(data.expires_at) < new Date()) {
+          setInvitationError("Cette invitation a expiré");
+          return;
+        }
+
+        setInvitation(data as InvitationData);
+        setEmail(data.email);
+        setIsLogin(false); // Switch to signup mode
+      } catch (error) {
+        console.error("Error checking invitation:", error);
+        setInvitationError("Erreur lors de la vérification de l'invitation");
+      } finally {
+        setCheckingInvitation(false);
+      }
+    };
+
+    checkInvitation();
+  }, [inviteToken]);
+
+  // Auth state listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -48,6 +130,20 @@ const Auth = () => {
         if (error) throw error;
         toast.success("Connexion réussie !");
       } else {
+        // Check if signup is allowed
+        if (!isFirstUser && !invitation) {
+          toast.error("L'inscription n'est possible que sur invitation");
+          setLoading(false);
+          return;
+        }
+
+        // Check email matches invitation
+        if (invitation && email.trim().toLowerCase() !== invitation.email.toLowerCase()) {
+          toast.error("L'email doit correspondre à l'invitation");
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -68,6 +164,18 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Show loading while checking
+  if (checkingInvitation || checkingFirstUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Can signup only if first user OR has valid invitation
+  const canSignup = isFirstUser || invitation !== null;
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -130,6 +238,43 @@ const Auth = () => {
             <img src={socialyLogo} alt="Socialy" className="w-12 h-12" />
             <span className="text-2xl font-bold text-foreground">Socialy</span>
           </div>
+
+          {/* Invitation Error */}
+          {invitationError && (
+            <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-destructive">{invitationError}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Contactez un administrateur pour obtenir une nouvelle invitation.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Invitation Banner */}
+          {invitation && (
+            <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/30">
+              <p className="font-medium text-primary">
+                Invitation pour {invitation.email}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Rôle: {invitation.role === "admin" ? "Administrateur" : "Utilisateur"}
+              </p>
+            </div>
+          )}
+
+          {/* First User Banner */}
+          {isFirstUser && !isLogin && (
+            <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30">
+              <p className="font-medium text-green-600">
+                🎉 Vous êtes le premier utilisateur !
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Vous deviendrez automatiquement administrateur.
+              </p>
+            </div>
+          )}
 
           {/* Glass Card */}
           <div className="glass-card p-8 rounded-3xl">
@@ -198,6 +343,7 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
                     required
+                    disabled={invitation !== null}
                   />
                 </div>
               </div>
@@ -241,7 +387,7 @@ const Auth = () => {
 
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (!isLogin && !canSignup)}
                 className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-base group transition-all duration-300"
               >
                 {loading ? (
@@ -256,16 +402,35 @@ const Auth = () => {
             </form>
 
             <div className="mt-8 text-center">
-              <p className="text-muted-foreground">
-                {isLogin ? "Pas encore de compte ?" : "Déjà un compte ?"}
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="ml-2 text-primary font-semibold hover:underline"
-                >
-                  {isLogin ? "S'inscrire" : "Se connecter"}
-                </button>
-              </p>
+              {isLogin ? (
+                <p className="text-muted-foreground">
+                  Pas encore de compte ?
+                  {canSignup ? (
+                    <button
+                      type="button"
+                      onClick={() => setIsLogin(false)}
+                      className="ml-2 text-primary font-semibold hover:underline"
+                    >
+                      S'inscrire
+                    </button>
+                  ) : (
+                    <span className="ml-2 text-muted-foreground/70">
+                      Inscription sur invitation uniquement
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Déjà un compte ?
+                  <button
+                    type="button"
+                    onClick={() => setIsLogin(true)}
+                    className="ml-2 text-primary font-semibold hover:underline"
+                  >
+                    Se connecter
+                  </button>
+                </p>
+              )}
             </div>
           </div>
 
