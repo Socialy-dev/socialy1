@@ -165,16 +165,32 @@ const Admin = () => {
 
       if (error) throw error;
 
-      toast.success("Invitation créée avec succès !");
+      const inviteLink = `${window.location.origin}/auth?token=${data.token}`;
+
+      // Send invitation email via Edge Function
+      const emailResponse = await supabase.functions.invoke("send-invitation-email", {
+        body: {
+          email: newEmail.trim().toLowerCase(),
+          inviteLink,
+          role: newRole,
+          pages: newPages,
+        },
+      });
+
+      if (emailResponse.error) {
+        console.error("Email error:", emailResponse.error);
+        toast.warning("Invitation créée mais l'email n'a pas pu être envoyé");
+        // Copy link as fallback
+        await navigator.clipboard.writeText(inviteLink);
+        toast.info("Lien copié dans le presse-papiers");
+      } else {
+        toast.success("Invitation envoyée par email !");
+      }
+
       setNewEmail("");
       setNewRole("user");
       setNewPages(["dashboard", "profile"]);
       fetchInvitations();
-
-      // Copy link to clipboard
-      const inviteLink = `${window.location.origin}/auth?token=${data.token}`;
-      await navigator.clipboard.writeText(inviteLink);
-      toast.success("Lien d'invitation copié dans le presse-papiers !");
     } catch (error: any) {
       console.error("Error creating invitation:", error);
       toast.error(error.message || "Erreur lors de la création de l'invitation");
