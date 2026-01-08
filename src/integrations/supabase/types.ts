@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      competitor_agencies: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          linkedin: string | null
+          name: string
+          notes: string | null
+          specialty: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name: string
+          notes?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name?: string
+          notes?: string | null
+          specialty?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       journalists: {
         Row: {
           created_at: string

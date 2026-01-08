@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Agency {
+  id: string;
   name: string;
   website: string;
   linkedin: string;
@@ -27,7 +28,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newAgency, setNewAgency] = useState<Agency>({
+  const [newAgency, setNewAgency] = useState({
     name: "",
     website: "",
     linkedin: "",
@@ -45,45 +46,27 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     setIsLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("competitor_agencies")
+      const { data, error } = await supabase
+        .from("competitor_agencies")
+        .select("*")
         .eq("user_id", user.id)
-        .single();
+        .order("created_at", { ascending: false });
 
-      if (profile?.competitor_agencies) {
-        // Parse the stored agencies (stored as JSON strings in the array)
-        const parsedAgencies = profile.competitor_agencies
-          .map((item: string) => {
-            try {
-              return JSON.parse(item);
-            } catch {
-              // Legacy format: just agency name as string
-              return { name: item, website: "", linkedin: "", email: "", specialty: "" };
-            }
-          });
-        setAgencies(parsedAgencies);
+      if (error) {
+        console.error("Error fetching agencies:", error);
+        toast.error("Erreur lors du chargement des agences");
+      } else {
+        setAgencies(data?.map(a => ({
+          id: a.id,
+          name: a.name,
+          website: a.website || "",
+          linkedin: a.linkedin || "",
+          email: a.email || "",
+          specialty: a.specialty || "",
+        })) || []);
       }
     }
     setIsLoading(false);
-  };
-
-  const saveAgencies = async (updatedAgencies: Agency[]) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const agencyStrings = updatedAgencies.map(agency => JSON.stringify(agency));
-      const { error } = await supabase
-        .from("profiles")
-        .update({ competitor_agencies: agencyStrings })
-        .eq("user_id", user.id);
-
-      if (error) {
-        toast.error("Erreur lors de la sauvegarde");
-        return false;
-      }
-      return true;
-    }
-    return false;
   };
 
   const handleAddAgency = async () => {
@@ -92,25 +75,58 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
       return;
     }
 
-    const updatedAgencies = [...agencies, newAgency];
-    const success = await saveAgencies(updatedAgencies);
-    
-    if (success) {
-      setAgencies(updatedAgencies);
-      setNewAgency({ name: "", website: "", linkedin: "", email: "", specialty: "" });
-      setShowAddForm(false);
-      toast.success("Agence ajoutée");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Vous devez être connecté");
+      return;
     }
+
+    const { data, error } = await supabase
+      .from("competitor_agencies")
+      .insert({
+        user_id: user.id,
+        name: newAgency.name.trim(),
+        website: newAgency.website.trim() || null,
+        linkedin: newAgency.linkedin.trim() || null,
+        email: newAgency.email.trim() || null,
+        specialty: newAgency.specialty.trim() || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding agency:", error);
+      toast.error("Erreur lors de l'ajout de l'agence");
+      return;
+    }
+
+    setAgencies([{
+      id: data.id,
+      name: data.name,
+      website: data.website || "",
+      linkedin: data.linkedin || "",
+      email: data.email || "",
+      specialty: data.specialty || "",
+    }, ...agencies]);
+    setNewAgency({ name: "", website: "", linkedin: "", email: "", specialty: "" });
+    setShowAddForm(false);
+    toast.success("Agence ajoutée avec succès");
   };
 
-  const handleDeleteAgency = async (index: number) => {
-    const updatedAgencies = agencies.filter((_, i) => i !== index);
-    const success = await saveAgencies(updatedAgencies);
-    
-    if (success) {
-      setAgencies(updatedAgencies);
-      toast.success("Agence supprimée");
+  const handleDeleteAgency = async (id: string) => {
+    const { error } = await supabase
+      .from("competitor_agencies")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting agency:", error);
+      toast.error("Erreur lors de la suppression");
+      return;
     }
+
+    setAgencies(agencies.filter(a => a.id !== id));
+    toast.success("Agence supprimée");
   };
 
   if (!isOpen) return null;
@@ -210,7 +226,7 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        Nom de l'agence <span className="text-danger">*</span>
+                        Nom de l'agence <span className="text-destructive">*</span>
                       </label>
                       <input
                         type="text"
@@ -293,9 +309,9 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                 </div>
               ) : agencies.length > 0 ? (
                 <div className="space-y-3">
-                  {agencies.map((agency, index) => (
+                  {agencies.map((agency) => (
                     <div
-                      key={index}
+                      key={agency.id}
                       className="bg-card border border-border rounded-xl p-5 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between">
@@ -341,8 +357,8 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                           </div>
                         </div>
                         <button
-                          onClick={() => handleDeleteAgency(index)}
-                          className="p-2 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+                          onClick={() => handleDeleteAgency(agency.id)}
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
