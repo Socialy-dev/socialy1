@@ -174,6 +174,25 @@ const Auth = () => {
     );
   }
 
+  // Block access without invitation token (except for first user or login)
+  if (!inviteToken && !isFirstUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-8">
+        <div className="glass-card p-8 rounded-3xl max-w-md text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <img src={socialyLogo} alt="Socialy" className="w-12 h-12" />
+            <span className="text-2xl font-bold text-foreground">Socialy</span>
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-4">Accès restreint</h2>
+          <p className="text-muted-foreground mb-6">
+            Cette page est accessible uniquement via un lien d'invitation.
+            Contactez un administrateur pour obtenir votre lien d'accès.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Can signup only if first user OR has valid invitation
   const canSignup = isFirstUser || invitation !== null;
 
@@ -264,17 +283,6 @@ const Auth = () => {
             </div>
           )}
 
-          {/* First User Banner */}
-          {isFirstUser && !isLogin && (
-            <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-              <p className="font-medium text-green-600">
-                🎉 Vous êtes le premier utilisateur !
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Vous deviendrez automatiquement administrateur.
-              </p>
-            </div>
-          )}
 
           {/* Glass Card */}
           <div className="glass-card p-8 rounded-3xl">
@@ -293,23 +301,6 @@ const Auth = () => {
               {!isLogin && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-foreground font-medium">
-                      Nom
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="lastName"
-                        type="text"
-                        placeholder="Dupont"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
-                        required={!isLogin}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-foreground font-medium">
                       Prénom
                     </Label>
@@ -321,6 +312,23 @@ const Auth = () => {
                         placeholder="Jean"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                        required={!isLogin}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-foreground font-medium">
+                      Nom
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="lastName"
+                        type="text"
+                        placeholder="Dupont"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
                         className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
                         required={!isLogin}
                       />
