@@ -450,77 +450,82 @@ export const ProjectSummary = () => {
         )}
       </div>
 
-      {/* EMAIL MODAL */}
+      {/* EMAIL MODAL - FULLSCREEN */}
       {showEmailModal && (
-        <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-card w-full max-w-lg rounded-3xl shadow-2xl border border-border overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 md:p-10 animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-4xl h-[90vh] rounded-3xl shadow-2xl border border-border overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border bg-secondary/30">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Send className="w-5 h-5 text-primary" />
+            <div className="flex items-center justify-between p-8 border-b border-border bg-secondary/30">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Send className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">Envoyer un communiqué</h3>
-                  <p className="text-sm text-muted-foreground">{selectedJournalists.length} destinataire(s)</p>
+                  <h3 className="text-2xl font-bold text-foreground">Envoyer un communiqué</h3>
+                  <p className="text-base text-muted-foreground mt-1">{selectedJournalists.length} destinataire(s) sélectionné(s)</p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowEmailModal(false)}
-                className="w-10 h-10 rounded-xl hover:bg-secondary flex items-center justify-center transition-colors"
+                className="w-12 h-12 rounded-xl hover:bg-secondary flex items-center justify-center transition-colors"
               >
-                <X className="w-5 h-5 text-muted-foreground" />
+                <X className="w-6 h-6 text-muted-foreground" />
               </button>
             </div>
 
             {/* Recipients */}
-            <div className="px-6 py-4 border-b border-border bg-secondary/10">
-              <p className="text-xs text-muted-foreground mb-2 font-medium uppercase tracking-wide">Destinataires</p>
+            <div className="px-8 py-5 border-b border-border bg-secondary/10">
+              <p className="text-sm text-muted-foreground mb-3 font-semibold uppercase tracking-wide">Destinataires</p>
               <div className="flex flex-wrap gap-2">
                 {selectedJournalists.map(j => (
-                  <span key={j.id} className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                  <span key={j.id} className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-sm font-semibold">
                     {j.name}
-                    <span className="text-primary/60">•</span>
-                    <span className="text-xs text-primary/70">{j.media}</span>
+                    <span className="text-primary/50">•</span>
+                    <span className="text-sm text-primary/70 font-medium">{j.media}</span>
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Form */}
-            <div className="p-6 space-y-5">
+            {/* Form - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-6">
               {/* Subject */}
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Sujet</label>
+                <label className="block text-base font-semibold text-foreground mb-3">Sujet</label>
                 <input
                   type="text"
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
-                  placeholder="Objet de votre communiqué..."
-                  className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  placeholder="Objet de votre communiqué de presse..."
+                  className="w-full px-5 py-4 bg-secondary/50 border border-border rounded-xl text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
               {/* Message */}
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Message</label>
+              <div className="flex-1">
+                <label className="block text-base font-semibold text-foreground mb-3">Message</label>
                 <textarea
                   value={emailMessage}
                   onChange={(e) => setEmailMessage(e.target.value)}
-                  placeholder="Rédigez votre message..."
-                  rows={5}
-                  className="w-full px-4 py-3 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                  placeholder="Rédigez votre message personnalisé pour accompagner le communiqué..."
+                  rows={10}
+                  className="w-full px-5 py-4 bg-secondary/50 border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                 />
               </div>
 
               {/* Attachment */}
               <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Pièce jointe</label>
-                <label className="flex items-center gap-3 px-4 py-3 bg-secondary/30 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/40 hover:bg-secondary/50 transition-all">
-                  <Paperclip className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground font-medium">
-                    {emailAttachment ? emailAttachment.name : "Ajouter votre communiqué (PDF, Word...)"}
-                  </span>
+                <label className="block text-base font-semibold text-foreground mb-3">Pièce jointe</label>
+                <label className="flex items-center gap-4 px-6 py-5 bg-secondary/30 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/40 hover:bg-secondary/50 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Paperclip className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <span className="text-base font-medium text-foreground block">
+                      {emailAttachment ? emailAttachment.name : "Ajouter votre communiqué de presse"}
+                    </span>
+                    <span className="text-sm text-muted-foreground">PDF, Word, ou autre document</span>
+                  </div>
                   <input
                     type="file"
                     className="hidden"
@@ -531,27 +536,27 @@ export const ProjectSummary = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 p-6 pt-0">
+            <div className="flex items-center gap-4 p-8 border-t border-border bg-secondary/20">
               <button
                 onClick={() => setShowEmailModal(false)}
-                className="flex-1 px-6 py-3 bg-secondary text-foreground rounded-xl font-semibold hover:bg-secondary/80 transition-all"
+                className="flex-1 px-8 py-4 bg-secondary text-foreground rounded-xl text-base font-semibold hover:bg-secondary/80 transition-all"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSendEmail}
                 disabled={isSending}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-xl text-base font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25 disabled:opacity-50"
               >
                 {isSending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Envoi...
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Envoi en cours...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" />
-                    Envoyer
+                    <Send className="w-5 h-5" />
+                    Envoyer le communiqué
                   </>
                 )}
               </button>
