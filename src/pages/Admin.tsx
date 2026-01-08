@@ -250,22 +250,17 @@ const Admin = () => {
 
       <main
         className={cn(
-          "transition-all duration-300 ease-in-out",
+          "min-h-screen p-8 content-transition",
           collapsed ? "ml-20" : "ml-64"
         )}
       >
-        <Header />
+        <Header title="Administration" />
 
-        <div className="p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Shield className="w-8 h-8 text-primary" />
-              Administration
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Gérez les utilisateurs et les invitations
-            </p>
-          </div>
+        <div className="mb-6">
+          <p className="text-muted-foreground">
+            Gérez les utilisateurs et les invitations
+          </p>
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Create Invitation */}
@@ -520,7 +515,6 @@ const Admin = () => {
               </div>
             )}
           </div>
-        </div>
       </main>
     </div>
   );
