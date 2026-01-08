@@ -121,6 +121,54 @@ export type Database = {
           },
         ]
       }
+      journalists: {
+        Row: {
+          competitor_name: string | null
+          created_at: string
+          email: string | null
+          id: string
+          linkedin: string | null
+          media: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          source_article_id: string | null
+          source_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competitor_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          media?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          source_article_id?: string | null
+          source_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competitor_name?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          media?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          source_article_id?: string | null
+          source_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

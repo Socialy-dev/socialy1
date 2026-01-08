@@ -57,8 +57,13 @@ interface Agency {
 interface Journalist {
   id: string;
   name: string;
-  media: string;
-  email: string;
+  media: string | null;
+  email: string | null;
+  linkedin: string | null;
+  phone: string | null;
+  notes: string | null;
+  source_type: string | null;
+  competitor_name: string | null;
   selected: boolean;
 }
 
@@ -66,12 +71,6 @@ const subTabs = [
   { id: "socialy", label: "Socialy", icon: Zap },
   { id: "concurrent", label: "Concurrent", icon: Users2 },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
-];
-
-const mockJournalists: Journalist[] = [
-  { id: "1", name: "Marie Dupont", media: "Le Monde", email: "m.dupont@lemonde.fr", selected: false },
-  { id: "2", name: "Jean Martin", media: "Les Échos", email: "j.martin@lesechos.fr", selected: false },
-  { id: "3", name: "Sophie Bernard", media: "Le Figaro", email: "s.bernard@lefigaro.fr", selected: false },
 ];
 
 const RelationsPresse = () => {
@@ -86,7 +85,8 @@ const RelationsPresse = () => {
   const [isLoadingSocialy, setIsLoadingSocialy] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
-  const [journalists, setJournalists] = useState<Journalist[]>(mockJournalists);
+  const [journalists, setJournalists] = useState<Journalist[]>([]);
+  const [isLoadingJournalists, setIsLoadingJournalists] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
@@ -113,7 +113,25 @@ const RelationsPresse = () => {
     fetchAgencies();
     fetchArticles();
     fetchSocialyArticles();
+    fetchJournalists();
   }, []);
+
+  const fetchJournalists = async () => {
+    setIsLoadingJournalists(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from("journalists")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("name");
+
+      if (!error && data) {
+        setJournalists(data.map(j => ({ ...j, selected: false })));
+      }
+    }
+    setIsLoadingJournalists(false);
+  };
 
   const fetchAgencies = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -515,55 +533,99 @@ const RelationsPresse = () => {
               <div className="flex items-center justify-between">
                 <p className="text-lg font-medium text-foreground flex items-center gap-2">
                   <UserCircle className="w-5 h-5 text-primary" />
-                  Sélectionnez vos contacts
+                  Vos contacts journalistes
                 </p>
-                {selectedJournalists.length > 0 && (
-                  <button
-                    onClick={() => setShowEmailModal(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25"
-                  >
-                    <Send className="w-4 h-4" />
-                    Envoyer un communiqué ({selectedJournalists.length})
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                    {journalists.length} journaliste{journalists.length !== 1 ? "s" : ""}
+                  </span>
+                  {selectedJournalists.length > 0 && (
+                    <button
+                      onClick={() => setShowEmailModal(true)}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25"
+                    >
+                      <Send className="w-4 h-4" />
+                      Envoyer un communiqué ({selectedJournalists.length})
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {journalists.map((journalist) => (
-                  <button
-                    key={journalist.id}
-                    onClick={() => toggleJournalist(journalist.id)}
-                    className={cn(
-                      "flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 border-2 text-left",
-                      journalist.selected
-                        ? "bg-primary/10 border-primary shadow-lg"
-                        : "bg-secondary/40 border-transparent hover:bg-secondary/70 hover:border-primary/20"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0",
-                      journalist.selected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-foreground"
-                    )}>
-                      {journalist.name.split(" ").map(n => n[0]).join("")}
+              {isLoadingJournalists ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="flex items-center gap-4 p-5 bg-secondary/30 rounded-2xl animate-pulse">
+                      <div className="w-14 h-14 bg-secondary rounded-full flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-secondary rounded w-3/4" />
+                        <div className="h-4 bg-secondary rounded w-1/2" />
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-foreground">{journalist.name}</h4>
-                      <p className="text-sm text-muted-foreground">{journalist.media}</p>
-                      <p className="text-xs text-primary mt-1 truncate">{journalist.email}</p>
-                    </div>
-                    <div className={cn(
-                      "w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                      journalist.selected
-                        ? "bg-primary border-primary"
-                        : "border-muted-foreground/30"
-                    )}>
-                      {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : journalists.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {journalists.map((journalist) => (
+                    <button
+                      key={journalist.id}
+                      onClick={() => toggleJournalist(journalist.id)}
+                      className={cn(
+                        "flex items-center gap-4 p-5 rounded-2xl transition-all duration-300 border-2 text-left",
+                        journalist.selected
+                          ? "bg-primary/10 border-primary shadow-lg"
+                          : "bg-secondary/40 border-transparent hover:bg-secondary/70 hover:border-primary/20"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0",
+                        journalist.selected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-foreground"
+                      )}>
+                        {journalist.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground truncate">{journalist.name}</h4>
+                        <p className="text-sm text-muted-foreground">{journalist.media || "Média inconnu"}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {journalist.source_type === "competitor" && journalist.competitor_name ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-600 text-xs font-medium">
+                              <Building2 className="w-3 h-3" />
+                              {journalist.competitor_name}
+                            </span>
+                          ) : journalist.source_type === "socialy" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-medium">
+                              <Zap className="w-3 h-3" />
+                              Socialy
+                            </span>
+                          ) : null}
+                          {journalist.email && (
+                            <span className="text-xs text-primary truncate max-w-32">{journalist.email}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                        journalist.selected
+                          ? "bg-primary border-primary"
+                          : "border-muted-foreground/30"
+                      )}>
+                        {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                    <UserCircle className="w-10 h-10 text-primary-foreground" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-foreground">Vos contacts journalistes</h4>
+                  <p className="text-muted-foreground mt-2 text-center max-w-md">
+                    Les journalistes seront automatiquement ajoutés à partir des articles de votre veille presse.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
