@@ -121,6 +121,42 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          pages: Database["public"]["Enums"]["app_page"][]
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          pages?: Database["public"]["Enums"]["app_page"][]
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          pages?: Database["public"]["Enums"]["app_page"][]
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       journalists: {
         Row: {
           competitor_name: string | null
@@ -262,15 +298,73 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          page: Database["public"]["Enums"]["app_page"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page: Database["public"]["Enums"]["app_page"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page?: Database["public"]["Enums"]["app_page"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_page_access: {
+        Args: {
+          _page: Database["public"]["Enums"]["app_page"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_first_user: { Args: never; Returns: boolean }
+      is_valid_invitation: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_page: "dashboard" | "relations-presse" | "social-media" | "profile"
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -397,6 +491,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_page: ["dashboard", "relations-presse", "social-media", "profile"],
+      app_role: ["admin", "user"],
+    },
   },
 } as const
