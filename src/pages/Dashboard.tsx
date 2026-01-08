@@ -33,22 +33,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar collapsed={sidebarCollapsed} />
-      
-      {/* Toggle Button - Outside sidebar to avoid overflow clipping */}
-      <button
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className={cn(
-          "fixed top-7 w-7 h-7 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-all duration-300 z-[100]",
-          sidebarCollapsed ? "left-[68px]" : "left-[252px]"
-        )}
-      >
-        {sidebarCollapsed ? (
-          <ChevronRight className="w-4 h-4 text-foreground" />
-        ) : (
-          <ChevronLeft className="w-4 h-4 text-foreground" />
-        )}
-      </button>
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
       <main
         className={cn(
