@@ -20,7 +20,10 @@ import {
   Zap,
   X,
   Paperclip,
-  Linkedin
+  Linkedin,
+  Upload,
+  Briefcase,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -59,6 +62,7 @@ interface Journalist {
   id: string;
   name: string;
   media: string | null;
+  job: string | null;
   email: string | null;
   linkedin: string | null;
   phone: string | null;
@@ -95,6 +99,7 @@ const RelationsPresse = () => {
   const [isSending, setIsSending] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -221,6 +226,90 @@ const RelationsPresse = () => {
       day: "numeric", 
       month: "short"
     });
+  };
+
+  const handleCsvImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour importer des journalistes",
+        variant: "destructive"
+      });
+      setIsImporting(false);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        // Skip header row and parse data
+        const dataLines = lines.slice(1);
+        const journalistsToInsert = [];
+
+        for (const line of dataLines) {
+          // Parse CSV, handling potential commas within quoted fields
+          const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => 
+            v.replace(/^"|"$/g, '').trim()
+          ) || [];
+          
+          // Expected format: Media, Contact, Poste, Email, Tel direct, Commentaire
+          const [media, name, job, email, phone, notes] = values;
+          
+          if (name && name.trim()) {
+            journalistsToInsert.push({
+              user_id: user.id,
+              name: name.trim(),
+              media: media?.trim() || null,
+              job: job?.trim() || null,
+              email: email?.trim() || null,
+              phone: phone?.trim() || null,
+              notes: notes?.trim() || null,
+              source_type: 'import'
+            });
+          }
+        }
+
+        if (journalistsToInsert.length > 0) {
+          const { error } = await supabase
+            .from("journalists")
+            .insert(journalistsToInsert);
+
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: "Import réussi !",
+            description: `${journalistsToInsert.length} journaliste(s) importé(s)`,
+          });
+          fetchJournalists();
+        } else {
+          toast({
+            title: "Fichier vide",
+            description: "Aucun journaliste trouvé dans le fichier",
+            variant: "destructive"
+          });
+        }
+      } catch (error: any) {
+        console.error("Import error:", error);
+        toast({
+          title: "Erreur d'import",
+          description: error.message || "Une erreur est survenue lors de l'import",
+          variant: "destructive"
+        });
+      }
+      setIsImporting(false);
+    };
+    reader.readAsText(file);
+    event.target.value = '';
   };
 
   const handleSendEmail = async () => {
@@ -618,6 +707,24 @@ const RelationsPresse = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
+                  {/* Import CSV Button */}
+                  <label className={cn(
+                    "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
+                    isImporting && "opacity-50 cursor-not-allowed"
+                  )}>
+                    <Upload className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">
+                      {isImporting ? "Import..." : "Importer CSV"}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".csv,.txt"
+                      className="hidden"
+                      onChange={handleCsvImport}
+                      disabled={isImporting}
+                    />
+                  </label>
+                  
                   <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
                     {filteredJournalists.length} journaliste{filteredJournalists.length !== 1 ? "s" : ""}
                   </span>
@@ -650,13 +757,15 @@ const RelationsPresse = () => {
               ) : filteredJournalists.length > 0 ? (
                 <div className="bg-card rounded-2xl border border-border overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.2fr_1fr_0.5fr_1.2fr_0.8fr_1fr_60px] gap-4 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className="grid grid-cols-[auto_1.2fr_0.8fr_0.8fr_0.5fr_1fr_0.7fr_1.2fr_0.8fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     <div className="w-10" />
                     <div>Contact</div>
                     <div>Média</div>
+                    <div>Poste</div>
                     <div>LinkedIn</div>
                     <div>Email</div>
                     <div>Téléphone</div>
+                    <div>Commentaire</div>
                     <div>Source</div>
                     <div className="text-center">Sélect.</div>
                   </div>
@@ -668,7 +777,7 @@ const RelationsPresse = () => {
                         key={journalist.id}
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
-                          "w-full grid grid-cols-[auto_1.2fr_1fr_0.5fr_1.2fr_0.8fr_1fr_60px] gap-4 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          "w-full grid grid-cols-[auto_1.2fr_0.8fr_0.8fr_0.5fr_1fr_0.7fr_1.2fr_0.8fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
                           journalist.selected && "bg-primary/5"
                         )}
                       >
@@ -693,6 +802,18 @@ const RelationsPresse = () => {
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 truncate">
                               <Newspaper className="w-3 h-3 flex-shrink-0" />
                               {journalist.media}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                        
+                        {/* Job - Poste */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.job ? (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 text-xs font-medium truncate">
+                              <Briefcase className="w-3 h-3 flex-shrink-0" />
+                              {journalist.job}
                             </span>
                           ) : (
                             <span className="text-sm text-muted-foreground/50">—</span>
@@ -734,6 +855,18 @@ const RelationsPresse = () => {
                           )}
                         </div>
                         
+                        {/* Notes - Commentaire */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.notes ? (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs truncate" title={journalist.notes}>
+                              <MessageSquare className="w-3 h-3 flex-shrink-0" />
+                              {journalist.notes.length > 30 ? journalist.notes.slice(0, 30) + "..." : journalist.notes}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                        
                         {/* Source */}
                         <div className="flex items-center min-w-0">
                           {journalist.source_type === "competitor" && journalist.competitor_name ? (
@@ -745,6 +878,11 @@ const RelationsPresse = () => {
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-medium">
                               <Zap className="w-3 h-3" />
                               Socialy
+                            </span>
+                          ) : journalist.source_type === "import" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-teal-500/15 text-teal-600 text-xs font-medium">
+                              <Upload className="w-3 h-3" />
+                              Import
                             </span>
                           ) : (
                             <span className="text-sm text-muted-foreground/50">—</span>

@@ -127,6 +127,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          job: string | null
           linkedin: string | null
           media: string | null
           name: string
@@ -142,6 +143,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          job?: string | null
           linkedin?: string | null
           media?: string | null
           name: string
@@ -157,6 +159,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          job?: string | null
           linkedin?: string | null
           media?: string | null
           name?: string
