@@ -12,26 +12,29 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocation, useNavigate } from "react-router-dom";
 import socialyLogo from "@/assets/socialy-logo.png";
 
 interface MenuItem {
   icon: React.ElementType;
   label: string;
-  active?: boolean;
+  path: string;
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutGrid, label: "Accueil", active: true },
-  { icon: Briefcase, label: "Studio" },
-  { icon: ListTodo, label: "Concurrent" },
-  { icon: Globe, label: "Dashboard" },
-  { icon: Clock, label: "Création" },
-  { icon: Users2, label: "Resource mgmt" },
-  { icon: UserCog, label: "Users" },
-  { icon: FileText, label: "Project template" },
-  { icon: Settings, label: "Menu settings" },
+  { icon: LayoutGrid, label: "Accueil", path: "/dashboard" },
+  { icon: Newspaper, label: "Relations Presse", path: "/relations-presse" },
+  { icon: Briefcase, label: "Studio", path: "/studio" },
+  { icon: ListTodo, label: "Concurrent", path: "/concurrent" },
+  { icon: Globe, label: "Dashboard", path: "/analytics" },
+  { icon: Clock, label: "Création", path: "/creation" },
+  { icon: Users2, label: "Resource mgmt", path: "/resources" },
+  { icon: UserCog, label: "Users", path: "/users" },
+  { icon: FileText, label: "Project template", path: "/templates" },
+  { icon: Settings, label: "Menu settings", path: "/settings" },
 ];
 
 interface SidebarProps {
@@ -40,6 +43,10 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPath = location.pathname;
+
   return (
     <aside
       className={cn(
@@ -99,27 +106,31 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       {/* Navigation Menu */}
       <nav className="flex-1 px-3 overflow-y-auto scrollbar-hide">
         <ul className="space-y-1">
-          {menuItems.map((item, index) => (
-            <li key={index}>
-              <button
-                className={cn(
-                  "w-full flex items-center gap-3 py-3 rounded-xl transition-all duration-200",
-                  collapsed ? "px-3 justify-center" : "px-4",
-                  item.active
-                    ? "bg-card/10 text-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
-                )}
-              >
-                <item.icon className={cn("w-5 h-5 flex-shrink-0", item.active && "text-primary")} />
-                {!collapsed && (
-                  <span className="text-sm font-medium">{item.label}</span>
-                )}
-                {item.active && !collapsed && (
-                  <div className="ml-auto w-2 h-2 rounded-full bg-primary" />
-                )}
-              </button>
-            </li>
-          ))}
+          {menuItems.map((item, index) => {
+            const isActive = currentPath === item.path;
+            return (
+              <li key={index}>
+                <button
+                  onClick={() => navigate(item.path)}
+                  className={cn(
+                    "w-full flex items-center gap-3 py-3 rounded-xl transition-all duration-200",
+                    collapsed ? "px-3 justify-center" : "px-4",
+                    isActive
+                      ? "bg-card/10 text-primary"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+                  )}
+                >
+                  <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+                  {!collapsed && (
+                    <span className="text-sm font-medium">{item.label}</span>
+                  )}
+                  {isActive && !collapsed && (
+                    <div className="ml-auto w-2 h-2 rounded-full bg-primary" />
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
