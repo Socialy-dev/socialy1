@@ -157,6 +157,60 @@ export type Database = {
         }
         Relationships: []
       }
+      socialy_articles: {
+        Row: {
+          article_date: string | null
+          article_iso_date: string | null
+          authors: string | null
+          created_at: string
+          id: string
+          link: string
+          position: number | null
+          snippet: string | null
+          source_icon: string | null
+          source_name: string | null
+          thumbnail: string | null
+          thumbnail_small: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          created_at?: string
+          id?: string
+          link: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          created_at?: string
+          id?: string
+          link?: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
