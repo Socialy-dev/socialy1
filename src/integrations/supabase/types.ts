@@ -58,7 +58,7 @@ export type Database = {
           agency_id: string
           article_date: string | null
           article_iso_date: string | null
-          authors: string[] | null
+          authors: string | null
           created_at: string
           id: string
           link: string
@@ -76,7 +76,7 @@ export type Database = {
           agency_id: string
           article_date?: string | null
           article_iso_date?: string | null
-          authors?: string[] | null
+          authors?: string | null
           created_at?: string
           id?: string
           link: string
@@ -94,7 +94,7 @@ export type Database = {
           agency_id?: string
           article_date?: string | null
           article_iso_date?: string | null
-          authors?: string[] | null
+          authors?: string | null
           created_at?: string
           id?: string
           link?: string
