@@ -35,6 +35,18 @@ interface Article {
   agency_id: string;
 }
 
+interface SocialyArticle {
+  id: string;
+  title: string;
+  link: string;
+  thumbnail: string | null;
+  source_name: string | null;
+  source_icon: string | null;
+  authors: string | null;
+  article_date: string | null;
+  snippet: string | null;
+}
+
 interface Agency {
   id: string;
   name: string;
@@ -62,10 +74,12 @@ const mockJournalists: Journalist[] = [
 ];
 
 export const ProjectSummary = () => {
-  const [activeSubTab, setActiveSubTab] = useState("concurrent");
+  const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
+  const [socialyArticles, setSocialyArticles] = useState<SocialyArticle[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingSocialy, setIsLoadingSocialy] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
   const [journalists, setJournalists] = useState<Journalist[]>(mockJournalists);
@@ -78,6 +92,7 @@ export const ProjectSummary = () => {
   useEffect(() => {
     fetchAgencies();
     fetchArticles();
+    fetchSocialyArticles();
   }, []);
 
   const fetchAgencies = async () => {
@@ -107,6 +122,23 @@ export const ProjectSummary = () => {
       }
     }
     setIsLoading(false);
+  };
+
+  const fetchSocialyArticles = async () => {
+    setIsLoadingSocialy(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from("socialy_articles")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("article_iso_date", { ascending: false });
+
+      if (!error && data) {
+        setSocialyArticles(data);
+      }
+    }
+    setIsLoadingSocialy(false);
   };
 
   const filteredArticles = selectedAgency
@@ -199,17 +231,100 @@ export const ProjectSummary = () => {
 
         {/* SOCIALY TAB */}
         {activeSubTab === "socialy" && (
-          <div className="flex flex-col items-center justify-center py-16 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-5 shadow-lg shadow-primary/25">
-              <Zap className="w-8 h-8 text-primary-foreground" />
+          <div className="space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <p className="text-base font-medium text-foreground flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                Retombées presse de Socialy
+              </p>
+              <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-lg">
+                {socialyArticles.length} article{socialyArticles.length !== 1 ? "s" : ""}
+              </span>
             </div>
-            <h4 className="text-xl font-bold text-foreground">Vos retombées presse</h4>
-            <p className="text-base text-muted-foreground mt-2 text-center max-w-md">
-              Retrouvez ici tous les articles où votre marque est mentionnée
-            </p>
-            <span className="mt-6 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold">
-              Configuration requise
-            </span>
+
+            {/* Articles List */}
+            {isLoadingSocialy ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
+                    <div className="w-24 h-20 bg-secondary rounded-xl flex-shrink-0" />
+                    <div className="flex-1 space-y-3">
+                      <div className="h-5 bg-secondary rounded w-3/4" />
+                      <div className="h-4 bg-secondary rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : socialyArticles.length > 0 ? (
+              <div className="space-y-3 max-h-[320px] overflow-y-auto scrollbar-hide">
+                {socialyArticles.map((article) => (
+                  <a
+                    key={article.id}
+                    href={article.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-24 h-20 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
+                      {article.thumbnail ? (
+                        <img
+                          src={article.thumbnail}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                          <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2">
+                        <ExternalLink className="w-4 h-4 text-background" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <h4 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                        {article.title}
+                      </h4>
+                      
+                      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
+                          <Zap className="w-3 h-3" />
+                          Socialy
+                        </span>
+                        {article.source_name && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                            {article.source_icon && (
+                              <img src={article.source_icon} alt="" className="w-4 h-4 rounded" />
+                            )}
+                            {article.source_name}
+                          </span>
+                        )}
+                        {article.article_date && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(article.article_date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-14 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-5 shadow-lg shadow-primary/25">
+                  <Zap className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <h4 className="text-xl font-bold text-foreground">Vos retombées presse</h4>
+                <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">
+                  Aucun article trouvé. Configurez votre veille pour voir les mentions de Socialy.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
