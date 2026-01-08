@@ -13,15 +13,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Newspaper,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import socialyLogo from "@/assets/socialy-logo.png";
 
 interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  adminOnly?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -35,6 +38,7 @@ const menuItems: MenuItem[] = [
   { icon: UserCog, label: "Users", path: "/users" },
   { icon: FileText, label: "Project template", path: "/templates" },
   { icon: Settings, label: "Menu settings", path: "/settings" },
+  { icon: Shield, label: "Administration", path: "/admin", adminOnly: true },
 ];
 
 interface SidebarProps {
@@ -45,7 +49,13 @@ interface SidebarProps {
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const currentPath = location.pathname;
+
+  // Filter menu items based on admin status
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   return (
     <aside
@@ -106,7 +116,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       {/* Navigation Menu */}
       <nav className="flex-1 px-3 overflow-y-auto scrollbar-hide">
         <ul className="space-y-1">
-          {menuItems.map((item, index) => {
+          {visibleMenuItems.map((item, index) => {
             const isActive = currentPath === item.path;
             return (
               <li key={index}>
