@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_resources: {
+        Row: {
+          content: string | null
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          name: string
+          type: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          type: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       competitor_agencies: {
         Row: {
           created_at: string
