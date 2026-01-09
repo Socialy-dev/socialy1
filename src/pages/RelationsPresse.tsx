@@ -124,8 +124,8 @@ const RelationsPresse = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
-  const [emailAttachment, setEmailAttachment] = useState<File | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -518,7 +518,7 @@ const RelationsPresse = () => {
     setShowEmailModal(false);
     setEmailSubject("");
     setEmailMessage("");
-    setEmailAttachment(null);
+    setSelectedResource(null);
     setJournalists(journalists.map((j) => ({ ...j, selected: false })));
     setIsSending(false);
   };
@@ -1385,16 +1385,18 @@ const RelationsPresse = () => {
         </div>
       )}
 
-      {/* Email Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
-            onClick={() => setShowEmailModal(false)}
+            onClick={() => {
+              setShowEmailModal(false);
+              setSelectedResource(null);
+            }}
           />
 
-          <div className="relative w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
+          <div className="relative w-full max-w-3xl bg-card rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Mail className="w-6 h-6 text-primary" />
@@ -1407,64 +1409,124 @@ const RelationsPresse = () => {
                 </div>
               </div>
               <button
-                onClick={() => setShowEmailModal(false)}
+                onClick={() => {
+                  setShowEmailModal(false);
+                  setSelectedResource(null);
+                }}
                 className="w-10 h-10 rounded-full hover:bg-secondary flex items-center justify-center transition-colors"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block">Sujet</label>
-                <input
-                  type="text"
-                  value={emailSubject}
-                  onChange={(e) => setEmailSubject(e.target.value)}
-                  placeholder="Sujet de votre communiqué..."
-                  className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block">Message</label>
-                <textarea
-                  value={emailMessage}
-                  onChange={(e) => setEmailMessage(e.target.value)}
-                  placeholder="Rédigez votre communiqué de presse..."
-                  rows={8}
-                  className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block">Pièce jointe</label>
-                <label className="flex items-center gap-3 px-4 py-3 rounded-xl bg-secondary/50 border border-dashed border-border hover:border-primary/40 cursor-pointer transition-all">
-                  <Paperclip className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {emailAttachment ? emailAttachment.name : "Ajouter un communiqué PDF..."}
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    className="hidden"
-                    onChange={(e) => setEmailAttachment(e.target.files?.[0] || null)}
-                  />
+                <label className="text-sm font-semibold text-foreground mb-3 block">
+                  Sélectionnez un communiqué de presse
                 </label>
+                
+                {resources.filter(r => r.type === "communique").length === 0 ? (
+                  <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
+                    <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">Aucun communiqué disponible</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Créez-en un dans l'onglet Ressources
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {resources.filter(r => r.type === "communique").map((resource) => (
+                      <button
+                        key={resource.id}
+                        onClick={() => setSelectedResource(resource)}
+                        className={cn(
+                          "group relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
+                          selectedResource?.id === resource.id
+                            ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                            : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={cn(
+                            "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                            selectedResource?.id === resource.id
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-primary/10 text-primary group-hover:bg-primary/20"
+                          )}>
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm text-foreground truncate">
+                              {resource.name}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-2">
+                              {resource.file_url && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-600 text-[10px] font-medium">
+                                  PDF
+                                </span>
+                              )}
+                              {resource.content && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 text-[10px] font-medium">
+                                  TXT
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {selectedResource?.id === resource.id && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {selectedResource && (
+                <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="h-px bg-border" />
+                  
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-2 block">Objet</label>
+                    <input
+                      type="text"
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Objet de votre email..."
+                      className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-foreground mb-2 block">Message</label>
+                    <textarea
+                      value={emailMessage}
+                      onChange={(e) => setEmailMessage(e.target.value)}
+                      placeholder="Rédigez le message qui accompagne votre communiqué..."
+                      rows={6}
+                      className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground resize-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-secondary/30">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-secondary/30 flex-shrink-0">
               <button
-                onClick={() => setShowEmailModal(false)}
+                onClick={() => {
+                  setShowEmailModal(false);
+                  setSelectedResource(null);
+                }}
                 className="px-5 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all font-medium"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSendEmail}
-                disabled={isSending}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25 disabled:opacity-50"
+                disabled={isSending || !selectedResource}
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
                   <>
