@@ -196,7 +196,8 @@ export type Database = {
       generated_posts_linkedin: {
         Row: {
           created_at: string
-          generated_content: string | null
+          generated_content_v1: string | null
+          generated_content_v2: string | null
           id: string
           objective: string | null
           request_id: string
@@ -208,7 +209,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          generated_content?: string | null
+          generated_content_v1?: string | null
+          generated_content_v2?: string | null
           id?: string
           objective?: string | null
           request_id?: string
@@ -220,7 +222,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          generated_content?: string | null
+          generated_content_v1?: string | null
+          generated_content_v2?: string | null
           id?: string
           objective?: string | null
           request_id?: string
