@@ -5,8 +5,6 @@ import { cn } from "@/lib/utils";
 import { 
   Linkedin, 
   FileText, 
-  Palette, 
-  Video, 
   ChevronRight,
   Eye,
   ThumbsUp,
@@ -18,10 +16,13 @@ import {
   Share2,
   BarChart3,
   ArrowUpRight,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-type ContentType = "linkedin" | "brief" | "visual" | "video";
+type ContentType = "linkedin" | "brief";
 type ViewMode = "menu" | "form";
 
 interface Tab {
@@ -32,9 +33,7 @@ interface Tab {
 
 const tabs: Tab[] = [
   { id: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { id: "brief", label: "Brief Client", icon: FileText },
-  { id: "visual", label: "Création Visuelle", icon: Palette },
-  { id: "video", label: "Création Vidéo", icon: Video },
+  { id: "brief", label: "Communiqué de Presse", icon: FileText },
 ];
 
 // Mock data for LinkedIn stats
@@ -101,11 +100,39 @@ const GrowthMarketing = () => {
   };
 
   const handleGeneratePost = async () => {
+    if (!postSubject.trim()) {
+      toast.error("Veuillez entrer un sujet pour le post");
+      return;
+    }
+
     setIsGenerating(true);
-    // TODO: Integrate with AI
-    setTimeout(() => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Vous devez être connecté pour générer un post");
+        return;
+      }
+
+      const response = await supabase.functions.invoke("generate-linkedin-post", {
+        body: {
+          subject: postSubject,
+          objective: postObjective,
+          tone: postTone,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast.success("Post généré avec succès !");
+      console.log("Generated post data:", response.data);
+    } catch (error) {
+      console.error("Error generating post:", error);
+      toast.error("Erreur lors de la génération du post");
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const filteredPosts = postFilter === "all" 
@@ -123,21 +150,9 @@ const GrowthMarketing = () => {
         };
       case "brief":
         return {
-          title: "Brief Client",
-          description: "Document de cadrage",
+          title: "Communiqué de Presse",
+          description: "Générer un communiqué",
           icon: FileText
-        };
-      case "visual":
-        return {
-          title: "Création Visuelle",
-          description: "Visuels & créations",
-          icon: Palette
-        };
-      case "video":
-        return {
-          title: "Création Vidéo",
-          description: "Vidéos générées par IA",
-          icon: Video
         };
     }
   };
@@ -159,38 +174,38 @@ const GrowthMarketing = () => {
       >
         <Header showTitle={false} />
         
+        {/* Tabs - Above the glass card */}
+        <div className="flex items-center gap-2 mb-6">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setViewMode("menu");
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                  isActive
+                    ? "bg-foreground text-background border-foreground shadow-sm"
+                    : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Page Container */}
         <div className="glass-card rounded-2xl p-8">
           {/* Header - Title only, no icon */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground">Growth Marketing</h1>
             <p className="text-muted-foreground text-sm mt-1">Analysez vos performances et créez du contenu impactant</p>
-          </div>
-
-          {/* Tabs - Above content */}
-          <div className="flex items-center gap-2 mb-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setViewMode("menu");
-                  }}
-                  className={cn(
-                    "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
-                    isActive
-                      ? "bg-foreground text-background border-foreground shadow-sm"
-                      : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
           </div>
 
           {/* Main Content Grid */}
@@ -265,35 +280,6 @@ const GrowthMarketing = () => {
                 </div>
               )}
 
-              {activeTab === "visual" && (
-                <div className="bg-card rounded-2xl border border-border p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-foreground/5 flex items-center justify-center">
-                      <Palette className="w-5 h-5 text-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Créations Visuelles</h3>
-                      <p className="text-xs text-muted-foreground">Visuels générés par IA</p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm">Aucune création visuelle pour le moment.</p>
-                </div>
-              )}
-
-              {activeTab === "video" && (
-                <div className="bg-card rounded-2xl border border-border p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-foreground/5 flex items-center justify-center">
-                      <Video className="w-5 h-5 text-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Créations Vidéo</h3>
-                      <p className="text-xs text-muted-foreground">Vidéos générées par IA</p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm">Aucune création vidéo pour le moment.</p>
-                </div>
-              )}
 
               {/* Posts List - Only for LinkedIn */}
               {activeTab === "linkedin" && (
@@ -465,7 +451,7 @@ const GrowthMarketing = () => {
                               : "bg-foreground text-background hover:bg-foreground/90"
                           )}
                         >
-                          <Sparkles className="w-4 h-4" />
+                          {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
                           {isGenerating ? "Génération en cours..." : "Générer le post"}
                         </button>
                       </div>
@@ -515,23 +501,6 @@ const GrowthMarketing = () => {
                       </div>
                     )}
 
-                    {(activeTab === "visual" || activeTab === "video") && (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <div className="w-14 h-14 rounded-2xl bg-secondary/50 flex items-center justify-center mb-4">
-                          {activeTab === "visual" ? (
-                            <Palette className="w-7 h-7 text-muted-foreground" />
-                          ) : (
-                            <Video className="w-7 h-7 text-muted-foreground" />
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Fonctionnalité à venir
-                        </p>
-                        <p className="text-xs text-muted-foreground/70 mt-1">
-                          Cette section sera bientôt disponible
-                        </p>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
