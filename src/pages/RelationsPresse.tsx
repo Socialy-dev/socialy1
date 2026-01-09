@@ -117,7 +117,7 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading: authLoading, role } = useAuth();
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -168,12 +168,14 @@ const RelationsPresse = () => {
   }, [navigate]);
 
   useEffect(() => {
+    if (authLoading) return;
+    console.log("[RelationsPresse] Fetching data with isAdmin:", isAdmin, "role:", role);
     fetchAgencies();
     fetchArticles();
     fetchSocialyArticles();
     fetchJournalists();
     fetchCommuniques();
-  }, [isAdmin]);
+  }, [isAdmin, authLoading]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -232,12 +234,14 @@ const RelationsPresse = () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    console.log("[fetchSocialyArticles] isAdmin:", isAdmin, "user:", user?.id);
     if (user) {
       let query = supabase.from("socialy_articles").select("*");
       if (!isAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
+      console.log("[fetchSocialyArticles] Result:", data?.length, "articles, error:", error);
 
       if (!error && data) {
         setSocialyArticles(data);
