@@ -88,47 +88,18 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     }
 
     try {
-      // Insert the post
-      const { data: postData, error: postError } = await supabase
+      // Insert the post - the database trigger will automatically copy it to documents
+      const { error: postError } = await supabase
         .from("user_linkedin_posts")
         .insert({
           user_id: user.id,
           content: newPost.content,
           post_url: newPost.post_url || null,
-        })
-        .select()
-        .single();
+        });
 
       if (postError) throw postError;
 
-      // Generate embedding via edge function
-      const response = await fetch(
-        `https://lypodfdlpbpjdsswmsni.supabase.co/functions/v1/generate-embedding`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG9kZmRscGJwamRzc3dtc25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4Mzk1MTUsImV4cCI6MjA4MzQxNTUxNX0.T6PH-7MpJ-YpfGO4rym2eCoM-xsgFID7nxvuaVLpelo`,
-          },
-          body: JSON.stringify({
-            content: newPost.content,
-            document_type: "linkedin_post",
-            source_id: postData.id,
-            user_id: user.id,
-            metadata: { post_url: newPost.post_url || null },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Embedding error:", errorData);
-        // Still success for the post, just log embedding error
-        toast.warning("Post ajouté, mais l'indexation a échoué");
-      } else {
-        toast.success("Post LinkedIn ajouté et indexé");
-      }
-
+      toast.success("Post LinkedIn ajouté et indexé");
       setNewPost({ content: "", post_url: "" });
       setShowAddPostForm(false);
       fetchLinkedinPosts();
