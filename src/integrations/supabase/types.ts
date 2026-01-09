@@ -50,6 +50,39 @@ export type Database = {
         }
         Relationships: []
       }
+      communique_presse: {
+        Row: {
+          assets_link: string | null
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          pdf_url: string | null
+          updated_at: string
+          word_url: string | null
+        }
+        Insert: {
+          assets_link?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          pdf_url?: string | null
+          updated_at?: string
+          word_url?: string | null
+        }
+        Update: {
+          assets_link?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          pdf_url?: string | null
+          updated_at?: string
+          word_url?: string | null
+        }
+        Relationships: []
+      }
       competitor_agencies: {
         Row: {
           created_at: string
