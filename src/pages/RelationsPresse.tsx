@@ -757,7 +757,7 @@ const RelationsPresse = () => {
               ) : filteredJournalists.length > 0 ? (
                 <div className="bg-card rounded-2xl border border-border overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.2fr_0.8fr_0.8fr_0.5fr_1fr_0.7fr_1.2fr_0.8fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className="grid grid-cols-[auto_1.2fr_1fr_0.8fr_0.5fr_1fr_0.7fr_1fr_0.8fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     <div className="w-10" />
                     <div>Contact</div>
                     <div>Média</div>
@@ -777,7 +777,7 @@ const RelationsPresse = () => {
                         key={journalist.id}
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
-                          "w-full grid grid-cols-[auto_1.2fr_0.8fr_0.8fr_0.5fr_1fr_0.7fr_1.2fr_0.8fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          "w-full grid grid-cols-[auto_1.2fr_1fr_0.8fr_0.5fr_1fr_0.7fr_1fr_0.8fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
                           journalist.selected && "bg-primary/5"
                         )}
                       >
@@ -799,9 +799,9 @@ const RelationsPresse = () => {
                         {/* Media - Modern Tag */}
                         <div className="flex items-center min-w-0">
                           {journalist.media ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 truncate">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full" title={journalist.media}>
                               <Newspaper className="w-3 h-3 flex-shrink-0" />
-                              {journalist.media}
+                              <span className="truncate">{journalist.media}</span>
                             </span>
                           ) : (
                             <span className="text-sm text-muted-foreground/50">—</span>
