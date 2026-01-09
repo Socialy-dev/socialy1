@@ -53,7 +53,9 @@ const App = () => (
             <Route
               path="/growth-marketing"
               element={
-                <GrowthMarketing />
+                <ProtectedRoute requiredPage="social-media">
+                  <GrowthMarketing />
+                </ProtectedRoute>
               }
             />
             <Route

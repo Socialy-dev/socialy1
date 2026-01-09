@@ -6,8 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const N8N_WEBHOOK_URL = "https://n8n.srv870433.hstgr.cloud/webhook/05a83f28-50c2-4c39-868e-2e018921153b";
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -104,9 +102,22 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
+    const n8nWebhookUrl = Deno.env.get("N8N_WEBHOOK_URL");
+    if (!n8nWebhookUrl) {
+      console.error("N8N_WEBHOOK_URL secret is not configured");
+      await supabaseAdmin
+        .from("generated_posts_linkedin")
+        .update({ status: "error" })
+        .eq("id", insertedPost.id);
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log("Calling n8n webhook for user:", userId, "request_id:", insertedPost.request_id);
 
-    const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
+    const webhookResponse = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
