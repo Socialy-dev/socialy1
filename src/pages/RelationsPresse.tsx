@@ -23,8 +23,16 @@ import {
   Linkedin,
   Upload,
   Briefcase,
-  MessageSquare
+  MessageSquare,
+  Info,
+  Tag
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 
 interface Article {
@@ -62,14 +70,15 @@ interface Journalist {
   id: string;
   name: string;
   media: string | null;
+  media_specialty: string | null;
   job: string | null;
   email: string | null;
   linkedin: string | null;
-  phone: string | null;
   notes: string | null;
   source_type: string | null;
   competitor_name: string | null;
   selected: boolean;
+  isEditingNotes?: boolean;
 }
 
 const subTabs = [
@@ -198,6 +207,32 @@ const RelationsPresse = () => {
   const toggleJournalist = (id: string) => {
     setJournalists(journalists.map(j => 
       j.id === id ? { ...j, selected: !j.selected } : j
+    ));
+  };
+
+  const updateJournalistNotes = async (id: string, notes: string) => {
+    const { error } = await supabase
+      .from("journalists")
+      .update({ notes })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder le commentaire",
+        variant: "destructive"
+      });
+    } else {
+      setJournalists(journalists.map(j => 
+        j.id === id ? { ...j, notes, isEditingNotes: false } : j
+      ));
+    }
+  };
+
+  const startEditingNotes = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setJournalists(journalists.map(j => 
+      j.id === id ? { ...j, isEditingNotes: true } : { ...j, isEditingNotes: false }
     ));
   };
 
@@ -757,14 +792,26 @@ const RelationsPresse = () => {
               ) : filteredJournalists.length > 0 ? (
                 <div className="bg-card rounded-2xl border border-border overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.2fr_1fr_0.8fr_0.5fr_1fr_0.7fr_1fr_0.8fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_1fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     <div className="w-10" />
                     <div>Contact</div>
                     <div>Média</div>
+                    <div className="flex items-center gap-1">
+                      Spécialité
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Spécialité du média (Tech, Mode, Business...)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <div>Poste</div>
                     <div>LinkedIn</div>
                     <div>Email</div>
-                    <div>Téléphone</div>
                     <div>Commentaire</div>
                     <div>Source</div>
                     <div className="text-center">Sélect.</div>
@@ -777,7 +824,7 @@ const RelationsPresse = () => {
                         key={journalist.id}
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
-                          "w-full grid grid-cols-[auto_1.2fr_1fr_0.8fr_0.5fr_1fr_0.7fr_1fr_0.8fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_1fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
                           journalist.selected && "bg-primary/5"
                         )}
                       >
@@ -808,6 +855,18 @@ const RelationsPresse = () => {
                           )}
                         </div>
                         
+                        {/* Media Specialty */}
+                        <div className="flex items-center min-w-0">
+                          {journalist.media_specialty ? (
+                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium" title={journalist.media_specialty}>
+                              <Tag className="w-3 h-3 flex-shrink-0" />
+                              <span className="truncate">{journalist.media_specialty}</span>
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+
                         {/* Job - Poste */}
                         <div className="flex items-center min-w-0">
                           {journalist.job ? (
@@ -846,24 +905,38 @@ const RelationsPresse = () => {
                           )}
                         </div>
                         
-                        {/* Phone */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.phone ? (
-                            <span className="text-sm text-foreground truncate">{journalist.phone}</span>
+                        {/* Notes - Commentaire éditable */}
+                        <div className="flex items-center min-w-0" onClick={(e) => e.stopPropagation()}>
+                          {journalist.isEditingNotes ? (
+                            <input
+                              type="text"
+                              defaultValue={journalist.notes || ""}
+                              autoFocus
+                              className="w-full px-2 py-1 text-sm bg-background border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                              onBlur={(e) => updateJournalistNotes(journalist.id, e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  updateJournalistNotes(journalist.id, e.currentTarget.value);
+                                }
+                                if (e.key === "Escape") {
+                                  setJournalists(journalists.map(j => 
+                                    j.id === journalist.id ? { ...j, isEditingNotes: false } : j
+                                  ));
+                                }
+                              }}
+                            />
                           ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-                        
-                        {/* Notes - Commentaire */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.notes ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs truncate" title={journalist.notes}>
-                              <MessageSquare className="w-3 h-3 flex-shrink-0" />
-                              {journalist.notes.length > 30 ? journalist.notes.slice(0, 30) + "..." : journalist.notes}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
+                            <button
+                              onClick={(e) => startEditingNotes(journalist.id, e)}
+                              className={cn(
+                                "w-full text-left px-2 py-1 rounded-lg transition-colors text-sm",
+                                journalist.notes 
+                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20" 
+                                  : "text-muted-foreground/50 hover:bg-secondary hover:text-foreground"
+                              )}
+                            >
+                              {journalist.notes || "Ajouter..."}
+                            </button>
                           )}
                         </div>
                         
