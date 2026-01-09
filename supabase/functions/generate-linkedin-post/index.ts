@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Secured n8n webhook URL - stored server-side only
 const N8N_WEBHOOK_URL = "https://n8n.srv870433.hstgr.cloud/webhook/05a83f28-50c2-4c39-868e-2e018921153b";
 
 serve(async (req) => {
@@ -15,7 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -25,36 +23,30 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Verify the JWT token
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (claimsError || !claimsData?.claims) {
-      console.error("Auth error:", claimsError);
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Auth error:", userError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = claimsData.claims.sub;
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: "User ID not found" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const userId = user.id;
 
-    // Parse and validate request body
     const body = await req.json();
     const { subject, objective, tone } = body;
 
-    // Validate required fields
     if (!subject || typeof subject !== "string" || subject.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "Subject is required" }),
@@ -62,13 +54,11 @@ serve(async (req) => {
       );
     }
 
-    // Sanitize inputs - limit length and remove potentially harmful characters
     const sanitizedSubject = subject.trim().slice(0, 2000);
     const sanitizedObjective = objective ? String(objective).trim().slice(0, 500) : "";
     const sanitizedTone = tone ? String(tone).trim().slice(0, 200) : "";
 
-    // Fetch user's existing LinkedIn posts for RAG context
-    const { data: userPosts, error: postsError } = await supabase
+    const { data: userPosts, error: postsError } = await supabaseUser
       .from("documents")
       .select("content, metadata")
       .eq("user_id", userId)
@@ -80,13 +70,32 @@ serve(async (req) => {
       console.error("Error fetching user posts:", postsError);
     }
 
-    // Prepare RAG context
     const postsContext = userPosts && userPosts.length > 0
       ? userPosts.map((p) => p.content).join("\n\n---\n\n")
       : "";
 
-    // Call n8n webhook with the data
+    const { data: insertedPost, error: insertError } = await supabaseAdmin
+      .from("generated_posts_linkedin")
+      .insert({
+        user_id: userId,
+        subject: sanitizedSubject,
+        objective: sanitizedObjective,
+        tone: sanitizedTone,
+        status: "pending",
+      })
+      .select("id, request_id")
+      .single();
+
+    if (insertError || !insertedPost) {
+      console.error("Error creating generation record:", insertError);
+      return new Response(
+        JSON.stringify({ error: "Failed to initiate generation" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const webhookPayload = {
+      request_id: insertedPost.request_id,
       user_id: userId,
       subject: sanitizedSubject,
       objective: sanitizedObjective,
@@ -95,7 +104,7 @@ serve(async (req) => {
       timestamp: new Date().toISOString(),
     };
 
-    console.log("Calling n8n webhook for user:", userId);
+    console.log("Calling n8n webhook for user:", userId, "request_id:", insertedPost.request_id);
 
     const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
@@ -108,6 +117,12 @@ serve(async (req) => {
     if (!webhookResponse.ok) {
       const errorText = await webhookResponse.text();
       console.error("n8n webhook error:", webhookResponse.status, errorText);
+      
+      await supabaseAdmin
+        .from("generated_posts_linkedin")
+        .update({ status: "error" })
+        .eq("id", insertedPost.id);
+      
       return new Response(
         JSON.stringify({ error: "Failed to generate post" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -118,7 +133,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
+        success: true,
+        request_id: insertedPost.request_id,
         data: webhookResult 
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
