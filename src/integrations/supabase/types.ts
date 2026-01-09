@@ -58,6 +58,7 @@ export type Database = {
           id: string
           name: string
           pdf_url: string | null
+          status: string
           updated_at: string
           word_url: string | null
         }
@@ -68,6 +69,7 @@ export type Database = {
           id?: string
           name: string
           pdf_url?: string | null
+          status?: string
           updated_at?: string
           word_url?: string | null
         }
@@ -78,6 +80,7 @@ export type Database = {
           id?: string
           name?: string
           pdf_url?: string | null
+          status?: string
           updated_at?: string
           word_url?: string | null
         }

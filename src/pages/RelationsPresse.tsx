@@ -102,7 +102,16 @@ interface Communique {
   word_url: string | null;
   assets_link: string | null;
   created_at: string;
+  status: string;
 }
+
+const STATUS_OPTIONS = [
+  { value: "en_cours", label: "En cours", color: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30" },
+  { value: "envoye", label: "Envoyé", color: "bg-green-500/10 text-green-600 border-green-500/30" },
+  { value: "archive", label: "Archivé", color: "bg-muted text-muted-foreground border-border" },
+];
+
+const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -240,7 +249,13 @@ const RelationsPresse = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCommuniques(data as Communique[]);
+      const sortedData = (data as Communique[]).sort((a, b) => {
+        const orderA = STATUS_ORDER.indexOf(a.status);
+        const orderB = STATUS_ORDER.indexOf(b.status);
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setCommuniques(sortedData);
     } catch (error: any) {
       console.error("Error fetching communiques:", error);
     } finally {
@@ -1159,65 +1174,88 @@ const RelationsPresse = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {communiques.map((communique) => (
-                    <div key={communique.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all border border-border">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                          <FileText className="w-6 h-6 text-primary" />
+                  {communiques.map((communique) => {
+                    const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                    return (
+                      <div key={communique.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all border border-border">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                            <FileText className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={communique.status}
+                              onValueChange={async (newStatus) => {
+                                await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
+                                fetchCommuniques();
+                              }}
+                            >
+                              <SelectTrigger className={cn("h-7 text-xs font-semibold border px-2 py-0.5 w-auto min-w-[90px]", statusInfo.color)}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {STATUS_OPTIONS.map(opt => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteCommunique(communique)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleDeleteCommunique(communique)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+
+                        <h4 className="font-semibold text-foreground mb-3 line-clamp-2">{communique.name}</h4>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {communique.pdf_url && (
+                            <a
+                              href={communique.pdf_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-xs font-semibold"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              PDF
+                            </a>
+                          )}
+                          {communique.word_url && (
+                            <a
+                              href={communique.word_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors text-xs font-semibold"
+                            >
+                              <File className="w-3.5 h-3.5" />
+                              Word
+                            </a>
+                          )}
+                          {communique.assets_link && (
+                            <a
+                              href={communique.assets_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-xs font-semibold"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Assets
+                            </a>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-muted-foreground">
+                          Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
+                        </p>
                       </div>
-
-                      <h4 className="font-semibold text-foreground mb-3 line-clamp-2">{communique.name}</h4>
-
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {communique.pdf_url && (
-                          <a
-                            href={communique.pdf_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-xs font-semibold"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            PDF
-                          </a>
-                        )}
-                        {communique.word_url && (
-                          <a
-                            href={communique.word_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors text-xs font-semibold"
-                          >
-                            <File className="w-3.5 h-3.5" />
-                            Word
-                          </a>
-                        )}
-                        {communique.assets_link && (
-                          <a
-                            href={communique.assets_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-xs font-semibold"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Assets
-                          </a>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-muted-foreground">
-                        Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
