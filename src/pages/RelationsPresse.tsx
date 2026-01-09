@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
-import { 
-  Users2, 
-  UserCircle, 
-  ChevronDown, 
-  ExternalLink, 
+import {
+  Users2,
+  UserCircle,
+  ChevronDown,
+  ExternalLink,
   Calendar,
   Building2,
   Filter,
@@ -32,25 +32,14 @@ import {
   File,
   Trash2,
   Download,
-  Plus
+  Plus,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 
 interface Article {
@@ -116,14 +105,12 @@ interface Resource {
   created_at: string;
 }
 
-const RESOURCE_TYPES = [
-  { value: "communique", label: "Communiqué de presse", icon: FileText },
-];
+const RESOURCE_TYPES = [{ value: "communique", label: "Communiqué de presse", icon: FileText }];
 
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  
+
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
   const [socialyArticles, setSocialyArticles] = useState<SocialyArticle[]>([]);
@@ -142,7 +129,7 @@ const RelationsPresse = () => {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  
+
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoadingResources, setIsLoadingResources] = useState(false);
   const [showAddResourceForm, setShowAddResourceForm] = useState(false);
@@ -156,7 +143,9 @@ const RelationsPresse = () => {
   const [formResourceFile, setFormResourceFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         navigate("/auth");
       }
@@ -181,23 +170,23 @@ const RelationsPresse = () => {
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase
-        .from("journalists")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("name");
+      const { data, error } = await supabase.from("journalists").select("*").eq("user_id", user.id).order("name");
 
       if (!error && data) {
-        setJournalists(data.map(j => ({ ...j, selected: false })));
+        setJournalists(data.map((j) => ({ ...j, selected: false })));
       }
     }
     setIsLoadingJournalists(false);
   };
 
   const fetchAgencies = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { data } = await supabase
         .from("competitor_agencies")
@@ -210,7 +199,9 @@ const RelationsPresse = () => {
 
   const fetchArticles = async () => {
     setIsLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { data, error } = await supabase
         .from("competitor_articles")
@@ -227,7 +218,9 @@ const RelationsPresse = () => {
 
   const fetchSocialyArticles = async () => {
     setIsLoadingSocialy(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
       const { data, error } = await supabase
         .from("socialy_articles")
@@ -282,7 +275,9 @@ const RelationsPresse = () => {
 
     setUploadingResource(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       let fileUrl: string | null = null;
@@ -292,15 +287,11 @@ const RelationsPresse = () => {
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("resources")
-          .upload(filePath, formResourceFile);
+        const { error: uploadError } = await supabase.storage.from("resources").upload(filePath, formResourceFile);
 
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from("resources")
-          .getPublicUrl(filePath);
+        const { data: urlData } = supabase.storage.from("resources").getPublicUrl(filePath);
 
         fileUrl = urlData.publicUrl;
       }
@@ -336,10 +327,7 @@ const RelationsPresse = () => {
         }
       }
 
-      const { error } = await supabase
-        .from("admin_resources")
-        .delete()
-        .eq("id", resource.id);
+      const { error } = await supabase.from("admin_resources").delete().eq("id", resource.id);
 
       if (error) throw error;
 
@@ -362,9 +350,8 @@ const RelationsPresse = () => {
     }
   };
 
-  const filteredResources = activeResourceType === "all"
-    ? resources
-    : resources.filter((r) => r.type === activeResourceType);
+  const filteredResources =
+    activeResourceType === "all" ? resources : resources.filter((r) => r.type === activeResourceType);
 
   const getResourceTypeIcon = (type: string) => {
     const found = RESOURCE_TYPES.find((t) => t.value === type);
@@ -376,70 +363,55 @@ const RelationsPresse = () => {
     return found ? found.label : type;
   };
 
-  const filteredArticles = selectedAgency
-    ? articles.filter(a => a.agency_id === selectedAgency)
-    : articles;
+  const filteredArticles = selectedAgency ? articles.filter((a) => a.agency_id === selectedAgency) : articles;
 
   const selectedAgencyName = selectedAgency
-    ? agencies.find(a => a.id === selectedAgency)?.name
+    ? agencies.find((a) => a.id === selectedAgency)?.name
     : "Tous les concurrents";
 
   const toggleJournalist = (id: string) => {
-    setJournalists(journalists.map(j => 
-      j.id === id ? { ...j, selected: !j.selected } : j
-    ));
+    setJournalists(journalists.map((j) => (j.id === id ? { ...j, selected: !j.selected } : j)));
   };
 
   const updateJournalistNotes = async (id: string, notes: string) => {
-    const { error } = await supabase
-      .from("journalists")
-      .update({ notes })
-      .eq("id", id);
+    const { error } = await supabase.from("journalists").update({ notes }).eq("id", id);
 
     if (error) {
       toast({
         title: "Erreur",
         description: "Impossible de sauvegarder le commentaire",
-        variant: "destructive"
+        variant: "destructive",
       });
     } else {
-      setJournalists(journalists.map(j => 
-        j.id === id ? { ...j, notes, isEditingNotes: false } : j
-      ));
+      setJournalists(journalists.map((j) => (j.id === id ? { ...j, notes, isEditingNotes: false } : j)));
     }
   };
 
   const startEditingNotes = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setJournalists(journalists.map(j => 
-      j.id === id ? { ...j, isEditingNotes: true } : { ...j, isEditingNotes: false }
-    ));
+    setJournalists(
+      journalists.map((j) => (j.id === id ? { ...j, isEditingNotes: true } : { ...j, isEditingNotes: false })),
+    );
   };
 
-  const selectedJournalists = journalists.filter(j => j.selected);
+  const selectedJournalists = journalists.filter((j) => j.selected);
 
   // Get unique medias for filter dropdown (sanitized)
   const uniqueMedias = Array.from(
-    new Set(
-      journalists
-        .map(j => j.media)
-        .filter((m): m is string => m !== null && m.trim() !== "")
-    )
-  ).sort((a, b) => a.localeCompare(b, 'fr'));
+    new Set(journalists.map((j) => j.media).filter((m): m is string => m !== null && m.trim() !== "")),
+  ).sort((a, b) => a.localeCompare(b, "fr"));
 
   // Filter journalists by selected media
-  const filteredJournalists = selectedMedia
-    ? journalists.filter(j => j.media === selectedMedia)
-    : journalists;
+  const filteredJournalists = selectedMedia ? journalists.filter((j) => j.media === selectedMedia) : journalists;
 
   const selectedMediaLabel = selectedMedia || "Tous les médias";
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", { 
-      day: "numeric", 
-      month: "short"
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
     });
   };
 
@@ -448,12 +420,14 @@ const RelationsPresse = () => {
     if (!file) return;
 
     setIsImporting(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       toast({
         title: "Erreur",
         description: "Vous devez être connecté pour importer des journalistes",
-        variant: "destructive"
+        variant: "destructive",
       });
       setIsImporting(false);
       return;
@@ -463,21 +437,19 @@ const RelationsPresse = () => {
     reader.onload = async (e) => {
       try {
         const text = e.target?.result as string;
-        const lines = text.split('\n').filter(line => line.trim());
-        
+        const lines = text.split("\n").filter((line) => line.trim());
+
         // Skip header row and parse data
         const dataLines = lines.slice(1);
         const journalistsToInsert = [];
 
         for (const line of dataLines) {
           // Parse CSV, handling potential commas within quoted fields
-          const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => 
-            v.replace(/^"|"$/g, '').trim()
-          ) || [];
-          
+          const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v) => v.replace(/^"|"$/g, "").trim()) || [];
+
           // Expected format: Media, Contact, Poste, Email, Tel direct, Commentaire
           const [media, name, job, email, phone, notes] = values;
-          
+
           if (name && name.trim()) {
             journalistsToInsert.push({
               user_id: user.id,
@@ -487,15 +459,13 @@ const RelationsPresse = () => {
               email: email?.trim() || null,
               phone: phone?.trim() || null,
               notes: notes?.trim() || null,
-              source_type: 'import'
+              source_type: "import",
             });
           }
         }
 
         if (journalistsToInsert.length > 0) {
-          const { error } = await supabase
-            .from("journalists")
-            .insert(journalistsToInsert);
+          const { error } = await supabase.from("journalists").insert(journalistsToInsert);
 
           if (error) {
             throw error;
@@ -510,7 +480,7 @@ const RelationsPresse = () => {
           toast({
             title: "Fichier vide",
             description: "Aucun journaliste trouvé dans le fichier",
-            variant: "destructive"
+            variant: "destructive",
           });
         }
       } catch (error: any) {
@@ -518,13 +488,13 @@ const RelationsPresse = () => {
         toast({
           title: "Erreur d'import",
           description: error.message || "Une erreur est survenue lors de l'import",
-          variant: "destructive"
+          variant: "destructive",
         });
       }
       setIsImporting(false);
     };
     reader.readAsText(file);
-    event.target.value = '';
+    event.target.value = "";
   };
 
   const handleSendEmail = async () => {
@@ -532,14 +502,14 @@ const RelationsPresse = () => {
       toast({
         title: "Champs requis",
         description: "Veuillez remplir le sujet et le message",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setIsSending(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     toast({
       title: "Communiqué envoyé !",
       description: `Email envoyé à ${selectedJournalists.length} journaliste(s)`,
@@ -549,22 +519,17 @@ const RelationsPresse = () => {
     setEmailSubject("");
     setEmailMessage("");
     setEmailAttachment(null);
-    setJournalists(journalists.map(j => ({ ...j, selected: false })));
+    setJournalists(journalists.map((j) => ({ ...j, selected: false })));
     setIsSending(false);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
-      <main
-        className={cn(
-          "min-h-screen p-8 content-transition",
-          sidebarCollapsed ? "ml-20" : "ml-64"
-        )}
-      >
+
+      <main className={cn("min-h-screen p-8 content-transition", sidebarCollapsed ? "ml-20" : "ml-64")}>
         <Header />
-        
+
         {/* Full Page Relations Presse */}
         <div className="glass-card rounded-2xl p-8">
           {/* Header with title and sub-tabs */}
@@ -575,10 +540,12 @@ const RelationsPresse = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Relations Presse</h1>
-                <p className="text-muted-foreground text-sm mt-1">Gérez vos retombées presse et vos contacts journalistes</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Gérez vos retombées presse et vos contacts journalistes
+                </p>
               </div>
             </div>
-            
+
             {/* Sub-tabs */}
             <div className="flex items-center gap-2 p-2 bg-secondary/50 rounded-xl">
               {subTabs.map((tab) => {
@@ -592,7 +559,7 @@ const RelationsPresse = () => {
                       "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200",
                       isActive
                         ? "bg-foreground text-background shadow-md"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -618,7 +585,7 @@ const RelationsPresse = () => {
 
               {isLoadingSocialy ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
                       <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
                       <div className="flex-1 space-y-3">
@@ -659,7 +626,7 @@ const RelationsPresse = () => {
                         <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
                           {article.title}
                         </h4>
-                        
+
                         <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
                             <Zap className="w-3 h-3" />
@@ -709,10 +676,12 @@ const RelationsPresse = () => {
                   >
                     <Filter className="w-4 h-4 text-primary" />
                     <span className="text-sm font-semibold text-foreground">{selectedAgencyName}</span>
-                    <ChevronDown className={cn(
-                      "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                      showAgencyDropdown && "rotate-180"
-                    )} />
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                        showAgencyDropdown && "rotate-180",
+                      )}
+                    />
                   </button>
 
                   {showAgencyDropdown && (
@@ -725,19 +694,17 @@ const RelationsPresse = () => {
                           }}
                           className={cn(
                             "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                            !selectedAgency 
-                              ? "bg-primary/10 text-primary" 
-                              : "text-foreground hover:bg-secondary"
+                            !selectedAgency ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
                           )}
                         >
                           <Users2 className="w-5 h-5" />
                           Tous les concurrents
                           {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
                         </button>
-                        
+
                         {agencies.length > 0 && <div className="border-t border-border my-2" />}
-                        
-                        {agencies.map(agency => (
+
+                        {agencies.map((agency) => (
                           <button
                             key={agency.id}
                             onClick={() => {
@@ -746,9 +713,9 @@ const RelationsPresse = () => {
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              selectedAgency === agency.id 
-                                ? "bg-primary/10 text-primary" 
-                                : "text-foreground hover:bg-secondary"
+                              selectedAgency === agency.id
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground hover:bg-secondary",
                             )}
                           >
                             <Building2 className="w-5 h-5" />
@@ -768,7 +735,7 @@ const RelationsPresse = () => {
 
               {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
                       <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
                       <div className="flex-1 space-y-3">
@@ -809,7 +776,7 @@ const RelationsPresse = () => {
                         <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
                           {article.title}
                         </h4>
-                        
+
                         <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                           {article.competitor_name && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
@@ -859,7 +826,7 @@ const RelationsPresse = () => {
                     <UserCircle className="w-5 h-5 text-primary" />
                     Vos contacts journalistes
                   </p>
-                  
+
                   {/* Media Filter Dropdown */}
                   <div className="relative">
                     <button
@@ -868,10 +835,12 @@ const RelationsPresse = () => {
                     >
                       <Filter className="w-4 h-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">{selectedMediaLabel}</span>
-                      <ChevronDown className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                        showMediaDropdown && "rotate-180"
-                      )} />
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                          showMediaDropdown && "rotate-180",
+                        )}
+                      />
                     </button>
 
                     {showMediaDropdown && (
@@ -884,19 +853,17 @@ const RelationsPresse = () => {
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              !selectedMedia 
-                                ? "bg-primary/10 text-primary" 
-                                : "text-foreground hover:bg-secondary"
+                              !selectedMedia ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
                             )}
                           >
                             <Newspaper className="w-5 h-5" />
                             Tous les médias
                             {!selectedMedia && <Check className="w-5 h-5 ml-auto" />}
                           </button>
-                          
+
                           {uniqueMedias.length > 0 && <div className="border-t border-border my-2" />}
-                          
-                          {uniqueMedias.map(media => (
+
+                          {uniqueMedias.map((media) => (
                             <button
                               key={media}
                               onClick={() => {
@@ -905,9 +872,9 @@ const RelationsPresse = () => {
                               }}
                               className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                                selectedMedia === media 
-                                  ? "bg-primary/10 text-primary" 
-                                  : "text-foreground hover:bg-secondary"
+                                selectedMedia === media
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-foreground hover:bg-secondary",
                               )}
                             >
                               <Newspaper className="w-5 h-5" />
@@ -920,13 +887,15 @@ const RelationsPresse = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
                   {/* Import CSV Button */}
-                  <label className={cn(
-                    "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
-                    isImporting && "opacity-50 cursor-not-allowed"
-                  )}>
+                  <label
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
+                      isImporting && "opacity-50 cursor-not-allowed",
+                    )}
+                  >
                     <Upload className="w-4 h-4 text-primary" />
                     <span className="text-sm font-medium text-foreground">
                       {isImporting ? "Import..." : "Importer CSV"}
@@ -939,7 +908,7 @@ const RelationsPresse = () => {
                       disabled={isImporting}
                     />
                   </label>
-                  
+
                   <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
                     {filteredJournalists.length} journaliste{filteredJournalists.length !== 1 ? "s" : ""}
                   </span>
@@ -957,8 +926,11 @@ const RelationsPresse = () => {
 
               {isLoadingJournalists ? (
                 <div className="bg-secondary/30 rounded-2xl overflow-hidden">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-b-0 animate-pulse">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-b-0 animate-pulse"
+                    >
                       <div className="w-10 h-10 bg-secondary rounded-full flex-shrink-0" />
                       <div className="flex-1 space-y-2">
                         <div className="h-4 bg-secondary rounded w-1/4" />
@@ -995,7 +967,7 @@ const RelationsPresse = () => {
                     <div>Commentaire</div>
                     <div className="text-center">Sélect.</div>
                   </div>
-                  
+
                   {/* Table Body */}
                   <div className="divide-y divide-border/50">
                     {filteredJournalists.map((journalist) => (
@@ -1004,28 +976,35 @@ const RelationsPresse = () => {
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
                           "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
-                          journalist.selected && "bg-primary/5"
+                          journalist.selected && "bg-primary/5",
                         )}
                       >
                         {/* Avatar */}
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
-                          journalist.selected
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-foreground"
-                        )}>
-                          {journalist.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
+                            journalist.selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
+                          )}
+                        >
+                          {journalist.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)}
                         </div>
-                        
+
                         {/* Contact Name */}
                         <div className="flex items-center min-w-0">
                           <span className="font-semibold text-foreground truncate">{journalist.name}</span>
                         </div>
-                        
+
                         {/* Media - Modern Tag */}
                         <div className="flex items-center min-w-0">
                           {journalist.media ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full" title={journalist.media}>
+                            <span
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full"
+                              title={journalist.media}
+                            >
                               <Newspaper className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{journalist.media}</span>
                             </span>
@@ -1033,11 +1012,14 @@ const RelationsPresse = () => {
                             <span className="text-sm text-muted-foreground/50">—</span>
                           )}
                         </div>
-                        
+
                         {/* Media Specialty */}
                         <div className="flex items-center min-w-0">
                           {journalist.media_specialty ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium" title={journalist.media_specialty}>
+                            <span
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium"
+                              title={journalist.media_specialty}
+                            >
                               <Tag className="w-3 h-3 flex-shrink-0" />
                               <span className="truncate">{journalist.media_specialty}</span>
                             </span>
@@ -1057,7 +1039,7 @@ const RelationsPresse = () => {
                             <span className="text-sm text-muted-foreground/50">—</span>
                           )}
                         </div>
-                        
+
                         {/* LinkedIn */}
                         <div className="flex items-center min-w-0">
                           {journalist.linkedin ? (
@@ -1074,7 +1056,7 @@ const RelationsPresse = () => {
                             <span className="text-sm text-muted-foreground/50">—</span>
                           )}
                         </div>
-                        
+
                         {/* Email */}
                         <div className="flex items-center min-w-0">
                           {journalist.email ? (
@@ -1083,7 +1065,7 @@ const RelationsPresse = () => {
                             <span className="text-sm text-muted-foreground/50">—</span>
                           )}
                         </div>
-                        
+
                         {/* Notes - Commentaire éditable */}
                         <div className="flex items-center min-w-0" onClick={(e) => e.stopPropagation()}>
                           {journalist.isEditingNotes ? (
@@ -1098,9 +1080,11 @@ const RelationsPresse = () => {
                                   updateJournalistNotes(journalist.id, e.currentTarget.value);
                                 }
                                 if (e.key === "Escape") {
-                                  setJournalists(journalists.map(j => 
-                                    j.id === journalist.id ? { ...j, isEditingNotes: false } : j
-                                  ));
+                                  setJournalists(
+                                    journalists.map((j) =>
+                                      j.id === journalist.id ? { ...j, isEditingNotes: false } : j,
+                                    ),
+                                  );
                                 }
                               }}
                             />
@@ -1109,25 +1093,26 @@ const RelationsPresse = () => {
                               onClick={(e) => startEditingNotes(journalist.id, e)}
                               className={cn(
                                 "w-full text-left px-2 py-1 rounded-lg transition-colors text-sm",
-                                journalist.notes 
-                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20" 
-                                  : "text-muted-foreground/50 hover:bg-secondary hover:text-foreground"
+                                journalist.notes
+                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                                  : "text-muted-foreground/50 hover:bg-secondary hover:text-foreground",
                               )}
                             >
                               {journalist.notes || "Ajouter..."}
                             </button>
                           )}
                         </div>
-                        
-                        
+
                         {/* Checkbox */}
                         <div className="flex items-center justify-center">
-                          <div className={cn(
-                            "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                            journalist.selected
-                              ? "bg-primary border-primary"
-                              : "border-muted-foreground/30 hover:border-primary/50"
-                          )}>
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                              journalist.selected
+                                ? "bg-primary border-primary"
+                                : "border-muted-foreground/30 hover:border-primary/50",
+                            )}
+                          >
                             {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
                           </div>
                         </div>
@@ -1164,7 +1149,7 @@ const RelationsPresse = () => {
                 </div>
                 <Button onClick={() => setShowAddResourceForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" />
-                  Ajouter
+                  Communiqué
                 </Button>
               </div>
 
@@ -1175,7 +1160,7 @@ const RelationsPresse = () => {
                     "px-4 py-2 rounded-full text-sm font-medium transition-all",
                     activeResourceType === "all"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted",
                   )}
                 >
                   Tous ({resources.length})
@@ -1190,7 +1175,7 @@ const RelationsPresse = () => {
                         "px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
                         activeResourceType === type.value
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted",
                       )}
                     >
                       <type.icon className="w-4 h-4" />
@@ -1219,21 +1204,14 @@ const RelationsPresse = () => {
                   {filteredResources.map((resource) => {
                     const TypeIcon = getResourceTypeIcon(resource.type);
                     return (
-                      <div
-                        key={resource.id}
-                        className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all"
-                      >
+                      <div key={resource.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all">
                         <div className="flex items-start justify-between mb-3">
                           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                             <TypeIcon className="w-5 h-5 text-primary" />
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {resource.file_url && (
-                              <a
-                                href={resource.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
+                              <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
                                   <Download className="w-4 h-4" />
                                 </Button>
@@ -1250,24 +1228,16 @@ const RelationsPresse = () => {
                           </div>
                         </div>
 
-                        <h4 className="font-semibold text-foreground mb-1 line-clamp-1">
-                          {resource.name}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          {getResourceTypeLabel(resource.type)}
-                        </p>
+                        <h4 className="font-semibold text-foreground mb-1 line-clamp-1">{resource.name}</h4>
+                        <p className="text-xs text-muted-foreground mb-2">{getResourceTypeLabel(resource.type)}</p>
 
                         {resource.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                            {resource.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{resource.description}</p>
                         )}
 
                         {resource.content && (
                           <div className="bg-muted/50 rounded-lg p-3 max-h-24 overflow-hidden relative">
-                            <p className="text-xs text-muted-foreground font-mono line-clamp-4">
-                              {resource.content}
-                            </p>
+                            <p className="text-xs text-muted-foreground font-mono line-clamp-4">{resource.content}</p>
                             <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent" />
                           </div>
                         )}
@@ -1290,9 +1260,7 @@ const RelationsPresse = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-foreground">
-                Nouvelle ressource
-              </h3>
+              <h3 className="text-xl font-semibold text-foreground">Nouvelle ressource</h3>
               <Button variant="ghost" size="icon" onClick={resetResourceForm}>
                 <X className="w-5 h-5" />
               </Button>
@@ -1363,18 +1331,14 @@ const RelationsPresse = () => {
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
                       "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
-                      formResourceFile
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-muted-foreground"
+                      formResourceFile ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground",
                     )}
                   >
                     {formResourceFile ? (
                       <div className="flex items-center justify-center gap-3">
                         <File className="w-8 h-8 text-primary" />
                         <div className="text-left">
-                          <p className="font-medium text-foreground">
-                            {formResourceFile.name}
-                          </p>
+                          <p className="font-medium text-foreground">{formResourceFile.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {(formResourceFile.size / 1024 / 1024).toFixed(2)} MB
                           </p>
@@ -1396,12 +1360,8 @@ const RelationsPresse = () => {
                     ) : (
                       <div>
                         <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-muted-foreground">
-                          Cliquez ou glissez un fichier
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          PDF, Word, PowerPoint, TXT
-                        </p>
+                        <p className="text-muted-foreground">Cliquez ou glissez un fichier</p>
+                        <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint, TXT</p>
                       </div>
                     )}
                   </div>
@@ -1428,11 +1388,11 @@ const RelationsPresse = () => {
       {/* Email Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
             onClick={() => setShowEmailModal(false)}
           />
-          
+
           <div className="relative w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-300">
             <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
               <div className="flex items-center gap-3">
@@ -1442,7 +1402,7 @@ const RelationsPresse = () => {
                 <div>
                   <h3 className="text-xl font-bold text-foreground">Nouveau communiqué</h3>
                   <p className="text-sm text-muted-foreground">
-                    À : {selectedJournalists.map(j => j.name).join(", ")}
+                    À : {selectedJournalists.map((j) => j.name).join(", ")}
                   </p>
                 </div>
               </div>
