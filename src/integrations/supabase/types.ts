@@ -166,6 +166,7 @@ export type Database = {
           job: string | null
           linkedin: string | null
           media: string | null
+          media_specialty: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -182,6 +183,7 @@ export type Database = {
           job?: string | null
           linkedin?: string | null
           media?: string | null
+          media_specialty?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           job?: string | null
           linkedin?: string | null
           media?: string | null
+          media_specialty?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
