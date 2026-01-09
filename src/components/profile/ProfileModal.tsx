@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Globe, Linkedin, Mail, Plus, Trash2, Building2, Users, Newspaper } from "lucide-react";
+import { X, Globe, Linkedin, Mail, Plus, Trash2, Building2, Users, Newspaper, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -10,6 +10,13 @@ interface Agency {
   linkedin: string;
   email: string;
   specialty: string;
+}
+
+interface LinkedInPost {
+  id: string;
+  content: string;
+  posted_at: string | null;
+  post_url: string | null;
 }
 
 interface ProfileModalProps {
@@ -36,11 +43,123 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
     specialty: ""
   });
 
+  // LinkedIn posts state
+  const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [showAddPostForm, setShowAddPostForm] = useState(false);
+  const [newPost, setNewPost] = useState({ content: "", post_url: "" });
+  const [isAddingPost, setIsAddingPost] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       fetchAgencies();
+      fetchLinkedinPosts();
     }
   }, [isOpen]);
+
+  const fetchLinkedinPosts = async () => {
+    setIsLoadingPosts(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase
+        .from("user_linkedin_posts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (!error && data) {
+        setLinkedinPosts(data);
+      }
+    }
+    setIsLoadingPosts(false);
+  };
+
+  const handleAddPost = async () => {
+    if (!newPost.content.trim()) {
+      toast.error("Le contenu du post est requis");
+      return;
+    }
+
+    setIsAddingPost(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setIsAddingPost(false);
+      return;
+    }
+
+    try {
+      // Insert the post
+      const { data: postData, error: postError } = await supabase
+        .from("user_linkedin_posts")
+        .insert({
+          user_id: user.id,
+          content: newPost.content,
+          post_url: newPost.post_url || null,
+        })
+        .select()
+        .single();
+
+      if (postError) throw postError;
+
+      // Generate embedding via edge function
+      const response = await fetch(
+        `https://lypodfdlpbpjdsswmsni.supabase.co/functions/v1/generate-embedding`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5cG9kZmRscGJwamRzc3dtc25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4Mzk1MTUsImV4cCI6MjA4MzQxNTUxNX0.T6PH-7MpJ-YpfGO4rym2eCoM-xsgFID7nxvuaVLpelo`,
+          },
+          body: JSON.stringify({
+            content: newPost.content,
+            document_type: "linkedin_post",
+            source_id: postData.id,
+            user_id: user.id,
+            metadata: { post_url: newPost.post_url || null },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Embedding error:", errorData);
+        // Still success for the post, just log embedding error
+        toast.warning("Post ajouté, mais l'indexation a échoué");
+      } else {
+        toast.success("Post LinkedIn ajouté et indexé");
+      }
+
+      setNewPost({ content: "", post_url: "" });
+      setShowAddPostForm(false);
+      fetchLinkedinPosts();
+    } catch (error) {
+      console.error("Error adding post:", error);
+      toast.error("Erreur lors de l'ajout");
+    } finally {
+      setIsAddingPost(false);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      // Delete from documents first (cascade not automatic)
+      await supabase.from("documents").delete().eq("source_id", id);
+      
+      // Delete the post
+      const { error } = await supabase
+        .from("user_linkedin_posts")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      toast.success("Post supprimé");
+      fetchLinkedinPosts();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast.error("Erreur lors de la suppression");
+    }
+  };
 
   const fetchAgencies = async () => {
     setIsLoading(true);
@@ -328,17 +447,140 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
           )}
 
           {activeTab === "ressources-memoire" && (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-                <Newspaper className="w-8 h-8 text-muted-foreground" />
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">Posts LinkedIn</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Ajoutez vos anciens posts LinkedIn pour personnaliser la génération de contenu
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowAddPostForm(!showAddPostForm)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/25"
+                >
+                  <Plus className="w-4 h-4" />
+                  Ajouter un post
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-foreground">Ressources Mémoire</h3>
-              <p className="text-sm text-muted-foreground mt-2 text-center max-w-md">
-                Stockez et gérez vos ressources, documents et références pour vos projets RP.
-              </p>
-              <span className="mt-4 px-3 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium">
-                Bientôt disponible
-              </span>
+
+              {/* Add Post Form */}
+              {showAddPostForm && (
+                <div className="bg-secondary/30 border border-border rounded-2xl p-6 space-y-4">
+                  <h4 className="text-base font-semibold text-foreground">Nouveau post LinkedIn</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Contenu du post *
+                      </label>
+                      <textarea
+                        value={newPost.content}
+                        onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                        placeholder="Collez ou tapez le contenu de votre post LinkedIn..."
+                        rows={6}
+                        className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        URL du post (optionnel)
+                      </label>
+                      <input
+                        type="url"
+                        value={newPost.post_url}
+                        onChange={(e) => setNewPost({ ...newPost, post_url: e.target.value })}
+                        placeholder="https://linkedin.com/posts/..."
+                        className="w-full px-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      onClick={() => setShowAddPostForm(false)}
+                      className="px-5 py-2.5 bg-secondary text-foreground rounded-xl font-medium hover:bg-secondary/80 transition-all"
+                      disabled={isAddingPost}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      onClick={handleAddPost}
+                      disabled={isAddingPost}
+                      className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-all flex items-center gap-2"
+                    >
+                      {isAddingPost ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Indexation...
+                        </>
+                      ) : (
+                        "Ajouter et indexer"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Posts List */}
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-secondary/30 rounded-2xl p-5 animate-pulse">
+                      <div className="h-4 bg-secondary rounded w-3/4 mb-2" />
+                      <div className="h-4 bg-secondary rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : linkedinPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {linkedinPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="group bg-card border border-border rounded-2xl p-5 hover:border-primary/30 hover:shadow-lg transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+                            <span className="text-xs font-medium text-muted-foreground">
+                              Post LinkedIn
+                            </span>
+                            {post.post_url && (
+                              <a
+                                href={post.post_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary hover:underline"
+                              >
+                                Voir le post
+                              </a>
+                            )}
+                          </div>
+                          <p className="text-sm text-foreground line-clamp-4 whitespace-pre-wrap">
+                            {post.content}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="w-8 h-8 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all flex-shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 bg-secondary/20 rounded-2xl border border-dashed border-border">
+                  <FileText className="w-12 h-12 text-muted-foreground/40 mb-4" />
+                  <h4 className="text-base font-semibold text-foreground">Aucun post LinkedIn</h4>
+                  <p className="text-sm text-muted-foreground mt-2 text-center max-w-sm">
+                    Ajoutez vos anciens posts LinkedIn pour que l'IA puisse reproduire votre style d'écriture
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
