@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
@@ -116,6 +117,7 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -171,7 +173,7 @@ const RelationsPresse = () => {
     fetchSocialyArticles();
     fetchJournalists();
     fetchCommuniques();
-  }, []);
+  }, [isAdmin]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -179,7 +181,11 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase.from("journalists").select("*").eq("user_id", user.id).order("name");
+      let query = supabase.from("journalists").select("*");
+      if (!isAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+      const { data, error } = await query.order("name");
 
       if (!error && data) {
         setJournalists(data.map((j) => ({ ...j, selected: false })));
@@ -193,11 +199,11 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data } = await supabase
-        .from("competitor_agencies")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .order("name");
+      let query = supabase.from("competitor_agencies").select("id, name");
+      if (!isAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+      const { data } = await query.order("name");
       setAgencies(data || []);
     }
   };
@@ -208,11 +214,11 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase
-        .from("competitor_articles")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("article_iso_date", { ascending: false });
+      let query = supabase.from("competitor_articles").select("*");
+      if (!isAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+      const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
         setArticles(data);
@@ -227,11 +233,11 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase
-        .from("socialy_articles")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("article_iso_date", { ascending: false });
+      let query = supabase.from("socialy_articles").select("*");
+      if (!isAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+      const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
         setSocialyArticles(data);
