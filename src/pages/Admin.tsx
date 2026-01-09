@@ -17,6 +17,7 @@ import {
   CheckCircle,
   XCircle,
   Copy,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ResourcesPanel } from "@/components/admin/ResourcesPanel";
 
 type AppRole = "admin" | "user";
 type AppPage = "dashboard" | "relations-presse" | "social-media" | "profile";
@@ -64,6 +66,7 @@ const Admin = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingInvitations, setLoadingInvitations] = useState(true);
+  const [showResources, setShowResources] = useState(false);
   
   // New invitation form
   const [newEmail, setNewEmail] = useState("");
@@ -272,11 +275,23 @@ const Admin = () => {
       >
         <Header title="Administration" />
 
-        <div className="mb-6">
-          <p className="text-muted-foreground">
-            Gérez les utilisateurs et les invitations
-          </p>
-        </div>
+        {showResources ? (
+          <ResourcesPanel onBack={() => setShowResources(false)} />
+        ) : (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-muted-foreground">
+                Gérez les utilisateurs et les invitations
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowResources(true)}
+                className="gap-2"
+              >
+                <FolderOpen className="w-4 h-4" />
+                Ressources
+              </Button>
+            </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Create Invitation */}
@@ -531,6 +546,8 @@ const Admin = () => {
               </div>
             )}
           </div>
+          </>
+        )}
       </main>
     </div>
   );
