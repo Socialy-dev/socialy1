@@ -21,51 +21,7 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    // Generate embedding using Lovable AI Gateway
-    const embeddingResponse = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "openai/text-embedding-3-small",
-        input: content,
-      }),
-    });
-
-    if (!embeddingResponse.ok) {
-      const errorText = await embeddingResponse.text();
-      console.error("Embedding API error:", embeddingResponse.status, errorText);
-      
-      if (embeddingResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded, please try again later" }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (embeddingResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add credits" }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`Embedding API error: ${embeddingResponse.status}`);
-    }
-
-    const embeddingData = await embeddingResponse.json();
-    const embedding = embeddingData.data?.[0]?.embedding;
-
-    if (!embedding) {
-      throw new Error("No embedding returned from API");
-    }
-
-    // Store in documents table
+    // Store in documents table (without embedding - we'll use full-text search and context injection)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -85,7 +41,6 @@ serve(async (req) => {
           .from("documents")
           .update({
             content,
-            embedding: JSON.stringify(embedding),
             metadata: metadata || {},
             updated_at: new Date().toISOString(),
           })
@@ -108,7 +63,6 @@ serve(async (req) => {
       .insert({
         user_id,
         content,
-        embedding: JSON.stringify(embedding),
         document_type,
         source_id: source_id || null,
         metadata: metadata || {},
