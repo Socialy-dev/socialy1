@@ -92,20 +92,17 @@ const subTabs = [
   { id: "socialy", label: "Socialy", icon: Zap },
   { id: "concurrent", label: "Concurrent", icon: Users2 },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
-  { id: "ressources", label: "Ressources", icon: FolderOpen },
+  { id: "communiques", label: "Communiqués", icon: FileText },
 ];
 
-interface Resource {
+interface Communique {
   id: string;
   name: string;
-  type: string;
-  description: string | null;
-  file_url: string | null;
-  content: string | null;
+  pdf_url: string | null;
+  word_url: string | null;
+  assets_link: string | null;
   created_at: string;
 }
-
-const RESOURCE_TYPES = [{ value: "communique", label: "Communiqué de presse", icon: FileText }];
 
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -125,22 +122,21 @@ const RelationsPresse = () => {
   const [emailSubject, setEmailSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [selectedCommunique, setSelectedCommunique] = useState<Communique | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [isLoadingResources, setIsLoadingResources] = useState(false);
-  const [showAddResourceForm, setShowAddResourceForm] = useState(false);
-  const [uploadingResource, setUploadingResource] = useState(false);
-  const [activeResourceType, setActiveResourceType] = useState<string>("all");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [formResourceName, setFormResourceName] = useState("");
-  const [formResourceType, setFormResourceType] = useState("communique");
-  const [formResourceDescription, setFormResourceDescription] = useState("");
-  const [formResourceContent, setFormResourceContent] = useState("");
-  const [formResourceFile, setFormResourceFile] = useState<File | null>(null);
+  const [communiques, setCommuniques] = useState<Communique[]>([]);
+  const [isLoadingCommuniques, setIsLoadingCommuniques] = useState(false);
+  const [showAddCommuniqueForm, setShowAddCommuniqueForm] = useState(false);
+  const [uploadingCommunique, setUploadingCommunique] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const wordInputRef = useRef<HTMLInputElement>(null);
+  const [formCommuniqueName, setFormCommuniqueName] = useState("");
+  const [formCommuniquePdf, setFormCommuniquePdf] = useState<File | null>(null);
+  const [formCommuniqueWord, setFormCommuniqueWord] = useState<File | null>(null);
+  const [formCommuniqueAssetsLink, setFormCommuniqueAssetsLink] = useState("");
 
   useEffect(() => {
     const {
@@ -165,7 +161,7 @@ const RelationsPresse = () => {
     fetchArticles();
     fetchSocialyArticles();
     fetchJournalists();
-    fetchResources();
+    fetchCommuniques();
   }, []);
 
   const fetchJournalists = async () => {
@@ -235,132 +231,126 @@ const RelationsPresse = () => {
     setIsLoadingSocialy(false);
   };
 
-  const fetchResources = async () => {
-    setIsLoadingResources(true);
+  const fetchCommuniques = async () => {
+    setIsLoadingCommuniques(true);
     try {
       const { data, error } = await supabase
-        .from("admin_resources")
+        .from("communique_presse")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setResources(data as Resource[]);
+      setCommuniques(data as Communique[]);
     } catch (error: any) {
-      console.error("Error fetching resources:", error);
+      console.error("Error fetching communiques:", error);
     } finally {
-      setIsLoadingResources(false);
+      setIsLoadingCommuniques(false);
     }
   };
 
-  const handleResourceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormResourceFile(file);
-      if (!formResourceName) {
-        setFormResourceName(file.name.replace(/\.[^/.]+$/, ""));
-      }
-    }
-  };
-
-  const handleResourceSubmit = async () => {
-    if (!formResourceName.trim()) {
+  const handleCommuniqueSubmit = async () => {
+    if (!formCommuniqueName.trim()) {
       toast({ title: "Erreur", description: "Le nom est requis", variant: "destructive" });
       return;
     }
 
-    if (!formResourceContent.trim() && !formResourceFile) {
-      toast({ title: "Erreur", description: "Ajoutez du contenu ou un fichier", variant: "destructive" });
+    if (!formCommuniquePdf && !formCommuniqueWord && !formCommuniqueAssetsLink.trim()) {
+      toast({ title: "Erreur", description: "Ajoutez au moins un fichier ou un lien", variant: "destructive" });
       return;
     }
 
-    setUploadingResource(true);
+    setUploadingCommunique(true);
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      let fileUrl: string | null = null;
+      let pdfUrl: string | null = null;
+      let wordUrl: string | null = null;
 
-      if (formResourceFile) {
-        const fileExt = formResourceFile.name.split(".").pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      if (formCommuniquePdf) {
+        const fileExt = formCommuniquePdf.name.split(".").pop();
+        const fileName = `${Date.now()}-pdf-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage.from("resources").upload(filePath, formResourceFile);
-
+        const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniquePdf);
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from("resources").getPublicUrl(filePath);
-
-        fileUrl = urlData.publicUrl;
+        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
+        pdfUrl = urlData.publicUrl;
       }
 
-      const { error } = await supabase.from("admin_resources").insert({
-        name: formResourceName.trim(),
-        type: formResourceType,
-        description: formResourceDescription.trim() || null,
-        content: formResourceContent.trim() || null,
-        file_url: fileUrl,
-        uploaded_by: user.id,
+      if (formCommuniqueWord) {
+        const fileExt = formCommuniqueWord.name.split(".").pop();
+        const fileName = `${Date.now()}-word-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniqueWord);
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
+        wordUrl = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("communique_presse").insert({
+        name: formCommuniqueName.trim(),
+        pdf_url: pdfUrl,
+        word_url: wordUrl,
+        assets_link: formCommuniqueAssetsLink.trim() || null,
+        created_by: user.id,
       });
 
       if (error) throw error;
 
-      toast({ title: "Ressource ajoutée !" });
-      resetResourceForm();
-      fetchResources();
+      toast({ title: "Communiqué ajouté !" });
+      resetCommuniqueForm();
+      fetchCommuniques();
     } catch (error: any) {
-      console.error("Error adding resource:", error);
+      console.error("Error adding communique:", error);
       toast({ title: "Erreur", description: "Erreur lors de l'ajout", variant: "destructive" });
     } finally {
-      setUploadingResource(false);
+      setUploadingCommunique(false);
     }
   };
 
-  const handleDeleteResource = async (resource: Resource) => {
+  const handleDeleteCommunique = async (communique: Communique) => {
     try {
-      if (resource.file_url) {
-        const pathMatch = resource.file_url.match(/resources\/(.+)$/);
-        if (pathMatch) {
-          await supabase.storage.from("resources").remove([pathMatch[1]]);
-        }
+      const filesToDelete: string[] = [];
+      
+      if (communique.pdf_url) {
+        const pathMatch = communique.pdf_url.match(/communique_presse\/(.+)$/);
+        if (pathMatch) filesToDelete.push(pathMatch[1]);
+      }
+      
+      if (communique.word_url) {
+        const pathMatch = communique.word_url.match(/communique_presse\/(.+)$/);
+        if (pathMatch) filesToDelete.push(pathMatch[1]);
       }
 
-      const { error } = await supabase.from("admin_resources").delete().eq("id", resource.id);
+      if (filesToDelete.length > 0) {
+        await supabase.storage.from("communique_presse").remove(filesToDelete);
+      }
+
+      const { error } = await supabase.from("communique_presse").delete().eq("id", communique.id);
 
       if (error) throw error;
 
-      toast({ title: "Ressource supprimée" });
-      fetchResources();
+      toast({ title: "Communiqué supprimé" });
+      fetchCommuniques();
     } catch (error: any) {
       toast({ title: "Erreur", description: "Erreur lors de la suppression", variant: "destructive" });
     }
   };
 
-  const resetResourceForm = () => {
-    setFormResourceName("");
-    setFormResourceType("communique");
-    setFormResourceDescription("");
-    setFormResourceContent("");
-    setFormResourceFile(null);
-    setShowAddResourceForm(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const filteredResources =
-    activeResourceType === "all" ? resources : resources.filter((r) => r.type === activeResourceType);
-
-  const getResourceTypeIcon = (type: string) => {
-    const found = RESOURCE_TYPES.find((t) => t.value === type);
-    return found ? found.icon : File;
-  };
-
-  const getResourceTypeLabel = (type: string) => {
-    const found = RESOURCE_TYPES.find((t) => t.value === type);
-    return found ? found.label : type;
+  const resetCommuniqueForm = () => {
+    setFormCommuniqueName("");
+    setFormCommuniquePdf(null);
+    setFormCommuniqueWord(null);
+    setFormCommuniqueAssetsLink("");
+    setShowAddCommuniqueForm(false);
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    if (wordInputRef.current) wordInputRef.current.value = "";
   };
 
   const filteredArticles = selectedAgency ? articles.filter((a) => a.agency_id === selectedAgency) : articles;
@@ -518,7 +508,7 @@ const RelationsPresse = () => {
     setShowEmailModal(false);
     setEmailSubject("");
     setEmailMessage("");
-    setSelectedResource(null);
+    setSelectedCommunique(null);
     setJournalists(journalists.map((j) => ({ ...j, selected: false })));
     setIsSending(false);
   };
@@ -1134,120 +1124,100 @@ const RelationsPresse = () => {
             </div>
           )}
 
-          {/* RESSOURCES TAB */}
-          {activeSubTab === "ressources" && (
+          {/* COMMUNIQUÉS TAB */}
+          {activeSubTab === "communiques" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5 text-primary" />
-                    Vos ressources
+                    <FileText className="w-5 h-5 text-primary" />
+                    Vos communiqués de presse
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Templates et communiqués pour vos relations presse
+                    Gérez vos communiqués avec PDF, Word et assets
                   </p>
                 </div>
-                <Button onClick={() => setShowAddResourceForm(true)} className="gap-2">
+                <Button onClick={() => setShowAddCommuniqueForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" />
                   Communiqué
                 </Button>
               </div>
 
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setActiveResourceType("all")}
-                  className={cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all",
-                    activeResourceType === "all"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted",
-                  )}
-                >
-                  Tous ({resources.length})
-                </button>
-                {RESOURCE_TYPES.map((type) => {
-                  const count = resources.filter((r) => r.type === type.value).length;
-                  return (
-                    <button
-                      key={type.value}
-                      onClick={() => setActiveResourceType(type.value)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
-                        activeResourceType === type.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted",
-                      )}
-                    >
-                      <type.icon className="w-4 h-4" />
-                      {type.label} ({count})
-                    </button>
-                  );
-                })}
-              </div>
-
-              {isLoadingResources ? (
+              {isLoadingCommuniques ? (
                 <div className="flex justify-center py-12">
                   <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
-              ) : filteredResources.length === 0 ? (
+              ) : communiques.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                    <FolderOpen className="w-10 h-10 text-primary-foreground" />
+                    <FileText className="w-10 h-10 text-primary-foreground" />
                   </div>
-                  <h4 className="text-2xl font-bold text-foreground">Aucune ressource</h4>
+                  <h4 className="text-2xl font-bold text-foreground">Aucun communiqué</h4>
                   <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Ajoutez vos premiers templates et communiqués de presse
+                    Ajoutez votre premier communiqué de presse
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredResources.map((resource) => {
-                    const TypeIcon = getResourceTypeIcon(resource.type);
-                    return (
-                      <div key={resource.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <TypeIcon className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {resource.file_url && (
-                              <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Download className="w-4 h-4" />
-                                </Button>
-                              </a>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => handleDeleteResource(resource)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                  {communiques.map((communique) => (
+                    <div key={communique.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all border border-border">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-primary" />
                         </div>
-
-                        <h4 className="font-semibold text-foreground mb-1 line-clamp-1">{resource.name}</h4>
-                        <p className="text-xs text-muted-foreground mb-2">{getResourceTypeLabel(resource.type)}</p>
-
-                        {resource.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{resource.description}</p>
-                        )}
-
-                        {resource.content && (
-                          <div className="bg-muted/50 rounded-lg p-3 max-h-24 overflow-hidden relative">
-                            <p className="text-xs text-muted-foreground font-mono line-clamp-4">{resource.content}</p>
-                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent" />
-                          </div>
-                        )}
-
-                        <p className="text-xs text-muted-foreground mt-3">
-                          Ajouté le {new Date(resource.created_at).toLocaleDateString("fr-FR")}
-                        </p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeleteCommunique(communique)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                    );
-                  })}
+
+                      <h4 className="font-semibold text-foreground mb-3 line-clamp-2">{communique.name}</h4>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {communique.pdf_url && (
+                          <a
+                            href={communique.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-xs font-semibold"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            PDF
+                          </a>
+                        )}
+                        {communique.word_url && (
+                          <a
+                            href={communique.word_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors text-xs font-semibold"
+                          >
+                            <File className="w-3.5 h-3.5" />
+                            Word
+                          </a>
+                        )}
+                        {communique.assets_link && (
+                          <a
+                            href={communique.assets_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-xs font-semibold"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Assets
+                          </a>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1255,125 +1225,162 @@ const RelationsPresse = () => {
         </div>
       </main>
 
-      {/* Add Resource Modal */}
-      {showAddResourceForm && (
+      {/* Add Communiqué Modal */}
+      {showAddCommuniqueForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-foreground">Nouvelle ressource</h3>
-              <Button variant="ghost" size="icon" onClick={resetResourceForm}>
+              <h3 className="text-xl font-semibold text-foreground">Nouveau communiqué de presse</h3>
+              <Button variant="ghost" size="icon" onClick={resetCommuniqueForm}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Nom</Label>
-                  <Input
-                    value={formResourceName}
-                    onChange={(e) => setFormResourceName(e.target.value)}
-                    placeholder="Nom de la ressource"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Type</Label>
-                  <Select value={formResourceType} onValueChange={setFormResourceType}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {RESOURCE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex items-center gap-2">
-                            <type.icon className="w-4 h-4" />
-                            {type.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
+            <div className="space-y-6">
               <div>
-                <Label>Description (optionnel)</Label>
+                <Label className="text-sm font-semibold">Nom du communiqué</Label>
                 <Input
-                  value={formResourceDescription}
-                  onChange={(e) => setFormResourceDescription(e.target.value)}
-                  placeholder="Brève description"
-                  className="mt-1"
+                  value={formCommuniqueName}
+                  onChange={(e) => setFormCommuniqueName(e.target.value)}
+                  placeholder="Ex: Lancement nouveau produit 2026"
+                  className="mt-2"
                 />
               </div>
 
-              <div>
-                <Label>Contenu texte</Label>
-                <Textarea
-                  value={formResourceContent}
-                  onChange={(e) => setFormResourceContent(e.target.value)}
-                  placeholder="Collez le texte du communiqué, template, etc."
-                  className="mt-1 min-h-[200px] font-mono text-sm"
-                />
-              </div>
-
-              <div>
-                <Label>Ou importer un fichier</Label>
-                <div className="mt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Communiqué PDF</Label>
                   <input
-                    ref={fileInputRef}
+                    ref={pdfInputRef}
                     type="file"
-                    onChange={handleResourceFileChange}
+                    onChange={(e) => e.target.files?.[0] && setFormCommuniquePdf(e.target.files[0])}
                     className="hidden"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md"
+                    accept=".pdf"
                   />
                   <div
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => pdfInputRef.current?.click()}
                     className={cn(
-                      "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
-                      formResourceFile ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground",
+                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
+                      formCommuniquePdf 
+                        ? "border-red-500 bg-red-500/5" 
+                        : "border-red-500/30 hover:border-red-500/60 hover:bg-red-500/5"
                     )}
                   >
-                    {formResourceFile ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <File className="w-8 h-8 text-primary" />
-                        <div className="text-left">
-                          <p className="font-medium text-foreground">{formResourceFile.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {(formResourceFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
+                    {formCommuniquePdf ? (
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto">
+                          <FileText className="w-6 h-6 text-red-500" />
                         </div>
+                        <p className="text-xs font-medium text-foreground truncate">{formCommuniquePdf.name}</p>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
+                          className="text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setFormResourceFile(null);
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = "";
-                            }
+                            setFormCommuniquePdf(null);
+                            if (pdfInputRef.current) pdfInputRef.current.value = "";
                           }}
                         >
-                          <X className="w-4 h-4" />
+                          Supprimer
                         </Button>
                       </div>
                     ) : (
-                      <div>
-                        <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-muted-foreground">Cliquez ou glissez un fichier</p>
-                        <p className="text-xs text-muted-foreground mt-1">PDF, Word, PowerPoint, TXT</p>
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto">
+                          <FileText className="w-6 h-6 text-red-500/60" />
+                        </div>
+                        <p className="text-xs text-muted-foreground">Fichier PDF</p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Communiqué Word</Label>
+                  <input
+                    ref={wordInputRef}
+                    type="file"
+                    onChange={(e) => e.target.files?.[0] && setFormCommuniqueWord(e.target.files[0])}
+                    className="hidden"
+                    accept=".doc,.docx"
+                  />
+                  <div
+                    onClick={() => wordInputRef.current?.click()}
+                    className={cn(
+                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
+                      formCommuniqueWord 
+                        ? "border-blue-500 bg-blue-500/5" 
+                        : "border-blue-500/30 hover:border-blue-500/60 hover:bg-blue-500/5"
+                    )}
+                  >
+                    {formCommuniqueWord ? (
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto">
+                          <File className="w-6 h-6 text-blue-500" />
+                        </div>
+                        <p className="text-xs font-medium text-foreground truncate">{formCommuniqueWord.name}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFormCommuniqueWord(null);
+                            if (wordInputRef.current) wordInputRef.current.value = "";
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto">
+                          <File className="w-6 h-6 text-blue-500/60" />
+                        </div>
+                        <p className="text-xs text-muted-foreground">Fichier Word</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Lien Assets</Label>
+                  <div
+                    className={cn(
+                      "border-2 border-dashed rounded-xl p-6 text-center transition-all",
+                      formCommuniqueAssetsLink 
+                        ? "border-purple-500 bg-purple-500/5" 
+                        : "border-purple-500/30"
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className={cn(
+                        "w-12 h-12 rounded-xl flex items-center justify-center mx-auto",
+                        formCommuniqueAssetsLink ? "bg-purple-500/20" : "bg-purple-500/10"
+                      )}>
+                        <ExternalLink className={cn(
+                          "w-6 h-6",
+                          formCommuniqueAssetsLink ? "text-purple-500" : "text-purple-500/60"
+                        )} />
+                      </div>
+                      <Input
+                        value={formCommuniqueAssetsLink}
+                        onChange={(e) => setFormCommuniqueAssetsLink(e.target.value)}
+                        placeholder="https://drive.google.com/..."
+                        className="text-xs h-8"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={resetResourceForm}>
+                <Button variant="outline" onClick={resetCommuniqueForm}>
                   Annuler
                 </Button>
-                <Button onClick={handleResourceSubmit} disabled={uploadingResource}>
-                  {uploadingResource ? (
+                <Button onClick={handleCommuniqueSubmit} disabled={uploadingCommunique}>
+                  {uploadingCommunique ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     "Enregistrer"
@@ -1391,7 +1398,7 @@ const RelationsPresse = () => {
             className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
             onClick={() => {
               setShowEmailModal(false);
-              setSelectedResource(null);
+              setSelectedCommunique(null);
             }}
           />
 
@@ -1411,7 +1418,7 @@ const RelationsPresse = () => {
               <button
                 onClick={() => {
                   setShowEmailModal(false);
-                  setSelectedResource(null);
+                  setSelectedCommunique(null);
                 }}
                 className="w-10 h-10 rounded-full hover:bg-secondary flex items-center justify-center transition-colors"
               >
@@ -1425,23 +1432,23 @@ const RelationsPresse = () => {
                   Sélectionnez un communiqué de presse
                 </label>
                 
-                {resources.filter(r => r.type === "communique").length === 0 ? (
+                {communiques.length === 0 ? (
                   <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
                     <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground">Aucun communiqué disponible</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Créez-en un dans l'onglet Ressources
+                      Créez-en un dans l'onglet Communiqués
                     </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {resources.filter(r => r.type === "communique").map((resource) => (
+                    {communiques.map((communique) => (
                       <button
-                        key={resource.id}
-                        onClick={() => setSelectedResource(resource)}
+                        key={communique.id}
+                        onClick={() => setSelectedCommunique(communique)}
                         className={cn(
                           "group relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
-                          selectedResource?.id === resource.id
+                          selectedCommunique?.id === communique.id
                             ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
                             : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
                         )}
@@ -1449,7 +1456,7 @@ const RelationsPresse = () => {
                         <div className="flex items-start gap-3">
                           <div className={cn(
                             "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                            selectedResource?.id === resource.id
+                            selectedCommunique?.id === communique.id
                               ? "bg-primary text-primary-foreground"
                               : "bg-primary/10 text-primary group-hover:bg-primary/20"
                           )}>
@@ -1457,23 +1464,28 @@ const RelationsPresse = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm text-foreground truncate">
-                              {resource.name}
+                              {communique.name}
                             </h4>
                             <div className="flex items-center gap-2 mt-2">
-                              {resource.file_url && (
+                              {communique.pdf_url && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-600 text-[10px] font-medium">
                                   PDF
                                 </span>
                               )}
-                              {resource.content && (
+                              {communique.word_url && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 text-[10px] font-medium">
-                                  TXT
+                                  Word
+                                </span>
+                              )}
+                              {communique.assets_link && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 text-[10px] font-medium">
+                                  Assets
                                 </span>
                               )}
                             </div>
                           </div>
                         </div>
-                        {selectedResource?.id === resource.id && (
+                        {selectedCommunique?.id === communique.id && (
                           <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                             <Check className="w-3 h-3 text-primary-foreground" />
                           </div>
@@ -1484,7 +1496,7 @@ const RelationsPresse = () => {
                 )}
               </div>
 
-              {selectedResource && (
+              {selectedCommunique && (
                 <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="h-px bg-border" />
                   
@@ -1517,7 +1529,7 @@ const RelationsPresse = () => {
               <button
                 onClick={() => {
                   setShowEmailModal(false);
-                  setSelectedResource(null);
+                  setSelectedCommunique(null);
                 }}
                 className="px-5 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all font-medium"
               >
@@ -1525,7 +1537,7 @@ const RelationsPresse = () => {
               </button>
               <button
                 onClick={handleSendEmail}
-                disabled={isSending || !selectedResource}
+                disabled={isSending || !selectedCommunique}
                 className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSending ? (
