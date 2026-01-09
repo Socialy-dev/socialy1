@@ -193,6 +193,45 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_posts_linkedin: {
+        Row: {
+          created_at: string
+          generated_content: string | null
+          id: string
+          objective: string | null
+          request_id: string
+          status: string
+          subject: string
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_content?: string | null
+          id?: string
+          objective?: string | null
+          request_id?: string
+          status?: string
+          subject: string
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_content?: string | null
+          id?: string
+          objective?: string | null
+          request_id?: string
+          status?: string
+          subject?: string
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           created_at: string
