@@ -792,7 +792,7 @@ const RelationsPresse = () => {
               ) : filteredJournalists.length > 0 ? (
                 <div className="bg-card rounded-2xl border border-border overflow-hidden">
                   {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_1fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                     <div className="w-10" />
                     <div>Contact</div>
                     <div>Média</div>
@@ -813,7 +813,6 @@ const RelationsPresse = () => {
                     <div>LinkedIn</div>
                     <div>Email</div>
                     <div>Commentaire</div>
-                    <div>Source</div>
                     <div className="text-center">Sélect.</div>
                   </div>
                   
@@ -824,7 +823,7 @@ const RelationsPresse = () => {
                         key={journalist.id}
                         onClick={() => toggleJournalist(journalist.id)}
                         className={cn(
-                          "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_1fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                          "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
                           journalist.selected && "bg-primary/5"
                         )}
                       >
@@ -940,27 +939,6 @@ const RelationsPresse = () => {
                           )}
                         </div>
                         
-                        {/* Source */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.source_type === "competitor" && journalist.competitor_name ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-600 text-xs font-medium truncate">
-                              <Building2 className="w-3 h-3 flex-shrink-0" />
-                              {journalist.competitor_name}
-                            </span>
-                          ) : journalist.source_type === "socialy" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-medium">
-                              <Zap className="w-3 h-3" />
-                              Socialy
-                            </span>
-                          ) : journalist.source_type === "import" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-teal-500/15 text-teal-600 text-xs font-medium">
-                              <Upload className="w-3 h-3" />
-                              Import
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
                         
                         {/* Checkbox */}
                         <div className="flex items-center justify-center">
