@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -25,8 +25,26 @@ import {
   Briefcase,
   MessageSquare,
   Info,
-  Tag
+  Tag,
+  FolderOpen,
+  FileText,
+  Presentation,
+  File,
+  Trash2,
+  Download,
+  Plus
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
@@ -85,6 +103,24 @@ const subTabs = [
   { id: "socialy", label: "Socialy", icon: Zap },
   { id: "concurrent", label: "Concurrent", icon: Users2 },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
+  { id: "ressources", label: "Ressources", icon: FolderOpen },
+];
+
+interface Resource {
+  id: string;
+  name: string;
+  type: string;
+  description: string | null;
+  file_url: string | null;
+  content: string | null;
+  created_at: string;
+}
+
+const RESOURCE_TYPES = [
+  { value: "communique", label: "Communiqué de presse", icon: FileText },
+  { value: "presentation", label: "Présentation", icon: Presentation },
+  { value: "template", label: "Template", icon: File },
+  { value: "autre", label: "Autre", icon: FolderOpen },
 ];
 
 const RelationsPresse = () => {
@@ -109,6 +145,18 @@ const RelationsPresse = () => {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [isLoadingResources, setIsLoadingResources] = useState(false);
+  const [showAddResourceForm, setShowAddResourceForm] = useState(false);
+  const [uploadingResource, setUploadingResource] = useState(false);
+  const [activeResourceType, setActiveResourceType] = useState<string>("all");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formResourceName, setFormResourceName] = useState("");
+  const [formResourceType, setFormResourceType] = useState("communique");
+  const [formResourceDescription, setFormResourceDescription] = useState("");
+  const [formResourceContent, setFormResourceContent] = useState("");
+  const [formResourceFile, setFormResourceFile] = useState<File | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -131,6 +179,7 @@ const RelationsPresse = () => {
     fetchArticles();
     fetchSocialyArticles();
     fetchJournalists();
+    fetchResources();
   }, []);
 
   const fetchJournalists = async () => {
@@ -194,6 +243,140 @@ const RelationsPresse = () => {
       }
     }
     setIsLoadingSocialy(false);
+  };
+
+  const fetchResources = async () => {
+    setIsLoadingResources(true);
+    try {
+      const { data, error } = await supabase
+        .from("admin_resources")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setResources(data as Resource[]);
+    } catch (error: any) {
+      console.error("Error fetching resources:", error);
+    } finally {
+      setIsLoadingResources(false);
+    }
+  };
+
+  const handleResourceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormResourceFile(file);
+      if (!formResourceName) {
+        setFormResourceName(file.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
+  const handleResourceSubmit = async () => {
+    if (!formResourceName.trim()) {
+      toast({ title: "Erreur", description: "Le nom est requis", variant: "destructive" });
+      return;
+    }
+
+    if (!formResourceContent.trim() && !formResourceFile) {
+      toast({ title: "Erreur", description: "Ajoutez du contenu ou un fichier", variant: "destructive" });
+      return;
+    }
+
+    setUploadingResource(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let fileUrl: string | null = null;
+
+      if (formResourceFile) {
+        const fileExt = formResourceFile.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("resources")
+          .upload(filePath, formResourceFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("resources")
+          .getPublicUrl(filePath);
+
+        fileUrl = urlData.publicUrl;
+      }
+
+      const { error } = await supabase.from("admin_resources").insert({
+        name: formResourceName.trim(),
+        type: formResourceType,
+        description: formResourceDescription.trim() || null,
+        content: formResourceContent.trim() || null,
+        file_url: fileUrl,
+        uploaded_by: user.id,
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Ressource ajoutée !" });
+      resetResourceForm();
+      fetchResources();
+    } catch (error: any) {
+      console.error("Error adding resource:", error);
+      toast({ title: "Erreur", description: "Erreur lors de l'ajout", variant: "destructive" });
+    } finally {
+      setUploadingResource(false);
+    }
+  };
+
+  const handleDeleteResource = async (resource: Resource) => {
+    try {
+      if (resource.file_url) {
+        const pathMatch = resource.file_url.match(/resources\/(.+)$/);
+        if (pathMatch) {
+          await supabase.storage.from("resources").remove([pathMatch[1]]);
+        }
+      }
+
+      const { error } = await supabase
+        .from("admin_resources")
+        .delete()
+        .eq("id", resource.id);
+
+      if (error) throw error;
+
+      toast({ title: "Ressource supprimée" });
+      fetchResources();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: "Erreur lors de la suppression", variant: "destructive" });
+    }
+  };
+
+  const resetResourceForm = () => {
+    setFormResourceName("");
+    setFormResourceType("communique");
+    setFormResourceDescription("");
+    setFormResourceContent("");
+    setFormResourceFile(null);
+    setShowAddResourceForm(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const filteredResources = activeResourceType === "all"
+    ? resources
+    : resources.filter((r) => r.type === activeResourceType);
+
+  const getResourceTypeIcon = (type: string) => {
+    const found = RESOURCE_TYPES.find((t) => t.value === type);
+    return found ? found.icon : File;
+  };
+
+  const getResourceTypeLabel = (type: string) => {
+    const found = RESOURCE_TYPES.find((t) => t.value === type);
+    return found ? found.label : type;
   };
 
   const filteredArticles = selectedAgency
@@ -968,8 +1151,282 @@ const RelationsPresse = () => {
               )}
             </div>
           )}
+
+          {/* RESSOURCES TAB */}
+          {activeSubTab === "ressources" && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <FolderOpen className="w-5 h-5 text-primary" />
+                    Vos ressources
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Templates et communiqués pour vos relations presse
+                  </p>
+                </div>
+                <Button onClick={() => setShowAddResourceForm(true)} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Ajouter
+                </Button>
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setActiveResourceType("all")}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                    activeResourceType === "all"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  Tous ({resources.length})
+                </button>
+                {RESOURCE_TYPES.map((type) => {
+                  const count = resources.filter((r) => r.type === type.value).length;
+                  return (
+                    <button
+                      key={type.value}
+                      onClick={() => setActiveResourceType(type.value)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2",
+                        activeResourceType === type.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      <type.icon className="w-4 h-4" />
+                      {type.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {isLoadingResources ? (
+                <div className="flex justify-center py-12">
+                  <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                </div>
+              ) : filteredResources.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                    <FolderOpen className="w-10 h-10 text-primary-foreground" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-foreground">Aucune ressource</h4>
+                  <p className="text-muted-foreground mt-2 text-center max-w-md">
+                    Ajoutez vos premiers templates et communiqués de presse
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredResources.map((resource) => {
+                    const TypeIcon = getResourceTypeIcon(resource.type);
+                    return (
+                      <div
+                        key={resource.id}
+                        className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <TypeIcon className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {resource.file_url && (
+                              <a
+                                href={resource.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                              </a>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteResource(resource)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <h4 className="font-semibold text-foreground mb-1 line-clamp-1">
+                          {resource.name}
+                        </h4>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {getResourceTypeLabel(resource.type)}
+                        </p>
+
+                        {resource.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                            {resource.description}
+                          </p>
+                        )}
+
+                        {resource.content && (
+                          <div className="bg-muted/50 rounded-lg p-3 max-h-24 overflow-hidden relative">
+                            <p className="text-xs text-muted-foreground font-mono line-clamp-4">
+                              {resource.content}
+                            </p>
+                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent" />
+                          </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground mt-3">
+                          Ajouté le {new Date(resource.created_at).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Add Resource Modal */}
+      {showAddResourceForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-foreground">
+                Nouvelle ressource
+              </h3>
+              <Button variant="ghost" size="icon" onClick={resetResourceForm}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nom</Label>
+                  <Input
+                    value={formResourceName}
+                    onChange={(e) => setFormResourceName(e.target.value)}
+                    placeholder="Nom de la ressource"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Type</Label>
+                  <Select value={formResourceType} onValueChange={setFormResourceType}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RESOURCE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <div className="flex items-center gap-2">
+                            <type.icon className="w-4 h-4" />
+                            {type.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Description (optionnel)</Label>
+                <Input
+                  value={formResourceDescription}
+                  onChange={(e) => setFormResourceDescription(e.target.value)}
+                  placeholder="Brève description"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Contenu texte</Label>
+                <Textarea
+                  value={formResourceContent}
+                  onChange={(e) => setFormResourceContent(e.target.value)}
+                  placeholder="Collez le texte du communiqué, template, etc."
+                  className="mt-1 min-h-[200px] font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <Label>Ou importer un fichier</Label>
+                <div className="mt-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleResourceFileChange}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md"
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
+                      formResourceFile
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-muted-foreground"
+                    )}
+                  >
+                    {formResourceFile ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <File className="w-8 h-8 text-primary" />
+                        <div className="text-left">
+                          <p className="font-medium text-foreground">
+                            {formResourceFile.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {(formResourceFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFormResourceFile(null);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = "";
+                            }
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground">
+                          Cliquez ou glissez un fichier
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PDF, Word, PowerPoint, TXT
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" onClick={resetResourceForm}>
+                  Annuler
+                </Button>
+                <Button onClick={handleResourceSubmit} disabled={uploadingResource}>
+                  {uploadingResource ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    "Enregistrer"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Email Modal */}
       {showEmailModal && (
