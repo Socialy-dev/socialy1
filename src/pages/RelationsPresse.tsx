@@ -1177,82 +1177,86 @@ const RelationsPresse = () => {
                   {communiques.map((communique) => {
                     const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
                     return (
-                      <div key={communique.id} className="glass-card p-5 rounded-xl group hover:shadow-lg transition-all border border-border">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                            <FileText className="w-6 h-6 text-primary" />
+                      <div key={communique.id} className="relative bg-card/80 backdrop-blur-sm p-6 rounded-3xl group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/50 hover:border-primary/20 hover:-translate-y-1">
+                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/50 to-transparent pointer-events-none" />
+                        
+                        <div className="relative">
+                          <div className="flex items-start justify-between mb-5">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent flex items-center justify-center shadow-lg shadow-primary/10">
+                              <FileText className="w-7 h-7 text-primary" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={communique.status}
+                                onValueChange={async (newStatus) => {
+                                  await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
+                                  fetchCommuniques();
+                                }}
+                              >
+                                <SelectTrigger className={cn("h-8 text-xs font-semibold border rounded-full px-3 py-1 w-auto min-w-[100px] shadow-sm", statusInfo.color)}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {STATUS_OPTIONS.map(opt => (
+                                    <SelectItem key={opt.value} value={opt.value}>
+                                      {opt.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                                onClick={() => handleDeleteCommunique(communique)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Select
-                              value={communique.status}
-                              onValueChange={async (newStatus) => {
-                                await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
-                                fetchCommuniques();
-                              }}
-                            >
-                              <SelectTrigger className={cn("h-7 text-xs font-semibold border px-2 py-0.5 w-auto min-w-[90px]", statusInfo.color)}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {STATUS_OPTIONS.map(opt => (
-                                  <SelectItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => handleDeleteCommunique(communique)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+
+                          <h4 className="font-bold text-lg text-foreground mb-4 line-clamp-2">{communique.name}</h4>
+
+                          <div className="flex flex-wrap gap-2 mb-5">
+                            {communique.pdf_url && (
+                              <a
+                                href={communique.pdf_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:shadow-md hover:shadow-red-500/10 transition-all text-xs font-semibold"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                PDF
+                              </a>
+                            )}
+                            {communique.word_url && (
+                              <a
+                                href={communique.word_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 hover:shadow-md hover:shadow-blue-500/10 transition-all text-xs font-semibold"
+                              >
+                                <File className="w-3.5 h-3.5" />
+                                Word
+                              </a>
+                            )}
+                            {communique.assets_link && (
+                              <a
+                                href={communique.assets_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 hover:shadow-md hover:shadow-purple-500/10 transition-all text-xs font-semibold"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Assets
+                              </a>
+                            )}
                           </div>
+
+                          <p className="text-xs text-muted-foreground font-medium">
+                            Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
+                          </p>
                         </div>
-
-                        <h4 className="font-semibold text-foreground mb-3 line-clamp-2">{communique.name}</h4>
-
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {communique.pdf_url && (
-                            <a
-                              href={communique.pdf_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors text-xs font-semibold"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              PDF
-                            </a>
-                          )}
-                          {communique.word_url && (
-                            <a
-                              href={communique.word_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors text-xs font-semibold"
-                            >
-                              <File className="w-3.5 h-3.5" />
-                              Word
-                            </a>
-                          )}
-                          {communique.assets_link && (
-                            <a
-                              href={communique.assets_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 transition-colors text-xs font-semibold"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              Assets
-                            </a>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
-                        </p>
                       </div>
                     );
                   })}
