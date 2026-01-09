@@ -157,6 +157,42 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          content: string
+          created_at: string
+          document_type: string
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          source_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          document_type: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          document_type?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           created_at: string
@@ -337,6 +373,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_linkedin_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_url: string | null
+          posted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_url?: string | null
+          posted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_url?: string | null
+          posted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_permissions: {
         Row: {
           created_at: string
@@ -400,6 +466,22 @@ export type Database = {
       }
       is_first_user: { Args: never; Returns: boolean }
       is_valid_invitation: { Args: { _email: string }; Returns: boolean }
+      match_documents: {
+        Args: {
+          filter_document_type?: string
+          filter_user_id?: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          document_type: string
+          id: string
+          metadata: Json
+          similarity: number
+          source_id: string
+        }[]
+      }
     }
     Enums: {
       app_page: "dashboard" | "relations-presse" | "social-media" | "profile"
