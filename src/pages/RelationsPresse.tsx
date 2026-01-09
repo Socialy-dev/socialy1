@@ -118,9 +118,6 @@ interface Resource {
 
 const RESOURCE_TYPES = [
   { value: "communique", label: "Communiqué de presse", icon: FileText },
-  { value: "presentation", label: "Présentation", icon: Presentation },
-  { value: "template", label: "Template", icon: File },
-  { value: "autre", label: "Autre", icon: FolderOpen },
 ];
 
 const RelationsPresse = () => {
