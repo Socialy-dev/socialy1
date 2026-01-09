@@ -13,9 +13,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   title?: string;
+  showTitle?: boolean;
 }
 
-export const Header = ({ title = "Dashboard" }: HeaderProps) => {
+export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) => {
   const [userName, setUserName] = useState("Utilisateur");
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -60,7 +61,11 @@ export const Header = ({ title = "Dashboard" }: HeaderProps) => {
   return (
     <>
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+        {showTitle ? (
+          <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+        ) : (
+          <div />
+        )}
         
         <div className="flex items-center gap-4">
           {/* Search Bar */}
