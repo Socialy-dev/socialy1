@@ -1505,9 +1505,19 @@ const RelationsPresse = () => {
                             <FileText className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-foreground truncate">
-                              {communique.name}
-                            </h4>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-sm text-foreground truncate">
+                                {communique.name}
+                              </h4>
+                              {(() => {
+                                const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                                return (
+                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border", statusInfo.color)}>
+                                    {statusInfo.label}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                             <div className="flex items-center gap-2 mt-2">
                               {communique.pdf_url && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-600 text-[10px] font-medium">
