@@ -430,6 +430,30 @@ const RelationsPresse = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Security: Validate file size (max 5MB for CSV)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "Le fichier CSV ne doit pas dépasser 5MB",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    // Security: Validate file type
+    const allowedMimeTypes = ['text/csv', 'text/plain', 'application/csv'];
+    if (file.type && !allowedMimeTypes.includes(file.type)) {
+      toast({
+        title: "Type de fichier invalide",
+        description: "Seuls les fichiers CSV sont autorisés",
+        variant: "destructive",
+      });
+      event.target.value = "";
+      return;
+    }
+
     setIsImporting(true);
     const {
       data: { user },
@@ -450,9 +474,23 @@ const RelationsPresse = () => {
         const text = e.target?.result as string;
         const lines = text.split("\n").filter((line) => line.trim());
 
+        // Security: Limit number of entries
+        if (lines.length > 1001) { // 1000 entries + header
+          toast({
+            title: "Trop d'entrées",
+            description: "Maximum 1000 journalistes par import",
+            variant: "destructive",
+          });
+          setIsImporting(false);
+          return;
+        }
+
         // Skip header row and parse data
         const dataLines = lines.slice(1);
         const journalistsToInsert = [];
+
+        // Security: Email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         for (const line of dataLines) {
           // Parse CSV, handling potential commas within quoted fields
@@ -462,14 +500,22 @@ const RelationsPresse = () => {
           const [media, name, job, email, phone, notes] = values;
 
           if (name && name.trim()) {
+            // Security: Validate and sanitize email if provided
+            const sanitizedEmail = email?.trim() || null;
+            if (sanitizedEmail && !emailRegex.test(sanitizedEmail)) {
+              console.warn(`Invalid email skipped: ${sanitizedEmail}`);
+              continue; // Skip entries with invalid emails
+            }
+
+            // Security: Limit field lengths
             journalistsToInsert.push({
               user_id: user.id,
-              name: name.trim(),
-              media: media?.trim() || null,
-              job: job?.trim() || null,
-              email: email?.trim() || null,
-              phone: phone?.trim() || null,
-              notes: notes?.trim() || null,
+              name: name.trim().slice(0, 255),
+              media: media?.trim().slice(0, 255) || null,
+              job: job?.trim().slice(0, 255) || null,
+              email: sanitizedEmail,
+              phone: phone?.trim().slice(0, 50) || null,
+              notes: notes?.trim().slice(0, 1000) || null,
               source_type: "import",
             });
           }
@@ -1301,7 +1347,33 @@ const RelationsPresse = () => {
                   <input
                     ref={pdfInputRef}
                     type="file"
-                    onChange={(e) => e.target.files?.[0] && setFormCommuniquePdf(e.target.files[0])}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Security: Validate file size (max 10MB)
+                        const maxSize = 10 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          toast({
+                            title: "Fichier trop volumineux",
+                            description: "Le PDF ne doit pas dépasser 10MB",
+                            variant: "destructive",
+                          });
+                          e.target.value = "";
+                          return;
+                        }
+                        // Security: Validate MIME type
+                        if (file.type !== 'application/pdf' && file.type !== '') {
+                          toast({
+                            title: "Type de fichier invalide",
+                            description: "Seuls les fichiers PDF sont autorisés",
+                            variant: "destructive",
+                          });
+                          e.target.value = "";
+                          return;
+                        }
+                        setFormCommuniquePdf(file);
+                      }
+                    }}
                     className="hidden"
                     accept=".pdf"
                   />
@@ -1349,7 +1421,37 @@ const RelationsPresse = () => {
                   <input
                     ref={wordInputRef}
                     type="file"
-                    onChange={(e) => e.target.files?.[0] && setFormCommuniqueWord(e.target.files[0])}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Security: Validate file size (max 10MB)
+                        const maxSize = 10 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                          toast({
+                            title: "Fichier trop volumineux",
+                            description: "Le fichier Word ne doit pas dépasser 10MB",
+                            variant: "destructive",
+                          });
+                          e.target.value = "";
+                          return;
+                        }
+                        // Security: Validate MIME type
+                        const allowedMimeTypes = [
+                          'application/msword',
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        ];
+                        if (file.type && !allowedMimeTypes.includes(file.type)) {
+                          toast({
+                            title: "Type de fichier invalide",
+                            description: "Seuls les fichiers Word (.doc, .docx) sont autorisés",
+                            variant: "destructive",
+                          });
+                          e.target.value = "";
+                          return;
+                        }
+                        setFormCommuniqueWord(file);
+                      }
+                    }}
                     className="hidden"
                     accept=".doc,.docx"
                   />

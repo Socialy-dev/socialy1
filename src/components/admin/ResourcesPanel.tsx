@@ -90,6 +90,40 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Security: Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        toast.error("Le fichier est trop volumineux (max 10MB)");
+        e.target.value = "";
+        return;
+      }
+
+      // Security: Validate file type
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt', '.md'];
+      const allowedMimeTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'text/markdown'
+      ];
+
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!allowedExtensions.includes(fileExtension)) {
+        toast.error("Type de fichier non autorisé. Formats acceptés: PDF, DOC, DOCX, PPT, PPTX, TXT, MD");
+        e.target.value = "";
+        return;
+      }
+
+      if (!allowedMimeTypes.includes(file.type) && file.type !== '') {
+        toast.error("Type MIME du fichier non autorisé");
+        e.target.value = "";
+        return;
+      }
+
       setFormFile(file);
       if (!formName) {
         setFormName(file.name.replace(/\.[^/.]+$/, ""));

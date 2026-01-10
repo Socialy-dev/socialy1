@@ -65,6 +65,13 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  // Security: Validate color values to prevent XSS
+  const isValidColor = (color: string): boolean => {
+    // Allow hex colors, rgb/rgba, hsl/hsla, and CSS color names
+    const colorRegex = /^(#[0-9A-Fa-f]{3,8}|rgb\(|rgba\(|hsl\(|hsla\(|[a-z]+)$/;
+    return colorRegex.test(color.trim());
+  };
+
   return (
     <style
       dangerouslySetInnerHTML={{
@@ -75,7 +82,8 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    // Security: Only output color if it's valid
+    return color && isValidColor(color) ? `  --color-${key}: ${color};` : null;
   })
   .join("\n")}
 }

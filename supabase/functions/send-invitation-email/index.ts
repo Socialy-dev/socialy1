@@ -3,10 +3,19 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+// Secure CORS: only allow requests from your frontend domain
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    Deno.env.get("FRONTEND_URL"),
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://lypodfdlpbpjdsswmsni.supabase.co"
+  ].filter(Boolean);
+
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  return allowedOrigins[0] || "*";
 };
 
 interface InvitationEmailRequest {
@@ -17,6 +26,12 @@ interface InvitationEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

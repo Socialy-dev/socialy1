@@ -41,7 +41,19 @@ const Profile = () => {
   const handleAddAgency = async () => {
     const trimmedAgency = newAgency.trim();
     if (!trimmedAgency) return;
-    
+
+    // Security: Validate agency name length
+    if (trimmedAgency.length > 255) {
+      toast.error("Le nom de l'agence est trop long (max 255 caractères)");
+      return;
+    }
+
+    // Security: Limit total number of agencies
+    if (agencies.length >= 50) {
+      toast.error("Vous ne pouvez pas ajouter plus de 50 agences");
+      return;
+    }
+
     if (agencies.includes(trimmedAgency)) {
       toast.error("Cette agence est déjà dans votre liste");
       return;
@@ -157,6 +169,7 @@ const Profile = () => {
                       onChange={(e) => setNewAgency(e.target.value)}
                       onKeyPress={handleKeyPress}
                       disabled={isSaving}
+                      maxLength={255}
                       className="w-full h-12 px-4 rounded-xl border border-border/50 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
                     />
                   </div>

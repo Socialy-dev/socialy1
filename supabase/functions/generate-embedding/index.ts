@@ -1,29 +1,73 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// Secure CORS: only allow requests from your frontend domain
+const getAllowedOrigin = (requestOrigin: string | null): string => {
+  const allowedOrigins = [
+    Deno.env.get("FRONTEND_URL"),
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://lypodfdlpbpjdsswmsni.supabase.co"
+  ].filter(Boolean);
+
+  if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin;
+  }
+  return allowedOrigins[0] || "*";
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": getAllowedOrigin(origin),
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { content, document_type, source_id, user_id, metadata } = await req.json();
-
-    if (!content || !document_type || !user_id) {
+    // Security: Verify authentication first
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "content, document_type, and user_id are required" }),
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Security: Use authenticated user ID, not client-provided authenticatedUserId
+    const authenticatedUserId = user.id;
+
+    const { content, document_type, source_id, metadata } = await req.json();
+
+    if (!content || !document_type) {
+      return new Response(
+        JSON.stringify({ error: "content and document_type are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Store in documents table (without embedding - we'll use full-text search and context injection)
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if document already exists for this source
@@ -32,7 +76,7 @@ serve(async (req) => {
         .from("documents")
         .select("id")
         .eq("source_id", source_id)
-        .eq("user_id", user_id)
+        .eq("authenticatedUserId", authenticatedUserId)
         .single();
 
       if (existing) {
@@ -61,7 +105,7 @@ serve(async (req) => {
     const { data: newDoc, error: insertError } = await supabase
       .from("documents")
       .insert({
-        user_id,
+        authenticatedUserId,
         content,
         document_type,
         source_id: source_id || null,

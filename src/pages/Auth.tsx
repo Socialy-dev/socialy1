@@ -35,7 +35,28 @@ const Auth = () => {
   const [invitationError, setInvitationError] = useState<string | null>(null);
   const [isFirstUser, setIsFirstUser] = useState(false);
   const [checkingFirstUser, setCheckingFirstUser] = useState(true);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Security: Strong password validation
+  const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
+    if (pwd.length < 12) {
+      return { valid: false, error: "Le mot de passe doit contenir au moins 12 caractères" };
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return { valid: false, error: "Le mot de passe doit contenir au moins une majuscule" };
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return { valid: false, error: "Le mot de passe doit contenir au moins une minuscule" };
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return { valid: false, error: "Le mot de passe doit contenir au moins un chiffre" };
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+      return { valid: false, error: "Le mot de passe doit contenir au moins un caractère spécial" };
+    }
+    return { valid: true };
+  };
 
   // Check if first user
   useEffect(() => {
@@ -140,6 +161,15 @@ const Auth = () => {
         // Check email matches invitation
         if (invitation && email.trim().toLowerCase() !== invitation.email.toLowerCase()) {
           toast.error("L'email doit correspondre à l'invitation");
+          setLoading(false);
+          return;
+        }
+
+        // Security: Validate password strength
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+          toast.error(passwordValidation.error);
+          setPasswordError(passwordValidation.error || null);
           setLoading(false);
           return;
         }
@@ -367,10 +397,18 @@ const Auth = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (!isLogin && e.target.value) {
+                        const validation = validatePassword(e.target.value);
+                        setPasswordError(validation.error || null);
+                      } else {
+                        setPasswordError(null);
+                      }
+                    }}
                     className="pl-12 pr-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
                     required
-                    minLength={6}
+                    minLength={12}
                   />
                   <button
                     type="button"
@@ -380,6 +418,17 @@ const Auth = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {!isLogin && passwordError && (
+                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {passwordError}
+                  </p>
+                )}
+                {!isLogin && !passwordError && password.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Min. 12 caractères avec majuscule, minuscule, chiffre et caractère spécial
+                  </p>
+                )}
               </div>
 
               {isLogin && (
