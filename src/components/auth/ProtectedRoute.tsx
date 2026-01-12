@@ -1,20 +1,16 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-type AppPage = "dashboard" | "relations-presse" | "social-media" | "profile";
-
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredPage?: AppPage;
   requireAdmin?: boolean;
 }
 
 export const ProtectedRoute = ({
   children,
-  requiredPage,
   requireAdmin = false,
 }: ProtectedRouteProps) => {
-  const { user, loading, isOrgAdmin, hasPageAccess } = useAuth();
+  const { user, loading, isOrgAdmin, currentOrganization } = useAuth();
 
   if (loading) {
     return (
@@ -24,31 +20,25 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Not authenticated
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Admin required but user is not admin
-  if (requireAdmin && !isOrgAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Page access required but user doesn't have permission
-  if (requiredPage && !hasPageAccess(requiredPage)) {
+  if (!currentOrganization) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Accès refusé</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Aucune organisation</h1>
           <p className="text-muted-foreground mb-4">
-            Vous n'avez pas accès à cette page.
+            Vous n'êtes membre d'aucune organisation.
           </p>
-          <a href="/dashboard" className="text-primary hover:underline">
-            Retour au dashboard
-          </a>
         </div>
       </div>
     );
+  }
+
+  if (requireAdmin && !isOrgAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
