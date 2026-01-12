@@ -62,7 +62,7 @@ interface Article {
   hidden?: boolean;
 }
 
-interface SocialyArticle {
+interface OrganizationArticle {
   id: string;
   title: string;
   link: string;
@@ -128,10 +128,10 @@ const RelationsPresse = () => {
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
-  const [socialyArticles, setSocialyArticles] = useState<SocialyArticle[]>([]);
+  const [organizationArticles, setOrganizationArticles] = useState<OrganizationArticle[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingSocialy, setIsLoadingSocialy] = useState(false);
+  const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
   
@@ -178,7 +178,7 @@ const RelationsPresse = () => {
   useEffect(() => {
     fetchAgencies();
     fetchArticles();
-    fetchSocialyArticles();
+    fetchOrganizationArticles();
     fetchJournalists();
     fetchCommuniques();
   }, [isOrgAdmin, effectiveOrgId, isViewingAsOtherOrg]);
@@ -241,13 +241,13 @@ const RelationsPresse = () => {
     setIsLoading(false);
   };
 
-  const fetchSocialyArticles = async () => {
-    setIsLoadingSocialy(true);
+  const fetchOrganizationArticles = async () => {
+    setIsLoadingOrganization(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      let query = supabase.from("socialy_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
+      let query = supabase.from("organization_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
       if (isViewingAsOtherOrg && effectiveOrgId) {
         query = query.eq("organization_id", effectiveOrgId);
       } else if (!isOrgAdmin) {
@@ -256,10 +256,10 @@ const RelationsPresse = () => {
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setSocialyArticles(data.filter(a => a.title && a.title.trim() !== ""));
+        setOrganizationArticles(data.filter(a => a.title && a.title.trim() !== ""));
       }
     }
-    setIsLoadingSocialy(false);
+    setIsLoadingOrganization(false);
   };
 
   const fetchCommuniques = async () => {
@@ -405,20 +405,20 @@ const RelationsPresse = () => {
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
   const [newArticleLink, setNewArticleLink] = useState("");
   const [isAddingArticle, setIsAddingArticle] = useState(false);
-  const [showHiddenSocialy, setShowHiddenSocialy] = useState(false);
+  const [showHiddenOrganization, setShowHiddenOrganization] = useState(false);
   const [showHiddenCompetitor, setShowHiddenCompetitor] = useState(false);
-  const [hiddenSocialyArticles, setHiddenSocialyArticles] = useState<SocialyArticle[]>([]);
+  const [hiddenOrganizationArticles, setHiddenOrganizationArticles] = useState<OrganizationArticle[]>([]);
   const [hiddenCompetitorArticles, setHiddenCompetitorArticles] = useState<Article[]>([]);
   const [showCompetitorManager, setShowCompetitorManager] = useState(false);
   const [newCompetitorName, setNewCompetitorName] = useState("");
   const [isAddingCompetitor, setIsAddingCompetitor] = useState(false);
   const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>("");
 
-  const fetchHiddenSocialyArticles = async () => {
+  const fetchHiddenOrganizationArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user && isOrgAdmin) {
-      const { data } = await supabase.from("socialy_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
-      if (data) setHiddenSocialyArticles(data.filter(a => a.title && a.title.trim() !== ""));
+      const { data } = await supabase.from("organization_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      if (data) setHiddenOrganizationArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
   };
 
@@ -430,29 +430,29 @@ const RelationsPresse = () => {
     }
   };
 
-  const handleHideSocialyArticle = async (articleId: string, e: React.MouseEvent) => {
+  const handleHideOrganizationArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const { error } = await supabase.from("socialy_articles").update({ hidden: true }).eq("id", articleId);
+    const { error } = await supabase.from("organization_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
       toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
       toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
-      fetchSocialyArticles();
-      fetchHiddenSocialyArticles();
+      fetchOrganizationArticles();
+      fetchHiddenOrganizationArticles();
     }
   };
 
-  const handleRestoreSocialyArticle = async (articleId: string, e: React.MouseEvent) => {
+  const handleRestoreOrganizationArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const { error } = await supabase.from("socialy_articles").update({ hidden: false }).eq("id", articleId);
+    const { error } = await supabase.from("organization_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
       toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
       toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
-      fetchSocialyArticles();
-      fetchHiddenSocialyArticles();
+      fetchOrganizationArticles();
+      fetchHiddenOrganizationArticles();
     }
   };
 
@@ -482,7 +482,7 @@ const RelationsPresse = () => {
     }
   };
 
-  const handleAddSocialyArticle = async () => {
+  const handleAddOrganizationArticle = async () => {
     if (!newArticleLink.trim()) {
       toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
@@ -818,25 +818,25 @@ const RelationsPresse = () => {
                   Retombées presse de Socialy
                 </p>
                 <div className="flex items-center gap-3">
-                  {isOrgAdmin && hiddenSocialyArticles.length > 0 && (
+                  {isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
                     <Button 
-                      variant={showHiddenSocialy ? "default" : "outline"}
+                      variant={showHiddenOrganization ? "default" : "outline"}
                       size="sm" 
                       onClick={() => {
-                        setShowHiddenSocialy(!showHiddenSocialy);
-                        if (!showHiddenSocialy) fetchHiddenSocialyArticles();
+                        setShowHiddenOrganization(!showHiddenOrganization);
+                        if (!showHiddenOrganization) fetchHiddenOrganizationArticles();
                       }}
                       className="gap-2"
                     >
                       <EyeOff className="w-4 h-4" />
-                      Masqués ({hiddenSocialyArticles.length})
+                      Masqués ({hiddenOrganizationArticles.length})
                     </Button>
                   )}
-                  {isOrgAdmin && hiddenSocialyArticles.length === 0 && (
+                  {isOrgAdmin && hiddenOrganizationArticles.length === 0 && (
                     <Button 
                       variant="ghost"
                       size="sm" 
-                      onClick={() => fetchHiddenSocialyArticles()}
+                      onClick={() => fetchHiddenOrganizationArticles()}
                       className="gap-2 text-muted-foreground"
                     >
                       <EyeOff className="w-4 h-4" />
@@ -853,30 +853,30 @@ const RelationsPresse = () => {
                     Ajouter
                   </Button>
                   <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                    {socialyArticles.length} article{socialyArticles.length !== 1 ? "s" : ""}
+                    {organizationArticles.length} article{organizationArticles.length !== 1 ? "s" : ""}
                   </span>
                 </div>
               </div>
 
-              {showHiddenSocialy && isOrgAdmin && hiddenSocialyArticles.length > 0 && (
+              {showHiddenOrganization && isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                       <EyeOff className="w-4 h-4" />
                       Articles masqués
                     </p>
-                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenSocialy(false)}>
+                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenOrganization(false)}>
                       Fermer
                     </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
-                    {hiddenSocialyArticles.map((article) => (
+                    {hiddenOrganizationArticles.map((article) => (
                       <div
                         key={article.id}
                         className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
                       >
                         <button
-                          onClick={(e) => handleRestoreSocialyArticle(article.id, e)}
+                          onClick={(e) => handleRestoreOrganizationArticle(article.id, e)}
                           className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
                           title="Restaurer l'article"
                         >
@@ -903,7 +903,7 @@ const RelationsPresse = () => {
                 </div>
               )}
 
-              {isLoadingSocialy ? (
+              {isLoadingOrganization ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
                     <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
@@ -915,9 +915,9 @@ const RelationsPresse = () => {
                     </div>
                   ))}
                 </div>
-              ) : socialyArticles.length > 0 ? (
+              ) : organizationArticles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {socialyArticles.map((article) => (
+                  {organizationArticles.map((article) => (
                     <div
                       key={article.id}
                       className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
@@ -925,7 +925,7 @@ const RelationsPresse = () => {
                     >
                       {isOrgAdmin && (
                         <button
-                          onClick={(e) => handleHideSocialyArticle(article.id, e)}
+                          onClick={(e) => handleHideOrganizationArticle(article.id, e)}
                           className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
                           title="Masquer l'article"
                         >
@@ -2064,7 +2064,7 @@ const RelationsPresse = () => {
                 <Button variant="outline" size="lg" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
                   Annuler
                 </Button>
-                <Button size="lg" onClick={handleAddSocialyArticle} disabled={isAddingArticle} className="min-w-32">
+                <Button size="lg" onClick={handleAddOrganizationArticle} disabled={isAddingArticle} className="min-w-32">
                   {isAddingArticle ? (
                     <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (

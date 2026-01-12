@@ -440,6 +440,74 @@ export type Database = {
           },
         ]
       }
+      organization_articles: {
+        Row: {
+          article_date: string | null
+          article_iso_date: string | null
+          authors: string | null
+          created_at: string
+          hidden: boolean
+          id: string
+          link: string
+          organization_id: string | null
+          position: number | null
+          snippet: string | null
+          source_icon: string | null
+          source_name: string | null
+          thumbnail: string | null
+          thumbnail_small: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          link: string
+          organization_id?: string | null
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          link?: string
+          organization_id?: string | null
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "socialy_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -534,74 +602,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      socialy_articles: {
-        Row: {
-          article_date: string | null
-          article_iso_date: string | null
-          authors: string | null
-          created_at: string
-          hidden: boolean
-          id: string
-          link: string
-          organization_id: string | null
-          position: number | null
-          snippet: string | null
-          source_icon: string | null
-          source_name: string | null
-          thumbnail: string | null
-          thumbnail_small: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          article_date?: string | null
-          article_iso_date?: string | null
-          authors?: string | null
-          created_at?: string
-          hidden?: boolean
-          id?: string
-          link: string
-          organization_id?: string | null
-          position?: number | null
-          snippet?: string | null
-          source_icon?: string | null
-          source_name?: string | null
-          thumbnail?: string | null
-          thumbnail_small?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          article_date?: string | null
-          article_iso_date?: string | null
-          authors?: string | null
-          created_at?: string
-          hidden?: boolean
-          id?: string
-          link?: string
-          organization_id?: string | null
-          position?: number | null
-          snippet?: string | null
-          source_icon?: string | null
-          source_name?: string | null
-          thumbnail?: string | null
-          thumbnail_small?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "socialy_articles_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_linkedin_posts: {
         Row: {
