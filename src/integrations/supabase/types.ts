@@ -364,6 +364,65 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -534,6 +593,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_org_role: {
+        Args: { check_org_id: string; check_user_id: string }
+        Returns: Database["public"]["Enums"]["org_role"]
+      }
       has_page_access: {
         Args: {
           _page: Database["public"]["Enums"]["app_page"]
@@ -549,6 +612,7 @@ export type Database = {
         Returns: boolean
       }
       is_first_user: { Args: never; Returns: boolean }
+      is_super_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_valid_invitation: { Args: { _email: string }; Returns: boolean }
       match_documents: {
         Args: {
@@ -566,10 +630,15 @@ export type Database = {
           source_id: string
         }[]
       }
+      user_belongs_to_org: {
+        Args: { check_org_id: string; check_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_page: "dashboard" | "relations-presse" | "social-media" | "profile"
       app_role: "admin" | "user"
+      org_role: "super_admin" | "org_admin" | "org_user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -699,6 +768,7 @@ export const Constants = {
     Enums: {
       app_page: ["dashboard", "relations-presse", "social-media", "profile"],
       app_role: ["admin", "user"],
+      org_role: ["super_admin", "org_admin", "org_user"],
     },
   },
 } as const
