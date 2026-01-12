@@ -95,8 +95,8 @@ interface Journalist {
   isEditingNotes?: boolean;
 }
 
-const subTabs = [
-  { id: "socialy", label: "Socialy", icon: Zap },
+const getSubTabs = (orgName: string) => [
+  { id: "socialy", label: orgName, icon: Zap },
   { id: "concurrent", label: "Concurrents", icon: Users2 },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
   { id: "communiques", label: "Communiqués", icon: FileText },
@@ -123,8 +123,12 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization } = useAuth();
+  const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization, organizations } = useAuth();
   const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
+  
+  const effectiveOrgName = isViewingAsOtherOrg 
+    ? organizations.find(o => o.id === viewAsOrgId)?.name || currentOrganization?.name || "votre organisation"
+    : currentOrganization?.name || "votre organisation";
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -507,7 +511,7 @@ const RelationsPresse = () => {
         throw error;
       }
       
-      toast({ title: "Enrichissement en cours", description: "L'article Socialy sera disponible dans quelques instants" });
+      toast({ title: "Enrichissement en cours", description: `L'article ${effectiveOrgName} sera disponible dans quelques instants` });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
       toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
@@ -787,7 +791,7 @@ const RelationsPresse = () => {
 
             {/* Sub-tabs */}
             <div className="flex items-center gap-2 p-2 bg-secondary/50 rounded-xl">
-              {subTabs.map((tab) => {
+              {getSubTabs(effectiveOrgName).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeSubTab === tab.id;
                 return (
@@ -815,7 +819,7 @@ const RelationsPresse = () => {
               <div className="flex items-center justify-between">
                 <p className="text-lg font-medium text-foreground flex items-center gap-2">
                   <Zap className="w-5 h-5 text-primary" />
-                  Retombées presse de Socialy
+                  Retombées presse de {effectiveOrgName}
                 </p>
                 <div className="flex items-center gap-3">
                   {isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
@@ -957,7 +961,7 @@ const RelationsPresse = () => {
                         <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
                             <Zap className="w-3 h-3" />
-                            Socialy
+                            {effectiveOrgName}
                           </span>
                           {article.source_name && (
                             <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
@@ -985,7 +989,7 @@ const RelationsPresse = () => {
                   </div>
                   <h4 className="text-2xl font-bold text-foreground">Vos retombées presse</h4>
                   <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Aucun article trouvé. Configurez votre veille pour voir les mentions de Socialy.
+                    Aucun article trouvé. Configurez votre veille pour voir les mentions de {effectiveOrgName}.
                   </p>
                 </div>
               )}
@@ -2038,7 +2042,7 @@ const RelationsPresse = () => {
                     <Zap className="w-7 h-7 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Nouvel article Socialy</h3>
+                    <h3 className="text-xl font-bold text-foreground">Nouvel article {effectiveOrgName}</h3>
                     <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse</p>
                   </div>
                 </div>
