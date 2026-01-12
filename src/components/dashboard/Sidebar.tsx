@@ -27,7 +27,7 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { icon: LayoutGrid, label: "Accueil", path: "/dashboard" },
-  { icon: Newspaper, label: "Relations Presse", path: "/relations-presse" },
+  { icon: Newspaper, label: "Presse", path: "/relations-presse" },
   { icon: TrendingUp, label: "Growth Marketing", path: "/growth-marketing" },
   { icon: Handshake, label: "Biz Dev", path: "/biz-dev" },
   { icon: FileBarChart, label: "Reporting Client", path: "/reporting-client" },

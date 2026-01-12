@@ -133,6 +133,7 @@ export type Database = {
           authors: string | null
           competitor_name: string | null
           created_at: string
+          hidden: boolean
           id: string
           link: string
           position: number | null
@@ -152,6 +153,7 @@ export type Database = {
           authors?: string | null
           competitor_name?: string | null
           created_at?: string
+          hidden?: boolean
           id?: string
           link: string
           position?: number | null
@@ -171,6 +173,7 @@ export type Database = {
           authors?: string | null
           competitor_name?: string | null
           created_at?: string
+          hidden?: boolean
           id?: string
           link?: string
           position?: number | null
@@ -403,6 +406,7 @@ export type Database = {
           article_iso_date: string | null
           authors: string | null
           created_at: string
+          hidden: boolean
           id: string
           link: string
           position: number | null
@@ -420,6 +424,7 @@ export type Database = {
           article_iso_date?: string | null
           authors?: string | null
           created_at?: string
+          hidden?: boolean
           id?: string
           link: string
           position?: number | null
@@ -437,6 +442,7 @@ export type Database = {
           article_iso_date?: string | null
           authors?: string | null
           created_at?: string
+          hidden?: boolean
           id?: string
           link?: string
           position?: number | null
