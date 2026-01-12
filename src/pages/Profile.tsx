@@ -89,12 +89,21 @@ const Profile = () => {
         .eq("user_id", user.id)
         .single();
 
+      const userEmail = user.email || "";
+
       if (profile) {
         setProfileData(prev => ({
           ...prev,
           firstName: profile.first_name || "",
           lastName: profile.last_name || "",
-          email: profile.email || "",
+          email: userEmail,
+          contactEmail: profile.email || userEmail,
+        }));
+      } else {
+        setProfileData(prev => ({
+          ...prev,
+          email: userEmail,
+          contactEmail: userEmail,
         }));
       }
 
@@ -574,7 +583,7 @@ const Profile = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/dashboard")}
                 className="w-10 h-10 rounded-xl bg-secondary/50 hover:bg-secondary flex items-center justify-center transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-foreground" />
