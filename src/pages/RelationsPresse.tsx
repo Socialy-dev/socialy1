@@ -123,12 +123,8 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization, organizations } = useAuth();
+  const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization, effectiveOrgName } = useAuth();
   const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
-  
-  const effectiveOrgName = isViewingAsOtherOrg 
-    ? organizations.find(o => o.id === viewAsOrgId)?.name || currentOrganization?.name || "votre organisation"
-    : currentOrganization?.name || "votre organisation";
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);

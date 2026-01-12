@@ -22,6 +22,7 @@ interface AuthContextType {
   loading: boolean;
   currentOrganization: Organization | null;
   organizations: Organization[];
+  allOrganizations: Organization[];
   orgRole: OrgRole | null;
   isSuperAdmin: boolean;
   isOrgAdmin: boolean;
@@ -30,6 +31,7 @@ interface AuthContextType {
   viewAsOrgId: string | null;
   setViewAsOrgId: (orgId: string | null) => void;
   effectiveOrgId: string | null;
+  effectiveOrgName: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
+  const [allOrganizations, setAllOrganizations] = useState<Organization[]>([]);
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
   const [viewAsOrgId, setViewAsOrgId] = useState<string | null>(null);
 
@@ -68,6 +71,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setMemberships(formattedMemberships);
 
+        const hasSuperAdmin = formattedMemberships.some(m => m.role === "super_admin");
+        if (hasSuperAdmin) {
+          const { data: allOrgsData } = await supabase
+            .from("organizations")
+            .select("id, name, slug, logo_url")
+            .order("name");
+          if (allOrgsData) {
+            setAllOrganizations(allOrgsData);
+          }
+        }
+
         const savedOrgId = localStorage.getItem("currentOrgId");
         const validSavedOrg = formattedMemberships.find(m => m.organization_id === savedOrgId);
         
@@ -91,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(() => fetchUserData(session.user.id), 0);
         } else {
           setMemberships([]);
+          setAllOrganizations([]);
           setCurrentOrgId(null);
           setViewAsOrgId(null);
         }
@@ -117,6 +132,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const organizations = memberships.map(m => m.organization);
 
   const effectiveOrgId = isSuperAdmin && viewAsOrgId ? viewAsOrgId : currentOrgId;
+  
+  const effectiveOrgName = (() => {
+    if (isSuperAdmin && viewAsOrgId) {
+      const viewOrg = allOrganizations.find(o => o.id === viewAsOrgId);
+      if (viewOrg) return viewOrg.name;
+    }
+    return currentOrganization?.name || "votre organisation";
+  })();
 
   const switchOrganization = (orgId: string) => {
     const membership = memberships.find(m => m.organization_id === orgId);
@@ -130,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setUser(null);
     setMemberships([]);
+    setAllOrganizations([]);
     setCurrentOrgId(null);
     setViewAsOrgId(null);
     localStorage.removeItem("currentOrgId");
@@ -142,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         currentOrganization,
         organizations,
+        allOrganizations,
         orgRole,
         isSuperAdmin,
         isOrgAdmin,
@@ -150,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         viewAsOrgId,
         setViewAsOrgId,
         effectiveOrgId,
+        effectiveOrgName,
       }}
     >
       {children}
