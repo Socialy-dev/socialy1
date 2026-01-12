@@ -108,7 +108,6 @@ export type Database = {
           organization_id: string | null
           specialty: string | null
           updated_at: string
-          user_id: string
           website: string | null
         }
         Insert: {
@@ -121,7 +120,6 @@ export type Database = {
           organization_id?: string | null
           specialty?: string | null
           updated_at?: string
-          user_id: string
           website?: string | null
         }
         Update: {
@@ -134,7 +132,6 @@ export type Database = {
           organization_id?: string | null
           specialty?: string | null
           updated_at?: string
-          user_id?: string
           website?: string | null
         }
         Relationships: [
@@ -167,7 +164,6 @@ export type Database = {
           thumbnail_small: string | null
           title: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           agency_id: string
@@ -188,7 +184,6 @@ export type Database = {
           thumbnail_small?: string | null
           title: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           agency_id?: string
@@ -209,7 +204,6 @@ export type Database = {
           thumbnail_small?: string | null
           title?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
@@ -392,7 +386,6 @@ export type Database = {
           source_article_id: string | null
           source_type: string | null
           updated_at: string
-          user_id: string
         }
         Insert: {
           competitor_name?: string | null
@@ -410,7 +403,6 @@ export type Database = {
           source_article_id?: string | null
           source_type?: string | null
           updated_at?: string
-          user_id: string
         }
         Update: {
           competitor_name?: string | null
@@ -428,7 +420,6 @@ export type Database = {
           source_article_id?: string | null
           source_type?: string | null
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
@@ -458,7 +449,6 @@ export type Database = {
           thumbnail_small: string | null
           title: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           article_date?: string | null
@@ -477,7 +467,6 @@ export type Database = {
           thumbnail_small?: string | null
           title: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           article_date?: string | null
@@ -496,7 +485,6 @@ export type Database = {
           thumbnail_small?: string | null
           title?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
