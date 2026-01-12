@@ -129,7 +129,7 @@ export const ProjectSummary = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data, error } = await supabase
-        .from("socialy_articles")
+        .from("organization_articles")
         .select("*")
         .eq("user_id", user.id)
         .order("article_iso_date", { ascending: false });
