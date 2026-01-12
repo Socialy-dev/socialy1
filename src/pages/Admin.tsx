@@ -96,9 +96,7 @@ const Admin = () => {
   const [newOrgSlug, setNewOrgSlug] = useState("");
   const [creatingOrg, setCreatingOrg] = useState(false);
 
-  const [viewAsOrgId, setViewAsOrgId] = useState<string>("");
-  
-  const { user, currentOrganization, isSuperAdmin } = useAuth();
+  const { user, currentOrganization, isSuperAdmin, viewAsOrgId, setViewAsOrgId } = useAuth();
 
   const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
   const viewAsOrgName = organizations.find(o => o.id === viewAsOrgId)?.name || "";
@@ -110,7 +108,7 @@ const Admin = () => {
         setViewAsOrgId(currentOrganization.id);
       }
     }
-  }, [currentOrganization]);
+  }, [currentOrganization, viewAsOrgId, setViewAsOrgId]);
 
   const filteredUsers = isViewingAsOtherOrg 
     ? users.filter(u => {

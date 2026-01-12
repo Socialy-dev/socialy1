@@ -123,7 +123,8 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isOrgAdmin } = useAuth();
+  const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization } = useAuth();
+  const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -180,7 +181,7 @@ const RelationsPresse = () => {
     fetchSocialyArticles();
     fetchJournalists();
     fetchCommuniques();
-  }, [isOrgAdmin]);
+  }, [isOrgAdmin, effectiveOrgId, isViewingAsOtherOrg]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -189,7 +190,9 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("journalists").select("*");
-      if (!isOrgAdmin) {
+      if (isViewingAsOtherOrg && effectiveOrgId) {
+        query = query.eq("organization_id", effectiveOrgId);
+      } else if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("name");
@@ -207,7 +210,9 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("competitor_agencies").select("id, name");
-      if (!isOrgAdmin) {
+      if (isViewingAsOtherOrg && effectiveOrgId) {
+        query = query.eq("organization_id", effectiveOrgId);
+      } else if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data } = await query.order("name");
@@ -222,7 +227,9 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (!isOrgAdmin) {
+      if (isViewingAsOtherOrg && effectiveOrgId) {
+        query = query.eq("organization_id", effectiveOrgId);
+      } else if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
@@ -241,7 +248,9 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("socialy_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (!isOrgAdmin) {
+      if (isViewingAsOtherOrg && effectiveOrgId) {
+        query = query.eq("organization_id", effectiveOrgId);
+      } else if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
@@ -256,10 +265,15 @@ const RelationsPresse = () => {
   const fetchCommuniques = async () => {
     setIsLoadingCommuniques(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("communique_presse")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+      
+      if (isViewingAsOtherOrg && effectiveOrgId) {
+        query = query.eq("organization_id", effectiveOrgId);
+      }
+      
+      const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
       const sortedData = (data as Communique[]).sort((a, b) => {
