@@ -14,7 +14,7 @@ export const ProtectedRoute = ({
   requiredPage,
   requireAdmin = false,
 }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, hasPageAccess } = useAuth();
+  const { user, loading, isOrgAdmin, hasPageAccess } = useAuth();
 
   if (loading) {
     return (
@@ -30,7 +30,7 @@ export const ProtectedRoute = ({
   }
 
   // Admin required but user is not admin
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !isOrgAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 

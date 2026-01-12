@@ -12,11 +12,12 @@ import socialyLogo from "@/assets/socialy-logo.png";
 interface InvitationData {
   id: string;
   email: string;
-  role: string;
-  pages: string[];
+  org_role: string;
+  organization_id: string;
   token: string;
   expires_at: string;
   used_at: string | null;
+  organization_name?: string;
 }
 
 const Auth = () => {
@@ -42,7 +43,7 @@ const Auth = () => {
     const checkFirstUser = async () => {
       try {
         const { count, error } = await supabase
-          .from("user_roles")
+          .from("organization_members")
           .select("*", { count: "exact", head: true });
 
         if (error) throw error;
@@ -67,7 +68,10 @@ const Auth = () => {
       try {
         const { data, error } = await supabase
           .from("invitations")
-          .select("*")
+          .select(`
+            *,
+            organizations:organization_id (name)
+          `)
           .eq("token", inviteToken)
           .single();
 
@@ -86,9 +90,14 @@ const Auth = () => {
           return;
         }
 
-        setInvitation(data as InvitationData);
+        const invitationWithOrg: InvitationData = {
+          ...data,
+          organization_name: (data.organizations as any)?.name || "Entreprise",
+        };
+
+        setInvitation(invitationWithOrg);
         setEmail(data.email);
-        setIsLogin(false); // Switch to signup mode
+        setIsLogin(false);
       } catch (error) {
         console.error("Error checking invitation:", error);
         setInvitationError("Erreur lors de la vérification de l'invitation");
@@ -278,7 +287,7 @@ const Auth = () => {
                 Invitation pour {invitation.email}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Rôle: {invitation.role === "admin" ? "Administrateur" : "Utilisateur"}
+                Organisation: {invitation.organization_name} • Rôle: {invitation.org_role === "org_admin" ? "Administrateur" : "Utilisateur"}
               </p>
             </div>
           )}

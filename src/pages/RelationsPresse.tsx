@@ -123,7 +123,7 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isOrgAdmin } = useAuth();
 
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
@@ -180,7 +180,7 @@ const RelationsPresse = () => {
     fetchSocialyArticles();
     fetchJournalists();
     fetchCommuniques();
-  }, [isAdmin]);
+  }, [isOrgAdmin]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -189,7 +189,7 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("journalists").select("*");
-      if (!isAdmin) {
+      if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("name");
@@ -207,7 +207,7 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("competitor_agencies").select("id, name");
-      if (!isAdmin) {
+      if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data } = await query.order("name");
@@ -222,7 +222,7 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (!isAdmin) {
+      if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
@@ -241,7 +241,7 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (user) {
       let query = supabase.from("socialy_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (!isAdmin) {
+      if (!isOrgAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
@@ -402,7 +402,7 @@ const RelationsPresse = () => {
 
   const fetchHiddenSocialyArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user && isAdmin) {
+    if (user && isOrgAdmin) {
       const { data } = await supabase.from("socialy_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
       if (data) setHiddenSocialyArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
@@ -410,7 +410,7 @@ const RelationsPresse = () => {
 
   const fetchHiddenCompetitorArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user && isAdmin) {
+    if (user && isOrgAdmin) {
       const { data } = await supabase.from("competitor_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
       if (data) setHiddenCompetitorArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
@@ -804,7 +804,7 @@ const RelationsPresse = () => {
                   Retombées presse de Socialy
                 </p>
                 <div className="flex items-center gap-3">
-                  {isAdmin && hiddenSocialyArticles.length > 0 && (
+                  {isOrgAdmin && hiddenSocialyArticles.length > 0 && (
                     <Button 
                       variant={showHiddenSocialy ? "default" : "outline"}
                       size="sm" 
@@ -818,7 +818,7 @@ const RelationsPresse = () => {
                       Masqués ({hiddenSocialyArticles.length})
                     </Button>
                   )}
-                  {isAdmin && hiddenSocialyArticles.length === 0 && (
+                  {isOrgAdmin && hiddenSocialyArticles.length === 0 && (
                     <Button 
                       variant="ghost"
                       size="sm" 
@@ -844,7 +844,7 @@ const RelationsPresse = () => {
                 </div>
               </div>
 
-              {showHiddenSocialy && isAdmin && hiddenSocialyArticles.length > 0 && (
+              {showHiddenSocialy && isOrgAdmin && hiddenSocialyArticles.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -909,7 +909,7 @@ const RelationsPresse = () => {
                       className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
                       onClick={() => window.open(article.link, "_blank")}
                     >
-                      {isAdmin && (
+                      {isOrgAdmin && (
                         <button
                           onClick={(e) => handleHideSocialyArticle(article.id, e)}
                           className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
@@ -1042,7 +1042,7 @@ const RelationsPresse = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {isAdmin && hiddenCompetitorArticles.length > 0 && (
+                  {isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
                     <Button 
                       variant={showHiddenCompetitor ? "default" : "outline"}
                       size="sm" 
@@ -1056,7 +1056,7 @@ const RelationsPresse = () => {
                       Masqués ({hiddenCompetitorArticles.length})
                     </Button>
                   )}
-                  {isAdmin && hiddenCompetitorArticles.length === 0 && (
+                  {isOrgAdmin && hiddenCompetitorArticles.length === 0 && (
                     <Button 
                       variant="ghost"
                       size="sm" 
@@ -1091,7 +1091,7 @@ const RelationsPresse = () => {
                 </div>
               </div>
 
-              {showHiddenCompetitor && isAdmin && hiddenCompetitorArticles.length > 0 && (
+              {showHiddenCompetitor && isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -1156,7 +1156,7 @@ const RelationsPresse = () => {
                       className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
                       onClick={() => window.open(article.link, "_blank")}
                     >
-                      {isAdmin && (
+                      {isOrgAdmin && (
                         <button
                           onClick={(e) => handleHideCompetitorArticle(article.id, e)}
                           className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
