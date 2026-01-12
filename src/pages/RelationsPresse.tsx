@@ -482,7 +482,12 @@ const RelationsPresse = () => {
     }).select().single();
     
     if (error || !insertedArticle) {
-      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
+      const isDuplicate = error?.code === "23505";
+      toast({ 
+        title: "Erreur", 
+        description: isDuplicate ? "Cet article existe déjà" : "Impossible d'ajouter l'article", 
+        variant: "destructive" 
+      });
       setIsAddingArticle(false);
       return;
     }
@@ -534,7 +539,12 @@ const RelationsPresse = () => {
     }).select().single();
     
     if (error || !insertedArticle) {
-      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
+      const isDuplicate = error?.code === "23505";
+      toast({ 
+        title: "Erreur", 
+        description: isDuplicate ? "Cet article existe déjà pour ce concurrent" : "Impossible d'ajouter l'article", 
+        variant: "destructive" 
+      });
       setIsAddingArticle(false);
       return;
     }
