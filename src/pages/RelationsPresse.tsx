@@ -185,16 +185,8 @@ const RelationsPresse = () => {
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      let query = supabase.from("journalists").select("*");
-      if (isViewingAsOtherOrg && effectiveOrgId) {
-        query = query.eq("organization_id", effectiveOrgId);
-      } else if (!isOrgAdmin) {
-        query = query.eq("user_id", user.id);
-      }
+    if (effectiveOrgId) {
+      let query = supabase.from("journalists").select("*").eq("organization_id", effectiveOrgId);
       const { data, error } = await query.order("name");
 
       if (!error && data) {
@@ -205,16 +197,8 @@ const RelationsPresse = () => {
   };
 
   const fetchAgencies = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      let query = supabase.from("competitor_agencies").select("id, name");
-      if (isViewingAsOtherOrg && effectiveOrgId) {
-        query = query.eq("organization_id", effectiveOrgId);
-      } else if (!isOrgAdmin) {
-        query = query.eq("user_id", user.id);
-      }
+    if (effectiveOrgId) {
+      let query = supabase.from("competitor_agencies").select("id, name").eq("organization_id", effectiveOrgId);
       const { data } = await query.order("name");
       setAgencies(data || []);
     }
@@ -222,16 +206,8 @@ const RelationsPresse = () => {
 
   const fetchArticles = async () => {
     setIsLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (isViewingAsOtherOrg && effectiveOrgId) {
-        query = query.eq("organization_id", effectiveOrgId);
-      } else if (!isOrgAdmin) {
-        query = query.eq("user_id", user.id);
-      }
+    if (effectiveOrgId) {
+      let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "").eq("organization_id", effectiveOrgId);
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
@@ -243,16 +219,8 @@ const RelationsPresse = () => {
 
   const fetchOrganizationArticles = async () => {
     setIsLoadingOrganization(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      let query = supabase.from("organization_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
-      if (isViewingAsOtherOrg && effectiveOrgId) {
-        query = query.eq("organization_id", effectiveOrgId);
-      } else if (!isOrgAdmin) {
-        query = query.eq("user_id", user.id);
-      }
+    if (effectiveOrgId) {
+      let query = supabase.from("organization_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "").eq("organization_id", effectiveOrgId);
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
@@ -487,19 +455,18 @@ const RelationsPresse = () => {
       toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
-    setIsAddingArticle(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setIsAddingArticle(false);
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
+    setIsAddingArticle(true);
     
     try {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
           type: "socialy",
-          user_id: user.id,
+          organization_id: effectiveOrgId,
         },
       });
       
@@ -527,20 +494,23 @@ const RelationsPresse = () => {
       toast({ title: "Concurrent requis", description: "Veuillez sélectionner un concurrent pour cet article", variant: "destructive" });
       return;
     }
-    setIsAddingArticle(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setIsAddingArticle(false);
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
+    
+    const selectedCompetitor = agencies.find(a => a.id === selectedCompetitorId);
+    
+    setIsAddingArticle(true);
     
     try {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
           type: "competitor",
-          user_id: user.id,
+          organization_id: effectiveOrgId,
           agency_id: selectedCompetitorId,
+          competitor_name: selectedCompetitor?.name || null,
         },
       });
       
@@ -565,16 +535,15 @@ const RelationsPresse = () => {
       toast({ title: "Nom requis", description: "Veuillez saisir le nom du concurrent", variant: "destructive" });
       return;
     }
-    setIsAddingCompetitor(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setIsAddingCompetitor(false);
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
+    setIsAddingCompetitor(true);
     
     try {
       const { error } = await supabase.from("competitor_agencies").insert({
-        user_id: user.id,
+        organization_id: effectiveOrgId,
         name: newCompetitorName.trim(),
       });
       
@@ -658,19 +627,16 @@ const RelationsPresse = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsImporting(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    if (!effectiveOrgId) {
       toast({
-        title: "Connexion requise",
-        description: "Vous devez être connecté pour importer des journalistes",
+        title: "Erreur",
+        description: "Organisation non trouvée",
         variant: "destructive",
       });
-      setIsImporting(false);
       return;
     }
+
+    setIsImporting(true);
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -678,20 +644,17 @@ const RelationsPresse = () => {
         const text = e.target?.result as string;
         const lines = text.split("\n").filter((line) => line.trim());
 
-        // Skip header row and parse data
         const dataLines = lines.slice(1);
         const journalistsToInsert = [];
 
         for (const line of dataLines) {
-          // Parse CSV, handling potential commas within quoted fields
           const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v) => v.replace(/^"|"$/g, "").trim()) || [];
 
-          // Expected format: Media, Contact, Poste, Email, Tel direct, Commentaire
           const [media, name, job, email, phone, notes] = values;
 
           if (name && name.trim()) {
             journalistsToInsert.push({
-              user_id: user.id,
+              organization_id: effectiveOrgId,
               name: name.trim(),
               media: media?.trim() || null,
               job: job?.trim() || null,
