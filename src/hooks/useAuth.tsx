@@ -27,6 +27,9 @@ interface AuthContextType {
   isOrgAdmin: boolean;
   switchOrganization: (orgId: string) => void;
   signOut: () => Promise<void>;
+  viewAsOrgId: string | null;
+  setViewAsOrgId: (orgId: string | null) => void;
+  effectiveOrgId: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
+  const [viewAsOrgId, setViewAsOrgId] = useState<string | null>(null);
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -88,6 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setMemberships([]);
           setCurrentOrgId(null);
+          setViewAsOrgId(null);
         }
         setLoading(false);
       }
@@ -111,6 +116,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isOrgAdmin = orgRole === "org_admin" || orgRole === "super_admin";
   const organizations = memberships.map(m => m.organization);
 
+  const effectiveOrgId = isSuperAdmin && viewAsOrgId ? viewAsOrgId : currentOrgId;
+
   const switchOrganization = (orgId: string) => {
     const membership = memberships.find(m => m.organization_id === orgId);
     if (membership) {
@@ -124,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setMemberships([]);
     setCurrentOrgId(null);
+    setViewAsOrgId(null);
     localStorage.removeItem("currentOrgId");
   };
 
@@ -139,6 +147,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isOrgAdmin,
         switchOrganization,
         signOut,
+        viewAsOrgId,
+        setViewAsOrgId,
+        effectiveOrgId,
       }}
     >
       {children}
