@@ -496,7 +496,7 @@ const Admin = () => {
                         <SelectValue placeholder="Sélectionner une organisation" />
                       </SelectTrigger>
                       <SelectContent>
-                        {organizations.map((org) => (
+                        {(isSuperAdmin ? organizations : organizations.filter(o => o.id === currentOrganization?.id)).map((org) => (
                           <SelectItem key={org.id} value={org.id}>
                             {org.name}
                           </SelectItem>
