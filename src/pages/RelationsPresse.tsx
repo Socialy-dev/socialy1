@@ -470,22 +470,41 @@ const RelationsPresse = () => {
     }
     setIsAddingArticle(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setIsAddingArticle(false);
+      return;
+    }
     
-    const { error } = await supabase.from("socialy_articles").insert({
+    const { data: insertedArticle, error } = await supabase.from("socialy_articles").insert({
       user_id: user.id,
       link: newArticleLink.trim(),
-      title: "Article à configurer",
-    });
+      title: "Enrichissement en cours...",
+    }).select().single();
     
-    if (error) {
+    if (error || !insertedArticle) {
       toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
-    } else {
-      toast({ title: "Article ajouté !" });
-      setNewArticleLink("");
-      setShowAddSocialyModal(false);
-      fetchSocialyArticles();
+      setIsAddingArticle(false);
+      return;
     }
+    
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      await supabase.functions.invoke("enrich-article", {
+        body: {
+          link: newArticleLink.trim(),
+          type: "socialy",
+          article_id: insertedArticle.id,
+        },
+      });
+      toast({ title: "Article ajouté", description: "Enrichissement en cours..." });
+    } catch (enrichError) {
+      console.error("Enrichment error:", enrichError);
+      toast({ title: "Article ajouté", description: "L'enrichissement sera effectué ultérieurement" });
+    }
+    
+    setNewArticleLink("");
+    setShowAddSocialyModal(false);
+    fetchSocialyArticles();
     setIsAddingArticle(false);
   };
 
@@ -500,23 +519,44 @@ const RelationsPresse = () => {
     }
     setIsAddingArticle(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    const { error } = await supabase.from("competitor_articles").insert({
-      user_id: user.id,
-      agency_id: agencies[0].id,
-      link: newArticleLink.trim(),
-      title: "Article à configurer",
-    });
-    
-    if (error) {
-      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
-    } else {
-      toast({ title: "Article ajouté !" });
-      setNewArticleLink("");
-      setShowAddCompetitorModal(false);
-      fetchArticles();
+    if (!user) {
+      setIsAddingArticle(false);
+      return;
     }
+    
+    const selectedAgencyId = agencies[0].id;
+    
+    const { data: insertedArticle, error } = await supabase.from("competitor_articles").insert({
+      user_id: user.id,
+      agency_id: selectedAgencyId,
+      link: newArticleLink.trim(),
+      title: "Enrichissement en cours...",
+    }).select().single();
+    
+    if (error || !insertedArticle) {
+      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
+      setIsAddingArticle(false);
+      return;
+    }
+    
+    try {
+      await supabase.functions.invoke("enrich-article", {
+        body: {
+          link: newArticleLink.trim(),
+          type: "competitor",
+          article_id: insertedArticle.id,
+          agency_id: selectedAgencyId,
+        },
+      });
+      toast({ title: "Article ajouté", description: "Enrichissement en cours..." });
+    } catch (enrichError) {
+      console.error("Enrichment error:", enrichError);
+      toast({ title: "Article ajouté", description: "L'enrichissement sera effectué ultérieurement" });
+    }
+    
+    setNewArticleLink("");
+    setShowAddCompetitorModal(false);
+    fetchArticles();
     setIsAddingArticle(false);
   };
 
