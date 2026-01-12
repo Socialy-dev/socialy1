@@ -96,11 +96,16 @@ const Admin = () => {
   const [newOrgSlug, setNewOrgSlug] = useState("");
   const [creatingOrg, setCreatingOrg] = useState(false);
 
+  const [viewAsOrgId, setViewAsOrgId] = useState<string>("");
+  
   const { user, currentOrganization, isSuperAdmin } = useAuth();
 
   useEffect(() => {
     if (currentOrganization) {
       setSelectedOrgId(currentOrganization.id);
+      if (!viewAsOrgId) {
+        setViewAsOrgId(currentOrganization.id);
+      }
     }
   }, [currentOrganization]);
 
@@ -380,10 +385,29 @@ const Admin = () => {
           <ResourcesPanel onBack={() => setShowResources(false)} />
         ) : (
           <>
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-muted-foreground">
-                Gérez les utilisateurs, organisations et invitations
-              </p>
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <p className="text-muted-foreground">
+                  Gérez les utilisateurs, organisations et invitations
+                </p>
+                {isSuperAdmin && (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
+                    <span className="text-sm font-medium text-primary">Voir en tant que</span>
+                    <Select value={viewAsOrgId} onValueChange={setViewAsOrgId}>
+                      <SelectTrigger className="w-[180px] h-8 border-primary/30 bg-background">
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
               <Button
                 variant="outline"
                 onClick={() => setShowResources(true)}
