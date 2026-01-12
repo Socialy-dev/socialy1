@@ -277,12 +277,12 @@ const RelationsPresse = () => {
 
   const handleCommuniqueSubmit = async () => {
     if (!formCommuniqueName.trim()) {
-      toast({ title: "Erreur", description: "Le nom est requis", variant: "destructive" });
+      toast({ title: "Champ obligatoire manquant", description: "Veuillez saisir un nom pour le communiqué", variant: "destructive" });
       return;
     }
 
     if (!formCommuniquePdf && !formCommuniqueWord && !formCommuniqueAssetsLink.trim()) {
-      toast({ title: "Erreur", description: "Ajoutez au moins un fichier ou un lien", variant: "destructive" });
+      toast({ title: "Fichier ou lien requis", description: "Veuillez ajouter un PDF, un fichier Word ou un lien vers les assets", variant: "destructive" });
       return;
     }
 
@@ -330,12 +330,12 @@ const RelationsPresse = () => {
 
       if (error) throw error;
 
-      toast({ title: "Communiqué ajouté !" });
+      toast({ title: "Communiqué créé avec succès", description: "Votre communiqué de presse a été enregistré" });
       resetCommuniqueForm();
       fetchCommuniques();
     } catch (error: any) {
       console.error("Error adding communique:", error);
-      toast({ title: "Erreur", description: "Erreur lors de l'ajout", variant: "destructive" });
+      toast({ title: "Échec de la création", description: "Une erreur s'est produite lors de l'ajout du communiqué. Veuillez réessayer.", variant: "destructive" });
     } finally {
       setUploadingCommunique(false);
     }
@@ -363,10 +363,10 @@ const RelationsPresse = () => {
 
       if (error) throw error;
 
-      toast({ title: "Communiqué supprimé" });
+      toast({ title: "Communiqué supprimé", description: "Le communiqué et ses fichiers associés ont été supprimés" });
       fetchCommuniques();
     } catch (error: any) {
-      toast({ title: "Erreur", description: "Erreur lors de la suppression", variant: "destructive" });
+      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le communiqué. Veuillez réessayer.", variant: "destructive" });
     }
   };
 
@@ -416,9 +416,9 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("socialy_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de masquer l'article", variant: "destructive" });
+      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
-      toast({ title: "Article masqué" });
+      toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchSocialyArticles();
       fetchHiddenSocialyArticles();
     }
@@ -429,9 +429,9 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("socialy_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de restaurer l'article", variant: "destructive" });
+      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
-      toast({ title: "Article restauré" });
+      toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchSocialyArticles();
       fetchHiddenSocialyArticles();
     }
@@ -442,9 +442,9 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("competitor_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de masquer l'article", variant: "destructive" });
+      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
-      toast({ title: "Article masqué" });
+      toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchArticles();
       fetchHiddenCompetitorArticles();
     }
@@ -455,9 +455,9 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("competitor_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de restaurer l'article", variant: "destructive" });
+      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
     } else {
-      toast({ title: "Article restauré" });
+      toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchArticles();
       fetchHiddenCompetitorArticles();
     }
@@ -465,7 +465,7 @@ const RelationsPresse = () => {
 
   const handleAddSocialyArticle = async () => {
     if (!newArticleLink.trim()) {
-      toast({ title: "Erreur", description: "Veuillez entrer un lien", variant: "destructive" });
+      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
     setIsAddingArticle(true);
@@ -484,8 +484,8 @@ const RelationsPresse = () => {
     if (error || !insertedArticle) {
       const isDuplicate = error?.code === "23505";
       toast({ 
-        title: "Erreur", 
-        description: isDuplicate ? "Cet article existe déjà" : "Impossible d'ajouter l'article", 
+        title: isDuplicate ? "Article déjà existant" : "Échec de l'ajout", 
+        description: isDuplicate ? "Cet article Socialy a déjà été enregistré" : "Une erreur s'est produite lors de l'ajout. Veuillez réessayer.", 
         variant: "destructive" 
       });
       setIsAddingArticle(false);
@@ -501,10 +501,10 @@ const RelationsPresse = () => {
           article_id: insertedArticle.id,
         },
       });
-      toast({ title: "Article ajouté", description: "Enrichissement en cours..." });
+      toast({ title: "Article Socialy ajouté", description: "Les métadonnées sont en cours de récupération automatique" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Article ajouté", description: "L'enrichissement sera effectué ultérieurement" });
+      toast({ title: "Article Socialy ajouté", description: "Les métadonnées seront récupérées ultérieurement" });
     }
     
     setNewArticleLink("");
@@ -515,11 +515,11 @@ const RelationsPresse = () => {
 
   const handleAddCompetitorArticle = async () => {
     if (!newArticleLink.trim()) {
-      toast({ title: "Erreur", description: "Veuillez entrer un lien", variant: "destructive" });
+      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
     if (agencies.length === 0) {
-      toast({ title: "Erreur", description: "Ajoutez d'abord un concurrent dans votre profil", variant: "destructive" });
+      toast({ title: "Aucun concurrent configuré", description: "Ajoutez d'abord un concurrent dans votre profil avant d'ajouter des articles", variant: "destructive" });
       return;
     }
     setIsAddingArticle(true);
@@ -541,8 +541,8 @@ const RelationsPresse = () => {
     if (error || !insertedArticle) {
       const isDuplicate = error?.code === "23505";
       toast({ 
-        title: "Erreur", 
-        description: isDuplicate ? "Cet article existe déjà pour ce concurrent" : "Impossible d'ajouter l'article", 
+        title: isDuplicate ? "Article déjà existant" : "Échec de l'ajout", 
+        description: isDuplicate ? "Cet article concurrent a déjà été enregistré pour cette agence" : "Une erreur s'est produite lors de l'ajout. Veuillez réessayer.", 
         variant: "destructive" 
       });
       setIsAddingArticle(false);
@@ -558,10 +558,10 @@ const RelationsPresse = () => {
           agency_id: selectedAgencyId,
         },
       });
-      toast({ title: "Article ajouté", description: "Enrichissement en cours..." });
+      toast({ title: "Article concurrent ajouté", description: "Les métadonnées sont en cours de récupération automatique" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Article ajouté", description: "L'enrichissement sera effectué ultérieurement" });
+      toast({ title: "Article concurrent ajouté", description: "Les métadonnées seront récupérées ultérieurement" });
     }
     
     setNewArticleLink("");
@@ -579,8 +579,8 @@ const RelationsPresse = () => {
 
     if (error) {
       toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder le commentaire",
+        title: "Échec de la sauvegarde",
+        description: "Impossible de sauvegarder le commentaire. Veuillez réessayer.",
         variant: "destructive",
       });
     } else {
@@ -627,7 +627,7 @@ const RelationsPresse = () => {
     } = await supabase.auth.getUser();
     if (!user) {
       toast({
-        title: "Erreur",
+        title: "Connexion requise",
         description: "Vous devez être connecté pour importer des journalistes",
         variant: "destructive",
       });
@@ -674,22 +674,22 @@ const RelationsPresse = () => {
           }
 
           toast({
-            title: "Import réussi !",
-            description: `${journalistsToInsert.length} journaliste(s) importé(s)`,
+            title: "Import réussi",
+            description: `${journalistsToInsert.length} journaliste(s) ajouté(s) à votre base de contacts`,
           });
           fetchJournalists();
         } else {
           toast({
-            title: "Fichier vide",
-            description: "Aucun journaliste trouvé dans le fichier",
+            title: "Fichier vide ou invalide",
+            description: "Aucun journaliste n'a été trouvé dans le fichier CSV. Vérifiez le format.",
             variant: "destructive",
           });
         }
       } catch (error: any) {
         console.error("Import error:", error);
         toast({
-          title: "Erreur d'import",
-          description: error.message || "Une erreur est survenue lors de l'import",
+          title: "Échec de l'import",
+          description: error.message || "Une erreur s'est produite lors de l'import du fichier CSV",
           variant: "destructive",
         });
       }
