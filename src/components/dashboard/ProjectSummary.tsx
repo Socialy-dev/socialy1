@@ -20,6 +20,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Article {
   id: string;
@@ -74,6 +75,7 @@ const mockJournalists: Journalist[] = [
 ];
 
 export const ProjectSummary = () => {
+  const { effectiveOrgId } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState("socialy");
   const [articles, setArticles] = useState<Article[]>([]);
   const [socialyArticles, setSocialyArticles] = useState<SocialyArticle[]>([]);
@@ -96,12 +98,11 @@ export const ProjectSummary = () => {
   }, []);
 
   const fetchAgencies = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (effectiveOrgId) {
       const { data } = await supabase
         .from("competitor_agencies")
         .select("id, name")
-        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId)
         .order("name");
       setAgencies(data || []);
     }
@@ -109,12 +110,11 @@ export const ProjectSummary = () => {
 
   const fetchArticles = async () => {
     setIsLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (effectiveOrgId) {
       const { data, error } = await supabase
         .from("competitor_articles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId)
         .order("article_iso_date", { ascending: false });
 
       if (!error && data) {
@@ -126,12 +126,11 @@ export const ProjectSummary = () => {
 
   const fetchSocialyArticles = async () => {
     setIsLoadingSocialy(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (effectiveOrgId) {
       const { data, error } = await supabase
         .from("organization_articles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId)
         .order("article_iso_date", { ascending: false });
 
       if (!error && data) {

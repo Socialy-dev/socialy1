@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Globe, Linkedin, Mail, Plus, Trash2, Building2, Users, Newspaper, FileText, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Agency {
   id: string;
@@ -31,6 +32,7 @@ const tabs = [
 ];
 
 export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
+  const { effectiveOrgId } = useAuth();
   const [activeTab, setActiveTab] = useState("agences-concurrentes");
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -134,12 +136,11 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
 
   const fetchAgencies = async () => {
     setIsLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+    if (effectiveOrgId) {
       const { data, error } = await supabase
         .from("competitor_agencies")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId)
         .order("name");
       
       if (!error && data) {
@@ -162,13 +163,15 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
       return;
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!effectiveOrgId) {
+      toast.error("Organisation non trouvée");
+      return;
+    }
 
     const { error } = await supabase
       .from("competitor_agencies")
       .insert({
-        user_id: user.id,
+        organization_id: effectiveOrgId,
         name: newAgency.name,
         website: newAgency.website || null,
         linkedin: newAgency.linkedin || null,
