@@ -132,6 +132,7 @@ const RelationsPresse = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSocialy, setIsLoadingSocialy] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
+  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
   
   const [journalists, setJournalists] = useState<Journalist[]>([]);
   const [isLoadingJournalists, setIsLoadingJournalists] = useState(false);
@@ -220,14 +221,14 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      let query = supabase.from("competitor_articles").select("*").eq("hidden", false);
+      let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
       if (!isAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setArticles(data);
+        setArticles(data.filter(a => a.title && a.title.trim() !== ""));
       }
     }
     setIsLoading(false);
@@ -239,14 +240,14 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      let query = supabase.from("socialy_articles").select("*").eq("hidden", false);
+      let query = supabase.from("socialy_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "");
       if (!isAdmin) {
         query = query.eq("user_id", user.id);
       }
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setSocialyArticles(data);
+        setSocialyArticles(data.filter(a => a.title && a.title.trim() !== ""));
       }
     }
     setIsLoadingSocialy(false);
@@ -382,6 +383,9 @@ const RelationsPresse = () => {
 
   const filteredArticles = selectedAgency ? articles.filter((a) => a.agency_id === selectedAgency) : articles;
 
+  const selectedAgencyName = selectedAgency
+    ? agencies.find((a) => a.id === selectedAgency)?.name
+    : "Tous les concurrents";
 
   const [showAddSocialyModal, setShowAddSocialyModal] = useState(false);
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
@@ -399,16 +403,16 @@ const RelationsPresse = () => {
   const fetchHiddenSocialyArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user && isAdmin) {
-      const { data } = await supabase.from("socialy_articles").select("*").eq("hidden", true).order("article_iso_date", { ascending: false });
-      if (data) setHiddenSocialyArticles(data);
+      const { data } = await supabase.from("socialy_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      if (data) setHiddenSocialyArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
   };
 
   const fetchHiddenCompetitorArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user && isAdmin) {
-      const { data } = await supabase.from("competitor_articles").select("*").eq("hidden", true).order("article_iso_date", { ascending: false });
-      if (data) setHiddenCompetitorArticles(data);
+      const { data } = await supabase.from("competitor_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      if (data) setHiddenCompetitorArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
   };
 
@@ -978,10 +982,64 @@ const RelationsPresse = () => {
           {activeSubTab === "concurrent" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                  <Users2 className="w-5 h-5 text-primary" />
-                  Veille concurrentielle
-                </p>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                    className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                  >
+                    <Filter className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">{selectedAgencyName}</span>
+                    <ChevronDown
+                      className={cn(
+                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                        showAgencyDropdown && "rotate-180",
+                      )}
+                    />
+                  </button>
+
+                  {showAgencyDropdown && (
+                    <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-2">
+                        <button
+                          onClick={() => {
+                            setSelectedAgency(null);
+                            setShowAgencyDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                            !selectedAgency ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                          )}
+                        >
+                          <Users2 className="w-5 h-5" />
+                          Tous les concurrents
+                          {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
+                        </button>
+
+                        {agencies.length > 0 && <div className="border-t border-border my-2" />}
+
+                        {agencies.map((agency) => (
+                          <button
+                            key={agency.id}
+                            onClick={() => {
+                              setSelectedAgency(agency.id);
+                              setShowAgencyDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                              selectedAgency === agency.id
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground hover:bg-secondary",
+                            )}
+                          >
+                            <Building2 className="w-5 h-5" />
+                            {agency.name}
+                            {selectedAgency === agency.id && <Check className="w-5 h-5 ml-auto" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-3">
                   {isAdmin && hiddenCompetitorArticles.length > 0 && (
@@ -1032,29 +1090,6 @@ const RelationsPresse = () => {
                   </span>
                 </div>
               </div>
-
-              {agencies.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {agencies.map((agency) => (
-                    <div 
-                      key={agency.id}
-                      onClick={() => setSelectedAgency(selectedAgency === agency.id ? null : agency.id)}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-200 border",
-                        selectedAgency === agency.id 
-                          ? "bg-primary/15 border-primary/30 text-primary shadow-sm" 
-                          : "bg-card border-border hover:border-primary/20 hover:bg-secondary/50"
-                      )}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{agency.name}</span>
-                      <span className="text-xs text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full">
-                        {articles.filter(a => a.agency_id === agency.id).length}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               {showHiddenCompetitor && isAdmin && hiddenCompetitorArticles.length > 0 && (
                 <div className="space-y-4">
@@ -1980,40 +2015,47 @@ const RelationsPresse = () => {
       )}
 
       {showAddSocialyModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Link className="w-5 h-5 text-primary" />
-                Ajouter un article Socialy
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
-                <X className="w-5 h-5" />
-              </Button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                    <Zap className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Nouvel article Socialy</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
-            <div className="space-y-4">
+            <div className="p-8 space-y-6">
               <div>
-                <Label className="text-sm font-semibold">Lien de l'article</Label>
+                <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
                 <Input
                   value={newArticleLink}
                   onChange={(e) => setNewArticleLink(e.target.value)}
                   placeholder="https://example.com/article..."
-                  className="mt-2"
+                  className="mt-3 h-12 text-base"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Les métadonnées seront récupérées automatiquement
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Collez le lien de l'article. Les métadonnées seront récupérées automatiquement.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" size="lg" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
                   Annuler
                 </Button>
-                <Button onClick={handleAddSocialyArticle} disabled={isAddingArticle}>
+                <Button size="lg" onClick={handleAddSocialyArticle} disabled={isAddingArticle} className="min-w-32">
                   {isAddingArticle ? (
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-5 h-5 mr-2" />
                       Ajouter
                     </>
                   )}
@@ -2025,22 +2067,29 @@ const RelationsPresse = () => {
       )}
 
       {showAddCompetitorModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Link className="w-5 h-5 text-primary" />
-                Ajouter un article concurrent
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
-                <X className="w-5 h-5" />
-              </Button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                    <Users2 className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Nouvel article concurrent</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
-            <div className="space-y-4">
+            <div className="p-8 space-y-6">
               <div>
-                <Label className="text-sm font-semibold">Concurrent</Label>
+                <Label className="text-sm font-semibold text-foreground">Concurrent</Label>
                 <Select value={selectedCompetitorId} onValueChange={setSelectedCompetitorId}>
-                  <SelectTrigger className="mt-2">
+                  <SelectTrigger className="mt-3 h-12 text-base">
                     <SelectValue placeholder="Sélectionnez un concurrent" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2061,27 +2110,27 @@ const RelationsPresse = () => {
                 )}
               </div>
               <div>
-                <Label className="text-sm font-semibold">Lien de l'article</Label>
+                <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
                 <Input
                   value={newArticleLink}
                   onChange={(e) => setNewArticleLink(e.target.value)}
                   placeholder="https://example.com/article..."
-                  className="mt-2"
+                  className="mt-3 h-12 text-base"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Les métadonnées seront récupérées automatiquement
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Collez le lien de l'article. Les métadonnées seront récupérées automatiquement.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
                   Annuler
                 </Button>
-                <Button onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId}>
+                <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId} className="min-w-32">
                   {isAddingArticle ? (
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-5 h-5 mr-2" />
                       Ajouter
                     </>
                   )}
@@ -2093,58 +2142,70 @@ const RelationsPresse = () => {
       )}
 
       {showCompetitorManager && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-lg border border-border shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                Gérer les concurrents
-              </h3>
-              <Button variant="ghost" size="icon" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
-                <X className="w-5 h-5" />
-              </Button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-2xl border border-border shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                    <Building2 className="w-7 h-7 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground">Gérer les concurrents</h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des concurrents</p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex gap-2">
+            <div className="p-8 space-y-6">
+              <div className="flex gap-3">
                 <Input
                   value={newCompetitorName}
                   onChange={(e) => setNewCompetitorName(e.target.value)}
                   placeholder="Nom du concurrent..."
-                  className="flex-1"
+                  className="flex-1 h-12 text-base"
                   onKeyDown={(e) => e.key === "Enter" && handleAddCompetitor()}
                 />
-                <Button onClick={handleAddCompetitor} disabled={isAddingCompetitor}>
+                <Button size="lg" onClick={handleAddCompetitor} disabled={isAddingCompetitor} className="px-6">
                   {isAddingCompetitor ? (
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (
-                    <Plus className="w-4 h-4" />
+                    <>
+                      <Plus className="w-5 h-5 mr-2" />
+                      Ajouter
+                    </>
                   )}
                 </Button>
               </div>
 
               {agencies.length === 0 ? (
-                <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
-                  <Building2 className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">Aucun concurrent</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                    <Building2 className="w-8 h-8 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-base font-medium text-muted-foreground">Aucun concurrent</p>
+                  <p className="text-sm text-muted-foreground mt-1">
                     Ajoutez votre premier concurrent ci-dessus
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-80 overflow-y-auto">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {agencies.map((agency) => (
                     <div 
                       key={agency.id}
-                      className="group flex items-center justify-between p-4 bg-secondary/40 hover:bg-secondary/60 rounded-xl transition-all border border-transparent hover:border-border"
+                      className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-primary" />
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Building2 className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                          <p className="font-semibold text-foreground">{agency.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-semibold text-foreground text-base">{agency.name}</p>
+                          <p className="text-sm text-muted-foreground">
                             {articles.filter(a => a.agency_id === agency.id).length} article(s)
                           </p>
                         </div>
@@ -2152,10 +2213,10 @@ const RelationsPresse = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                        className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                         onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-5 h-5" />
                       </Button>
                     </div>
                   ))}
