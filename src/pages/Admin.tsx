@@ -29,6 +29,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ResourcesPanel } from "@/components/admin/ResourcesPanel";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type AppPage = "dashboard" | "relations-presse" | "social-media" | "profile";
+
+const PAGE_LABELS: Record<AppPage, string> = {
+  "dashboard": "Dashboard",
+  "relations-presse": "Presse",
+  "social-media": "Social Media",
+  "profile": "Profile",
+};
+
+const ALL_PAGES: AppPage[] = ["dashboard", "relations-presse", "social-media", "profile"];
 
 type OrgRole = "super_admin" | "org_admin" | "org_user";
 
@@ -77,6 +89,7 @@ const Admin = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newOrgRole, setNewOrgRole] = useState<OrgRole>("org_user");
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+  const [selectedPages, setSelectedPages] = useState<AppPage[]>(["dashboard", "profile"]);
   const [sendingInvitation, setSendingInvitation] = useState(false);
 
   const { user, currentOrganization, isSuperAdmin } = useAuth();
