@@ -100,6 +100,9 @@ const Admin = () => {
   
   const { user, currentOrganization, isSuperAdmin } = useAuth();
 
+  const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
+  const viewAsOrgName = organizations.find(o => o.id === viewAsOrgId)?.name || "";
+
   useEffect(() => {
     if (currentOrganization) {
       setSelectedOrgId(currentOrganization.id);
@@ -108,6 +111,17 @@ const Admin = () => {
       }
     }
   }, [currentOrganization]);
+
+  const filteredUsers = isViewingAsOtherOrg 
+    ? users.filter(u => {
+        const userOrg = organizations.find(o => o.name === u.organization_name);
+        return userOrg?.id === viewAsOrgId;
+      })
+    : users;
+
+  const filteredInvitations = isViewingAsOtherOrg
+    ? invitations.filter(inv => inv.organization_id === viewAsOrgId)
+    : invitations;
 
   const fetchOrganizations = async () => {
     const { data, error } = await supabase
@@ -418,7 +432,7 @@ const Admin = () => {
               </Button>
             </div>
 
-            {isSuperAdmin && (
+            {isSuperAdmin && !isViewingAsOtherOrg && (
               <div className="glass-card p-6 rounded-2xl mb-8">
                 <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
@@ -490,6 +504,14 @@ const Admin = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {isViewingAsOtherOrg && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
+                  Vous visualisez l'interface en tant qu'admin de {viewAsOrgName}
+                </p>
               </div>
             )}
 
@@ -592,20 +614,20 @@ const Admin = () => {
               <div className="glass-card p-6 rounded-2xl">
                 <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Invitations ({invitations.length})
+                  Invitations ({filteredInvitations.length})
                 </h2>
 
                 {loadingInvitations ? (
                   <div className="flex justify-center py-8">
                     <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                   </div>
-                ) : invitations.length === 0 ? (
+                ) : filteredInvitations.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
                     Aucune invitation
                   </p>
                 ) : (
                   <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {invitations.map((inv) => {
+                    {filteredInvitations.map((inv) => {
                       const isExpired = new Date(inv.expires_at) < new Date();
                       const isUsed = inv.used_at !== null;
 
@@ -687,14 +709,14 @@ const Admin = () => {
             <div className="glass-card p-6 rounded-2xl mt-8">
               <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Utilisateurs ({users.length})
+                Utilisateurs ({filteredUsers.length})
               </h2>
 
               {loadingUsers ? (
                 <div className="flex justify-center py-8">
                   <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
                   Aucun utilisateur
                 </p>
@@ -721,7 +743,7 @@ const Admin = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((u) => (
+                      {filteredUsers.map((u) => (
                         <tr key={u.user_id} className="border-b border-border/50 hover:bg-muted/30">
                           <td className="py-3 px-4">
                             <span className="font-medium text-foreground">
