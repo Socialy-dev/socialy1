@@ -34,6 +34,8 @@ import {
   Trash2,
   Download,
   Plus,
+  EyeOff,
+  Link,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,7 @@ interface Article {
   snippet: string | null;
   competitor_name: string | null;
   agency_id: string;
+  hidden?: boolean;
 }
 
 interface SocialyArticle {
@@ -67,6 +70,7 @@ interface SocialyArticle {
   authors: string | null;
   article_date: string | null;
   snippet: string | null;
+  hidden?: boolean;
 }
 
 interface Agency {
@@ -91,7 +95,7 @@ interface Journalist {
 
 const subTabs = [
   { id: "socialy", label: "Socialy", icon: Zap },
-  { id: "concurrent", label: "Concurrent", icon: Users2 },
+  { id: "concurrent", label: "Concurrents", icon: Users2 },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
   { id: "communiques", label: "Communiqués", icon: FileText },
 ];
@@ -214,7 +218,7 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      let query = supabase.from("competitor_articles").select("*");
+      let query = supabase.from("competitor_articles").select("*").eq("hidden", false);
       if (!isAdmin) {
         query = query.eq("user_id", user.id);
       }
@@ -233,7 +237,7 @@ const RelationsPresse = () => {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      let query = supabase.from("socialy_articles").select("*");
+      let query = supabase.from("socialy_articles").select("*").eq("hidden", false);
       if (!isAdmin) {
         query = query.eq("user_id", user.id);
       }
@@ -380,6 +384,92 @@ const RelationsPresse = () => {
     ? agencies.find((a) => a.id === selectedAgency)?.name
     : "Tous les concurrents";
 
+  const [showAddSocialyModal, setShowAddSocialyModal] = useState(false);
+  const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
+  const [newArticleLink, setNewArticleLink] = useState("");
+  const [isAddingArticle, setIsAddingArticle] = useState(false);
+
+  const handleHideSocialyArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("socialy_articles").update({ hidden: true }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de masquer l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article masqué" });
+      fetchSocialyArticles();
+    }
+  };
+
+  const handleHideCompetitorArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("competitor_articles").update({ hidden: true }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de masquer l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article masqué" });
+      fetchArticles();
+    }
+  };
+
+  const handleAddSocialyArticle = async () => {
+    if (!newArticleLink.trim()) {
+      toast({ title: "Erreur", description: "Veuillez entrer un lien", variant: "destructive" });
+      return;
+    }
+    setIsAddingArticle(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { error } = await supabase.from("socialy_articles").insert({
+      user_id: user.id,
+      link: newArticleLink.trim(),
+      title: "Article à configurer",
+    });
+    
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article ajouté !" });
+      setNewArticleLink("");
+      setShowAddSocialyModal(false);
+      fetchSocialyArticles();
+    }
+    setIsAddingArticle(false);
+  };
+
+  const handleAddCompetitorArticle = async () => {
+    if (!newArticleLink.trim()) {
+      toast({ title: "Erreur", description: "Veuillez entrer un lien", variant: "destructive" });
+      return;
+    }
+    if (agencies.length === 0) {
+      toast({ title: "Erreur", description: "Ajoutez d'abord un concurrent dans votre profil", variant: "destructive" });
+      return;
+    }
+    setIsAddingArticle(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { error } = await supabase.from("competitor_articles").insert({
+      user_id: user.id,
+      agency_id: agencies[0].id,
+      link: newArticleLink.trim(),
+      title: "Article à configurer",
+    });
+    
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible d'ajouter l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article ajouté !" });
+      setNewArticleLink("");
+      setShowAddCompetitorModal(false);
+      fetchArticles();
+    }
+    setIsAddingArticle(false);
+  };
+
   const toggleJournalist = (id: string) => {
     setJournalists(journalists.map((j) => (j.id === id ? { ...j, selected: !j.selected } : j)));
   };
@@ -423,6 +513,7 @@ const RelationsPresse = () => {
     return date.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "short",
+      year: "numeric",
     });
   };
 
@@ -550,7 +641,7 @@ const RelationsPresse = () => {
                 <Newspaper className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Relations Presse</h1>
+                <h1 className="text-2xl font-bold text-foreground">Presse</h1>
                 <p className="text-muted-foreground text-sm mt-1">
                   Gérez vos retombées presse et vos contacts journalistes
                 </p>
@@ -589,9 +680,20 @@ const RelationsPresse = () => {
                   <Zap className="w-5 h-5 text-primary" />
                   Retombées presse de Socialy
                 </p>
-                <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                  {socialyArticles.length} article{socialyArticles.length !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowAddSocialyModal(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter
+                  </Button>
+                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                    {socialyArticles.length} article{socialyArticles.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
               </div>
 
               {isLoadingSocialy ? (
@@ -609,13 +711,20 @@ const RelationsPresse = () => {
               ) : socialyArticles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {socialyArticles.map((article) => (
-                    <a
+                    <div
                       key={article.id}
-                      href={article.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg"
+                      className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                      onClick={() => window.open(article.link, "_blank")}
                     >
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => handleHideSocialyArticle(article.id, e)}
+                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                          title="Masquer l'article"
+                        >
+                          <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      )}
                       <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                         {article.thumbnail ? (
                           <img
@@ -659,7 +768,7 @@ const RelationsPresse = () => {
                           </span>
                         )}
                       </div>
-                    </a>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -739,9 +848,20 @@ const RelationsPresse = () => {
                   )}
                 </div>
 
-                <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                  {filteredArticles.length} article{filteredArticles.length !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowAddCompetitorModal(true)}
+                    className="gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter
+                  </Button>
+                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                    {filteredArticles.length} article{filteredArticles.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
               </div>
 
               {isLoading ? (
@@ -759,13 +879,20 @@ const RelationsPresse = () => {
               ) : filteredArticles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {filteredArticles.map((article) => (
-                    <a
+                    <div
                       key={article.id}
-                      href={article.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg"
+                      className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                      onClick={() => window.open(article.link, "_blank")}
                     >
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => handleHideCompetitorArticle(article.id, e)}
+                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                          title="Masquer l'article"
+                        >
+                          <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      )}
                       <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                         {article.thumbnail ? (
                           <img
@@ -811,7 +938,7 @@ const RelationsPresse = () => {
                           </span>
                         )}
                       </div>
-                    </a>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -1610,6 +1737,96 @@ const RelationsPresse = () => {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddSocialyModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Link className="w-5 h-5 text-primary" />
+                Ajouter un article Socialy
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-semibold">Lien de l'article</Label>
+                <Input
+                  value={newArticleLink}
+                  onChange={(e) => setNewArticleLink(e.target.value)}
+                  placeholder="https://example.com/article..."
+                  className="mt-2"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Collez le lien de l'article. Les métadonnées seront récupérées automatiquement.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAddSocialyArticle} disabled={isAddingArticle}>
+                  {isAddingArticle ? (
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddCompetitorModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-md border border-border shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Link className="w-5 h-5 text-primary" />
+                Ajouter un article concurrent
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-semibold">Lien de l'article</Label>
+                <Input
+                  value={newArticleLink}
+                  onChange={(e) => setNewArticleLink(e.target.value)}
+                  placeholder="https://example.com/article..."
+                  className="mt-2"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Collez le lien de l'article. Les métadonnées seront récupérées automatiquement.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAddCompetitorArticle} disabled={isAddingArticle}>
+                  {isAddingArticle ? (
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
