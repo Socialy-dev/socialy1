@@ -21,7 +21,7 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isOrgAdmin } = useAuth();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -114,7 +114,7 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
                   <Settings className="w-4 h-4" />
                   Paramètres
                 </button>
-                {isAdmin && (
+                {isOrgAdmin && (
                   <>
                     <div className="h-px bg-border my-1" />
                     <button 
