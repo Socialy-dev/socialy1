@@ -132,7 +132,7 @@ const RelationsPresse = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingSocialy, setIsLoadingSocialy] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
-  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
+  
   const [journalists, setJournalists] = useState<Journalist[]>([]);
   const [isLoadingJournalists, setIsLoadingJournalists] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -382,9 +382,6 @@ const RelationsPresse = () => {
 
   const filteredArticles = selectedAgency ? articles.filter((a) => a.agency_id === selectedAgency) : articles;
 
-  const selectedAgencyName = selectedAgency
-    ? agencies.find((a) => a.id === selectedAgency)?.name
-    : "Tous les concurrents";
 
   const [showAddSocialyModal, setShowAddSocialyModal] = useState(false);
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
@@ -394,6 +391,10 @@ const RelationsPresse = () => {
   const [showHiddenCompetitor, setShowHiddenCompetitor] = useState(false);
   const [hiddenSocialyArticles, setHiddenSocialyArticles] = useState<SocialyArticle[]>([]);
   const [hiddenCompetitorArticles, setHiddenCompetitorArticles] = useState<Article[]>([]);
+  const [showCompetitorManager, setShowCompetitorManager] = useState(false);
+  const [newCompetitorName, setNewCompetitorName] = useState("");
+  const [isAddingCompetitor, setIsAddingCompetitor] = useState(false);
+  const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>("");
 
   const fetchHiddenSocialyArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -504,8 +505,8 @@ const RelationsPresse = () => {
       toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
-    if (agencies.length === 0) {
-      toast({ title: "Aucun concurrent configuré", description: "Ajoutez d'abord un concurrent dans votre profil avant d'ajouter des articles", variant: "destructive" });
+    if (!selectedCompetitorId) {
+      toast({ title: "Concurrent requis", description: "Veuillez sélectionner un concurrent pour cet article", variant: "destructive" });
       return;
     }
     setIsAddingArticle(true);
@@ -515,15 +516,13 @@ const RelationsPresse = () => {
       return;
     }
     
-    const selectedAgencyId = agencies[0].id;
-    
     try {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
           type: "competitor",
           user_id: user.id,
-          agency_id: selectedAgencyId,
+          agency_id: selectedCompetitorId,
         },
       });
       
@@ -538,8 +537,56 @@ const RelationsPresse = () => {
     }
     
     setNewArticleLink("");
+    setSelectedCompetitorId("");
     setShowAddCompetitorModal(false);
     setIsAddingArticle(false);
+  };
+
+  const handleAddCompetitor = async () => {
+    if (!newCompetitorName.trim()) {
+      toast({ title: "Nom requis", description: "Veuillez saisir le nom du concurrent", variant: "destructive" });
+      return;
+    }
+    setIsAddingCompetitor(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setIsAddingCompetitor(false);
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.from("competitor_agencies").insert({
+        user_id: user.id,
+        name: newCompetitorName.trim(),
+      });
+      
+      if (error) {
+        if (error.code === "23505") {
+          toast({ title: "Concurrent existant", description: "Ce concurrent existe déjà dans votre liste", variant: "destructive" });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({ title: "Concurrent ajouté", description: `${newCompetitorName.trim()} a été ajouté à votre liste` });
+        setNewCompetitorName("");
+        fetchAgencies();
+      }
+    } catch (error) {
+      console.error("Error adding competitor:", error);
+      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le concurrent. Veuillez réessayer.", variant: "destructive" });
+    }
+    
+    setIsAddingCompetitor(false);
+  };
+
+  const handleDeleteCompetitor = async (agencyId: string, agencyName: string) => {
+    const { error } = await supabase.from("competitor_agencies").delete().eq("id", agencyId);
+    if (error) {
+      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le concurrent. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Concurrent supprimé", description: `${agencyName} a été retiré de votre liste` });
+      fetchAgencies();
+    }
   };
 
   const toggleJournalist = (id: string) => {
@@ -931,64 +978,10 @@ const RelationsPresse = () => {
           {activeSubTab === "concurrent" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
-                    className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
-                  >
-                    <Filter className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">{selectedAgencyName}</span>
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                        showAgencyDropdown && "rotate-180",
-                      )}
-                    />
-                  </button>
-
-                  {showAgencyDropdown && (
-                    <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-2">
-                        <button
-                          onClick={() => {
-                            setSelectedAgency(null);
-                            setShowAgencyDropdown(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                            !selectedAgency ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
-                          )}
-                        >
-                          <Users2 className="w-5 h-5" />
-                          Tous les concurrents
-                          {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
-                        </button>
-
-                        {agencies.length > 0 && <div className="border-t border-border my-2" />}
-
-                        {agencies.map((agency) => (
-                          <button
-                            key={agency.id}
-                            onClick={() => {
-                              setSelectedAgency(agency.id);
-                              setShowAgencyDropdown(false);
-                            }}
-                            className={cn(
-                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              selectedAgency === agency.id
-                                ? "bg-primary/10 text-primary"
-                                : "text-foreground hover:bg-secondary",
-                            )}
-                          >
-                            <Building2 className="w-5 h-5" />
-                            {agency.name}
-                            {selectedAgency === agency.id && <Check className="w-5 h-5 ml-auto" />}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                  <Users2 className="w-5 h-5 text-primary" />
+                  Veille concurrentielle
+                </p>
 
                 <div className="flex items-center gap-3">
                   {isAdmin && hiddenCompetitorArticles.length > 0 && (
@@ -1019,6 +1012,15 @@ const RelationsPresse = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    onClick={() => setShowCompetitorManager(true)}
+                    className="gap-2"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Concurrents
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
                     onClick={() => setShowAddCompetitorModal(true)}
                     className="gap-2"
                   >
@@ -1030,6 +1032,29 @@ const RelationsPresse = () => {
                   </span>
                 </div>
               </div>
+
+              {agencies.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {agencies.map((agency) => (
+                    <div 
+                      key={agency.id}
+                      onClick={() => setSelectedAgency(selectedAgency === agency.id ? null : agency.id)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-200 border",
+                        selectedAgency === agency.id 
+                          ? "bg-primary/15 border-primary/30 text-primary shadow-sm" 
+                          : "bg-card border-border hover:border-primary/20 hover:bg-secondary/50"
+                      )}
+                    >
+                      <Building2 className="w-4 h-4" />
+                      <span className="text-sm font-semibold">{agency.name}</span>
+                      <span className="text-xs text-muted-foreground bg-secondary/80 px-2 py-0.5 rounded-full">
+                        {articles.filter(a => a.agency_id === agency.id).length}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {showHiddenCompetitor && isAdmin && hiddenCompetitorArticles.length > 0 && (
                 <div className="space-y-4">
@@ -2007,11 +2032,34 @@ const RelationsPresse = () => {
                 <Link className="w-5 h-5 text-primary" />
                 Ajouter un article concurrent
               </h3>
-              <Button variant="ghost" size="icon" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
+              <Button variant="ghost" size="icon" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
             <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-semibold">Concurrent</Label>
+                <Select value={selectedCompetitorId} onValueChange={setSelectedCompetitorId}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Sélectionnez un concurrent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {agencies.map((agency) => (
+                      <SelectItem key={agency.id} value={agency.id}>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4" />
+                          {agency.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {agencies.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Aucun concurrent disponible. Ajoutez-en via le bouton "Concurrents".
+                  </p>
+                )}
+              </div>
               <div>
                 <Label className="text-sm font-semibold">Lien de l'article</Label>
                 <Input
@@ -2025,10 +2073,10 @@ const RelationsPresse = () => {
                 Collez le lien de l'article. Les métadonnées seront récupérées automatiquement.
               </p>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
+                <Button variant="outline" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
                   Annuler
                 </Button>
-                <Button onClick={handleAddCompetitorArticle} disabled={isAddingArticle}>
+                <Button onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId}>
                   {isAddingArticle ? (
                     <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                   ) : (
@@ -2039,6 +2087,80 @@ const RelationsPresse = () => {
                   )}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCompetitorManager && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl p-6 w-full max-w-lg border border-border shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-primary" />
+                Gérer les concurrents
+              </h3>
+              <Button variant="ghost" size="icon" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  value={newCompetitorName}
+                  onChange={(e) => setNewCompetitorName(e.target.value)}
+                  placeholder="Nom du concurrent..."
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddCompetitor()}
+                />
+                <Button onClick={handleAddCompetitor} disabled={isAddingCompetitor}>
+                  {isAddingCompetitor ? (
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+
+              {agencies.length === 0 ? (
+                <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
+                  <Building2 className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Aucun concurrent</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ajoutez votre premier concurrent ci-dessus
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {agencies.map((agency) => (
+                    <div 
+                      key={agency.id}
+                      className="group flex items-center justify-between p-4 bg-secondary/40 hover:bg-secondary/60 rounded-xl transition-all border border-transparent hover:border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{agency.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {articles.filter(a => a.agency_id === agency.id).length} article(s)
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                        onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
