@@ -105,7 +105,7 @@ export type Database = {
           linkedin: string | null
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           specialty: string | null
           updated_at: string
           website: string | null
@@ -117,7 +117,7 @@ export type Database = {
           linkedin?: string | null
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           specialty?: string | null
           updated_at?: string
           website?: string | null
@@ -129,7 +129,7 @@ export type Database = {
           linkedin?: string | null
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           specialty?: string | null
           updated_at?: string
           website?: string | null
@@ -155,7 +155,7 @@ export type Database = {
           hidden: boolean
           id: string
           link: string
-          organization_id: string | null
+          organization_id: string
           position: number | null
           snippet: string | null
           source_icon: string | null
@@ -175,7 +175,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link: string
-          organization_id?: string | null
+          organization_id: string
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -195,7 +195,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link?: string
-          organization_id?: string | null
+          organization_id?: string
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -381,7 +381,7 @@ export type Database = {
           media_specialty: string | null
           name: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           phone: string | null
           source_article_id: string | null
           source_type: string | null
@@ -398,7 +398,7 @@ export type Database = {
           media_specialty?: string | null
           name: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           phone?: string | null
           source_article_id?: string | null
           source_type?: string | null
@@ -415,7 +415,7 @@ export type Database = {
           media_specialty?: string | null
           name?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           phone?: string | null
           source_article_id?: string | null
           source_type?: string | null
@@ -440,7 +440,7 @@ export type Database = {
           hidden: boolean
           id: string
           link: string
-          organization_id: string | null
+          organization_id: string
           position: number | null
           snippet: string | null
           source_icon: string | null
@@ -458,7 +458,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link: string
-          organization_id?: string | null
+          organization_id: string
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -476,7 +476,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link?: string
-          organization_id?: string | null
+          organization_id?: string
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
