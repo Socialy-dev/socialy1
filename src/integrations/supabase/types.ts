@@ -281,8 +281,8 @@ export type Database = {
           expires_at: string
           id: string
           invited_by: string | null
-          pages: Database["public"]["Enums"]["app_page"][]
-          role: Database["public"]["Enums"]["app_role"]
+          org_role: Database["public"]["Enums"]["org_role"]
+          organization_id: string
           token: string
           used_at: string | null
         }
@@ -292,8 +292,8 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
-          pages?: Database["public"]["Enums"]["app_page"][]
-          role?: Database["public"]["Enums"]["app_role"]
+          org_role?: Database["public"]["Enums"]["org_role"]
+          organization_id: string
           token?: string
           used_at?: string | null
         }
@@ -303,12 +303,20 @@ export type Database = {
           expires_at?: string
           id?: string
           invited_by?: string | null
-          pages?: Database["public"]["Enums"]["app_page"][]
-          role?: Database["public"]["Enums"]["app_role"]
+          org_role?: Database["public"]["Enums"]["org_role"]
+          organization_id?: string
           token?: string
           used_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       journalists: {
         Row: {
