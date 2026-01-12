@@ -57,6 +57,7 @@ export type Database = {
           created_by: string
           id: string
           name: string
+          organization_id: string | null
           pdf_url: string | null
           status: string
           updated_at: string
@@ -68,6 +69,7 @@ export type Database = {
           created_by: string
           id?: string
           name: string
+          organization_id?: string | null
           pdf_url?: string | null
           status?: string
           updated_at?: string
@@ -79,12 +81,21 @@ export type Database = {
           created_by?: string
           id?: string
           name?: string
+          organization_id?: string | null
           pdf_url?: string | null
           status?: string
           updated_at?: string
           word_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "communique_presse_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       competitor_agencies: {
         Row: {
@@ -94,6 +105,7 @@ export type Database = {
           linkedin: string | null
           name: string
           notes: string | null
+          organization_id: string | null
           specialty: string | null
           updated_at: string
           user_id: string
@@ -106,6 +118,7 @@ export type Database = {
           linkedin?: string | null
           name: string
           notes?: string | null
+          organization_id?: string | null
           specialty?: string | null
           updated_at?: string
           user_id: string
@@ -118,12 +131,21 @@ export type Database = {
           linkedin?: string | null
           name?: string
           notes?: string | null
+          organization_id?: string | null
           specialty?: string | null
           updated_at?: string
           user_id?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "competitor_agencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       competitor_articles: {
         Row: {
@@ -136,6 +158,7 @@ export type Database = {
           hidden: boolean
           id: string
           link: string
+          organization_id: string | null
           position: number | null
           snippet: string | null
           source_icon: string | null
@@ -156,6 +179,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link: string
+          organization_id?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -176,6 +200,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link?: string
+          organization_id?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -194,6 +219,13 @@ export type Database = {
             referencedRelation: "competitor_agencies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "competitor_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       documents: {
@@ -204,6 +236,7 @@ export type Database = {
           embedding: string | null
           id: string
           metadata: Json | null
+          organization_id: string | null
           source_id: string | null
           updated_at: string
           user_id: string
@@ -215,6 +248,7 @@ export type Database = {
           embedding?: string | null
           id?: string
           metadata?: Json | null
+          organization_id?: string | null
           source_id?: string | null
           updated_at?: string
           user_id: string
@@ -226,11 +260,20 @@ export type Database = {
           embedding?: string | null
           id?: string
           metadata?: Json | null
+          organization_id?: string | null
           source_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generated_posts_linkedin: {
         Row: {
@@ -239,6 +282,7 @@ export type Database = {
           generated_content_v2: string | null
           id: string
           objective: string | null
+          organization_id: string | null
           request_id: string
           status: string
           subject: string
@@ -252,6 +296,7 @@ export type Database = {
           generated_content_v2?: string | null
           id?: string
           objective?: string | null
+          organization_id?: string | null
           request_id?: string
           status?: string
           subject: string
@@ -265,6 +310,7 @@ export type Database = {
           generated_content_v2?: string | null
           id?: string
           objective?: string | null
+          organization_id?: string | null
           request_id?: string
           status?: string
           subject?: string
@@ -272,7 +318,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "generated_posts_linkedin_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invitations: {
         Row: {
@@ -333,6 +387,7 @@ export type Database = {
           media_specialty: string | null
           name: string
           notes: string | null
+          organization_id: string | null
           phone: string | null
           source_article_id: string | null
           source_type: string | null
@@ -350,6 +405,7 @@ export type Database = {
           media_specialty?: string | null
           name: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           source_article_id?: string | null
           source_type?: string | null
@@ -367,13 +423,22 @@ export type Database = {
           media_specialty?: string | null
           name?: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           source_article_id?: string | null
           source_type?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "journalists_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organization_members: {
         Row: {
@@ -479,6 +544,7 @@ export type Database = {
           hidden: boolean
           id: string
           link: string
+          organization_id: string | null
           position: number | null
           snippet: string | null
           source_icon: string | null
@@ -497,6 +563,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link: string
+          organization_id?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -515,6 +582,7 @@ export type Database = {
           hidden?: boolean
           id?: string
           link?: string
+          organization_id?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
@@ -525,7 +593,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "socialy_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_linkedin_posts: {
         Row: {
