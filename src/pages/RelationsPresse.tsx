@@ -36,6 +36,8 @@ import {
   Plus,
   EyeOff,
   Link,
+  Eye,
+  RotateCcw,
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -388,6 +390,26 @@ const RelationsPresse = () => {
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
   const [newArticleLink, setNewArticleLink] = useState("");
   const [isAddingArticle, setIsAddingArticle] = useState(false);
+  const [showHiddenSocialy, setShowHiddenSocialy] = useState(false);
+  const [showHiddenCompetitor, setShowHiddenCompetitor] = useState(false);
+  const [hiddenSocialyArticles, setHiddenSocialyArticles] = useState<SocialyArticle[]>([]);
+  const [hiddenCompetitorArticles, setHiddenCompetitorArticles] = useState<Article[]>([]);
+
+  const fetchHiddenSocialyArticles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && isAdmin) {
+      const { data } = await supabase.from("socialy_articles").select("*").eq("hidden", true).order("article_iso_date", { ascending: false });
+      if (data) setHiddenSocialyArticles(data);
+    }
+  };
+
+  const fetchHiddenCompetitorArticles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && isAdmin) {
+      const { data } = await supabase.from("competitor_articles").select("*").eq("hidden", true).order("article_iso_date", { ascending: false });
+      if (data) setHiddenCompetitorArticles(data);
+    }
+  };
 
   const handleHideSocialyArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -398,6 +420,20 @@ const RelationsPresse = () => {
     } else {
       toast({ title: "Article masqué" });
       fetchSocialyArticles();
+      fetchHiddenSocialyArticles();
+    }
+  };
+
+  const handleRestoreSocialyArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("socialy_articles").update({ hidden: false }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de restaurer l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article restauré" });
+      fetchSocialyArticles();
+      fetchHiddenSocialyArticles();
     }
   };
 
@@ -410,6 +446,20 @@ const RelationsPresse = () => {
     } else {
       toast({ title: "Article masqué" });
       fetchArticles();
+      fetchHiddenCompetitorArticles();
+    }
+  };
+
+  const handleRestoreCompetitorArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("competitor_articles").update({ hidden: false }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Erreur", description: "Impossible de restaurer l'article", variant: "destructive" });
+    } else {
+      toast({ title: "Article restauré" });
+      fetchArticles();
+      fetchHiddenCompetitorArticles();
     }
   };
 
@@ -681,6 +731,31 @@ const RelationsPresse = () => {
                   Retombées presse de Socialy
                 </p>
                 <div className="flex items-center gap-3">
+                  {isAdmin && hiddenSocialyArticles.length > 0 && (
+                    <Button 
+                      variant={showHiddenSocialy ? "default" : "outline"}
+                      size="sm" 
+                      onClick={() => {
+                        setShowHiddenSocialy(!showHiddenSocialy);
+                        if (!showHiddenSocialy) fetchHiddenSocialyArticles();
+                      }}
+                      className="gap-2"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Masqués ({hiddenSocialyArticles.length})
+                    </Button>
+                  )}
+                  {isAdmin && hiddenSocialyArticles.length === 0 && (
+                    <Button 
+                      variant="ghost"
+                      size="sm" 
+                      onClick={() => fetchHiddenSocialyArticles()}
+                      className="gap-2 text-muted-foreground"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Voir masqués
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -695,6 +770,51 @@ const RelationsPresse = () => {
                   </span>
                 </div>
               </div>
+
+              {showHiddenSocialy && isAdmin && hiddenSocialyArticles.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <EyeOff className="w-4 h-4" />
+                      Articles masqués
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenSocialy(false)}>
+                      Fermer
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                    {hiddenSocialyArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                      >
+                        <button
+                          onClick={(e) => handleRestoreSocialyArticle(article.id, e)}
+                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                          title="Restaurer l'article"
+                        >
+                          <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                        </button>
+                        <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                          {article.thumbnail ? (
+                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                              <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                          {article.article_date && (
+                            <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {isLoadingSocialy ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -849,6 +969,31 @@ const RelationsPresse = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {isAdmin && hiddenCompetitorArticles.length > 0 && (
+                    <Button 
+                      variant={showHiddenCompetitor ? "default" : "outline"}
+                      size="sm" 
+                      onClick={() => {
+                        setShowHiddenCompetitor(!showHiddenCompetitor);
+                        if (!showHiddenCompetitor) fetchHiddenCompetitorArticles();
+                      }}
+                      className="gap-2"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Masqués ({hiddenCompetitorArticles.length})
+                    </Button>
+                  )}
+                  {isAdmin && hiddenCompetitorArticles.length === 0 && (
+                    <Button 
+                      variant="ghost"
+                      size="sm" 
+                      onClick={() => fetchHiddenCompetitorArticles()}
+                      className="gap-2 text-muted-foreground"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                      Voir masqués
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -863,6 +1008,51 @@ const RelationsPresse = () => {
                   </span>
                 </div>
               </div>
+
+              {showHiddenCompetitor && isAdmin && hiddenCompetitorArticles.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <EyeOff className="w-4 h-4" />
+                      Articles masqués
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenCompetitor(false)}>
+                      Fermer
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                    {hiddenCompetitorArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                      >
+                        <button
+                          onClick={(e) => handleRestoreCompetitorArticle(article.id, e)}
+                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                          title="Restaurer l'article"
+                        >
+                          <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                        </button>
+                        <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                          {article.thumbnail ? (
+                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                              <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                          {article.article_date && (
+                            <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
