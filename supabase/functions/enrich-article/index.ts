@@ -34,10 +34,10 @@ serve(async (req) => {
       });
     }
 
-    const { link, type, article_id, agency_id } = await req.json();
+    const { link, type, user_id, agency_id } = await req.json();
 
-    if (!link || !type || !article_id) {
-      return new Response(JSON.stringify({ error: "Missing required fields: link, type, article_id" }), {
+    if (!link || !type) {
+      return new Response(JSON.stringify({ error: "Missing required fields: link, type" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -61,8 +61,7 @@ serve(async (req) => {
     const payload = {
       link,
       type,
-      article_id,
-      user_id: user.id,
+      user_id: user_id || user.id,
       agency_id: agency_id || null,
       timestamp: new Date().toISOString(),
     };
@@ -87,7 +86,6 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         message: "Article sent for enrichment",
-        article_id,
         webhook_response: webhookData,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

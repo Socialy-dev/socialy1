@@ -475,41 +475,27 @@ const RelationsPresse = () => {
       return;
     }
     
-    const { data: insertedArticle, error } = await supabase.from("socialy_articles").insert({
-      user_id: user.id,
-      link: newArticleLink.trim(),
-      title: "Enrichissement en cours...",
-    }).select().single();
-    
-    if (error || !insertedArticle) {
-      const isDuplicate = error?.code === "23505";
-      toast({ 
-        title: isDuplicate ? "Article déjà existant" : "Échec de l'ajout", 
-        description: isDuplicate ? "Cet article Socialy a déjà été enregistré" : "Une erreur s'est produite lors de l'ajout. Veuillez réessayer.", 
-        variant: "destructive" 
-      });
-      setIsAddingArticle(false);
-      return;
-    }
-    
     try {
-      const { data: session } = await supabase.auth.getSession();
-      await supabase.functions.invoke("enrich-article", {
+      const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
           type: "socialy",
-          article_id: insertedArticle.id,
+          user_id: user.id,
         },
       });
-      toast({ title: "Article Socialy ajouté", description: "Les métadonnées sont en cours de récupération automatique" });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({ title: "Enrichissement en cours", description: "L'article Socialy sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Article Socialy ajouté", description: "Les métadonnées seront récupérées ultérieurement" });
+      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
     
     setNewArticleLink("");
     setShowAddSocialyModal(false);
-    fetchSocialyArticles();
     setIsAddingArticle(false);
   };
 
@@ -531,42 +517,28 @@ const RelationsPresse = () => {
     
     const selectedAgencyId = agencies[0].id;
     
-    const { data: insertedArticle, error } = await supabase.from("competitor_articles").insert({
-      user_id: user.id,
-      agency_id: selectedAgencyId,
-      link: newArticleLink.trim(),
-      title: "Enrichissement en cours...",
-    }).select().single();
-    
-    if (error || !insertedArticle) {
-      const isDuplicate = error?.code === "23505";
-      toast({ 
-        title: isDuplicate ? "Article déjà existant" : "Échec de l'ajout", 
-        description: isDuplicate ? "Cet article concurrent a déjà été enregistré pour cette agence" : "Une erreur s'est produite lors de l'ajout. Veuillez réessayer.", 
-        variant: "destructive" 
-      });
-      setIsAddingArticle(false);
-      return;
-    }
-    
     try {
-      await supabase.functions.invoke("enrich-article", {
+      const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
           type: "competitor",
-          article_id: insertedArticle.id,
+          user_id: user.id,
           agency_id: selectedAgencyId,
         },
       });
-      toast({ title: "Article concurrent ajouté", description: "Les métadonnées sont en cours de récupération automatique" });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({ title: "Enrichissement en cours", description: "L'article concurrent sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Article concurrent ajouté", description: "Les métadonnées seront récupérées ultérieurement" });
+      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
     
     setNewArticleLink("");
     setShowAddCompetitorModal(false);
-    fetchArticles();
     setIsAddingArticle(false);
   };
 
