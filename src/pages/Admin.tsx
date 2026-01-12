@@ -209,6 +209,7 @@ const Admin = () => {
           org_role: newOrgRole,
           organization_id: selectedOrgId,
           invited_by: user?.id,
+          page_permissions: selectedPages,
         })
         .select()
         .single();
@@ -237,6 +238,7 @@ const Admin = () => {
 
       setNewEmail("");
       setNewOrgRole("org_user");
+      setSelectedPages(["dashboard", "profile"]);
       fetchInvitations();
     } catch (error: any) {
       console.error("Error creating invitation:", error);
@@ -350,23 +352,21 @@ const Admin = () => {
                     />
                   </div>
 
-                  {isSuperAdmin && organizations.length > 1 && (
-                    <div>
-                      <Label>Organisation</Label>
-                      <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Sélectionner une organisation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {organizations.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                  <div>
+                    <Label>Organisation</Label>
+                    <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Sélectionner une organisation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {organizations.map((org) => (
+                          <SelectItem key={org.id} value={org.id}>
+                            {org.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
                   <div>
                     <Label>Rôle</Label>
@@ -382,6 +382,33 @@ const Admin = () => {
                         )}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label className="mb-3 block">Pages accessibles</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {ALL_PAGES.map((page) => (
+                        <div key={page} className="flex items-center gap-2">
+                          <Checkbox
+                            id={`page-${page}`}
+                            checked={selectedPages.includes(page)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedPages([...selectedPages, page]);
+                              } else {
+                                setSelectedPages(selectedPages.filter((p) => p !== page));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`page-${page}`}
+                            className="text-sm font-medium text-foreground cursor-pointer"
+                          >
+                            {PAGE_LABELS[page]}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <Button

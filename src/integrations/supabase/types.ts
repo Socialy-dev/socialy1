@@ -283,6 +283,7 @@ export type Database = {
           invited_by: string | null
           org_role: Database["public"]["Enums"]["org_role"]
           organization_id: string
+          page_permissions: Database["public"]["Enums"]["app_page"][] | null
           token: string
           used_at: string | null
         }
@@ -294,6 +295,7 @@ export type Database = {
           invited_by?: string | null
           org_role?: Database["public"]["Enums"]["org_role"]
           organization_id: string
+          page_permissions?: Database["public"]["Enums"]["app_page"][] | null
           token?: string
           used_at?: string | null
         }
@@ -305,6 +307,7 @@ export type Database = {
           invited_by?: string | null
           org_role?: Database["public"]["Enums"]["org_role"]
           organization_id?: string
+          page_permissions?: Database["public"]["Enums"]["app_page"][] | null
           token?: string
           used_at?: string | null
         }
