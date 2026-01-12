@@ -146,10 +146,10 @@ export type Database = {
       }
       competitor_articles: {
         Row: {
-          agency_id: string
           article_date: string | null
           article_iso_date: string | null
           authors: string | null
+          competitor_id: string
           competitor_name: string | null
           created_at: string
           hidden: boolean
@@ -166,10 +166,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          agency_id: string
           article_date?: string | null
           article_iso_date?: string | null
           authors?: string | null
+          competitor_id: string
           competitor_name?: string | null
           created_at?: string
           hidden?: boolean
@@ -186,10 +186,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          agency_id?: string
           article_date?: string | null
           article_iso_date?: string | null
           authors?: string | null
+          competitor_id?: string
           competitor_name?: string | null
           created_at?: string
           hidden?: boolean
@@ -208,7 +208,7 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "competitor_articles_agency_id_fkey"
-            columns: ["agency_id"]
+            columns: ["competitor_id"]
             isOneToOne: false
             referencedRelation: "competitor_agencies"
             referencedColumns: ["id"]
