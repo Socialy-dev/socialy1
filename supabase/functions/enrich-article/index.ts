@@ -34,7 +34,7 @@ serve(async (req) => {
       });
     }
 
-    const { link, type, user_id, agency_id, competitor_name, organization_id } = await req.json();
+    const { link, type, user_id, competitor_id, competitor_name, organization_id } = await req.json();
 
     if (!link || !type) {
       return new Response(JSON.stringify({ error: "Missing required fields: link, type" }), {
@@ -62,7 +62,7 @@ serve(async (req) => {
       link,
       type,
       user_id: user_id || user.id,
-      agency_id: agency_id || null,
+      competitor_id: competitor_id || null,
       competitor_name: competitor_name || null,
       organization_id: organization_id || null,
       timestamp: new Date().toISOString(),

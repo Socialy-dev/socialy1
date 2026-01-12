@@ -58,7 +58,7 @@ interface Article {
   article_date: string | null;
   snippet: string | null;
   competitor_name: string | null;
-  agency_id: string;
+  competitor_id: string;
   hidden?: boolean;
 }
 
@@ -363,7 +363,7 @@ const RelationsPresse = () => {
     if (wordInputRef.current) wordInputRef.current.value = "";
   };
 
-  const filteredArticles = selectedAgency ? articles.filter((a) => a.agency_id === selectedAgency) : articles;
+  const filteredArticles = selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles;
 
   const selectedAgencyName = selectedAgency
     ? agencies.find((a) => a.id === selectedAgency)?.name
@@ -509,7 +509,7 @@ const RelationsPresse = () => {
           link: newArticleLink.trim(),
           type: "competitor",
           organization_id: effectiveOrgId,
-          agency_id: selectedCompetitorId,
+          competitor_id: selectedCompetitorId,
           competitor_name: selectedCompetitor?.name || null,
         },
       });
@@ -2183,7 +2183,7 @@ const RelationsPresse = () => {
                         <div>
                           <p className="font-semibold text-foreground text-base">{agency.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {articles.filter(a => a.agency_id === agency.id).length} article(s)
+                            {articles.filter(a => a.competitor_id === agency.id).length} article(s)
                           </p>
                         </div>
                       </div>

@@ -33,7 +33,7 @@ interface Article {
   article_date: string | null;
   snippet: string | null;
   competitor_name: string | null;
-  agency_id: string;
+  competitor_id: string;
 }
 
 interface SocialyArticle {
@@ -141,7 +141,7 @@ export const ProjectSummary = () => {
   };
 
   const filteredArticles = selectedAgency
-    ? articles.filter(a => a.agency_id === selectedAgency)
+    ? articles.filter(a => a.competitor_id === selectedAgency)
     : articles;
 
   const selectedAgencyName = selectedAgency
