@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 type OrgRole = "super_admin" | "org_admin" | "org_user";
-type AppPage = "dashboard" | "relations-presse" | "social-media" | "profile";
 
 interface Organization {
   id: string;
@@ -26,8 +25,6 @@ interface AuthContextType {
   orgRole: OrgRole | null;
   isSuperAdmin: boolean;
   isOrgAdmin: boolean;
-  permissions: AppPage[];
-  hasPageAccess: (page: AppPage) => boolean;
   switchOrganization: (orgId: string) => void;
   signOut: () => Promise<void>;
 }
@@ -39,7 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [memberships, setMemberships] = useState<OrganizationMembership[]>([]);
   const [currentOrgId, setCurrentOrgId] = useState<string | null>(null);
-  const [permissions, setPermissions] = useState<AppPage[]>([]);
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -77,15 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setCurrentOrgId(formattedMemberships[0].organization_id);
         }
       }
-
-      const { data: permData } = await supabase
-        .from("user_permissions")
-        .select("page")
-        .eq("user_id", userId);
-
-      if (permData) {
-        setPermissions(permData.map((p) => p.page as AppPage));
-      }
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -101,7 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setMemberships([]);
           setCurrentOrgId(null);
-          setPermissions([]);
         }
         setLoading(false);
       }
@@ -125,11 +111,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isOrgAdmin = orgRole === "org_admin" || orgRole === "super_admin";
   const organizations = memberships.map(m => m.organization);
 
-  const hasPageAccess = (page: AppPage): boolean => {
-    if (isSuperAdmin || isOrgAdmin) return true;
-    return permissions.includes(page);
-  };
-
   const switchOrganization = (orgId: string) => {
     const membership = memberships.find(m => m.organization_id === orgId);
     if (membership) {
@@ -143,7 +124,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setMemberships([]);
     setCurrentOrgId(null);
-    setPermissions([]);
     localStorage.removeItem("currentOrgId");
   };
 
@@ -157,8 +137,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         orgRole,
         isSuperAdmin,
         isOrgAdmin,
-        permissions,
-        hasPageAccess,
         switchOrganization,
         signOut,
       }}

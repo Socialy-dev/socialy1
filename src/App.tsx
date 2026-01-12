@@ -29,7 +29,7 @@ const App = () => (
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute requiredPage="dashboard">
+                <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               }
@@ -37,7 +37,7 @@ const App = () => (
             <Route
               path="/profile"
               element={
-                <ProtectedRoute requiredPage="profile">
+                <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               }
@@ -45,7 +45,7 @@ const App = () => (
             <Route
               path="/relations-presse"
               element={
-                <ProtectedRoute requiredPage="relations-presse">
+                <ProtectedRoute>
                   <RelationsPresse />
                 </ProtectedRoute>
               }
@@ -53,7 +53,7 @@ const App = () => (
             <Route
               path="/growth-marketing"
               element={
-                <ProtectedRoute requiredPage="social-media">
+                <ProtectedRoute>
                   <GrowthMarketing />
                 </ProtectedRoute>
               }
@@ -66,7 +66,6 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
