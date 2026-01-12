@@ -92,6 +92,10 @@ const Admin = () => {
   const [selectedPages, setSelectedPages] = useState<AppPage[]>(["dashboard", "profile"]);
   const [sendingInvitation, setSendingInvitation] = useState(false);
 
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgSlug, setNewOrgSlug] = useState("");
+  const [creatingOrg, setCreatingOrg] = useState(false);
+
   const { user, currentOrganization, isSuperAdmin } = useAuth();
 
   useEffect(() => {
@@ -108,6 +112,64 @@ const Admin = () => {
     
     if (!error && data) {
       setOrganizations(data);
+    }
+  };
+
+  const handleCreateOrganization = async () => {
+    if (!newOrgName.trim()) {
+      toast.error("Veuillez entrer un nom d'organisation");
+      return;
+    }
+
+    const slug = newOrgSlug.trim() || newOrgName.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+    setCreatingOrg(true);
+    try {
+      const { error } = await supabase
+        .from("organizations")
+        .insert({ name: newOrgName.trim(), slug });
+
+      if (error) throw error;
+
+      toast.success(`Organisation "${newOrgName}" créée`);
+      setNewOrgName("");
+      setNewOrgSlug("");
+      fetchOrganizations();
+    } catch (error: any) {
+      console.error("Error creating organization:", error);
+      if (error.code === "23505") {
+        toast.error("Une organisation avec ce nom ou slug existe déjà");
+      } else {
+        toast.error(error.message || "Erreur lors de la création");
+      }
+    } finally {
+      setCreatingOrg(false);
+    }
+  };
+
+  const handleDeleteOrganization = async (orgId: string, orgName: string) => {
+    if (orgId === currentOrganization?.id) {
+      toast.error("Vous ne pouvez pas supprimer votre propre organisation");
+      return;
+    }
+
+    if (!confirm(`Supprimer l'organisation "${orgName}" ? Cette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("organizations")
+        .delete()
+        .eq("id", orgId);
+
+      if (error) throw error;
+
+      toast.success(`Organisation "${orgName}" supprimée`);
+      fetchOrganizations();
+    } catch (error: any) {
+      console.error("Error deleting organization:", error);
+      toast.error(error.message || "Erreur lors de la suppression");
     }
   };
 
@@ -320,7 +382,7 @@ const Admin = () => {
           <>
             <div className="mb-6 flex items-center justify-between">
               <p className="text-muted-foreground">
-                Gérez les utilisateurs et les invitations
+                Gérez les utilisateurs, organisations et invitations
               </p>
               <Button
                 variant="outline"
@@ -331,6 +393,81 @@ const Admin = () => {
                 Ressources
               </Button>
             </div>
+
+            {isSuperAdmin && (
+              <div className="glass-card p-6 rounded-2xl mb-8">
+                <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  Organisations ({organizations.length})
+                </h2>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="orgName">Nom de l'organisation</Label>
+                      <Input
+                        id="orgName"
+                        placeholder="Zooka"
+                        value={newOrgName}
+                        onChange={(e) => setNewOrgName(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="orgSlug">Slug (optionnel)</Label>
+                      <Input
+                        id="orgSlug"
+                        placeholder="zooka"
+                        value={newOrgSlug}
+                        onChange={(e) => setNewOrgSlug(e.target.value)}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Identifiant unique. Auto-généré si vide.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleCreateOrganization}
+                      disabled={creatingOrg}
+                      className="w-full"
+                    >
+                      {creatingOrg ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Créer l'organisation
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {organizations.map((org) => (
+                      <div
+                        key={org.id}
+                        className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30"
+                      >
+                        <div>
+                          <p className="font-medium text-foreground">{org.name}</p>
+                          <p className="text-xs text-muted-foreground">{org.slug}</p>
+                        </div>
+                        {org.id !== currentOrganization?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteOrganization(org.id, org.name)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="glass-card p-6 rounded-2xl">
