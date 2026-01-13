@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
 import { 
   Linkedin, 
-  FileText, 
+  MessageSquare, 
   ChevronRight,
   Eye,
   ThumbsUp,
@@ -17,12 +17,16 @@ import {
   BarChart3,
   ArrowUpRight,
   TrendingUp,
-  Loader2
+  Loader2,
+  ExternalLink,
+  Check,
+  Copy
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
-type ContentType = "linkedin" | "brief";
+type ContentType = "linkedin" | "comment";
 type ViewMode = "menu" | "form";
 
 interface Tab {
@@ -31,12 +35,19 @@ interface Tab {
   icon: React.ElementType;
 }
 
+interface LinkedInPost {
+  id: string;
+  content: string;
+  post_url: string | null;
+  posted_at: string | null;
+  created_at: string;
+}
+
 const tabs: Tab[] = [
   { id: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { id: "brief", label: "Communiqué de Presse", icon: FileText },
+  { id: "comment", label: "Commentaire LinkedIn", icon: MessageSquare },
 ];
 
-// Mock data for LinkedIn stats
 const linkedinStats = {
   posts: 15,
   views: "124.5k",
@@ -45,7 +56,6 @@ const linkedinStats = {
   growth: "+12.4%"
 };
 
-// Mock recent posts
 const recentPosts = [
   {
     id: "1",
@@ -77,16 +87,46 @@ const recentPosts = [
 ];
 
 const GrowthMarketing = () => {
+  const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<ContentType>("linkedin");
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
   const [postFilter, setPostFilter] = useState<"all" | "linkedin" | "generated">("all");
   
-  // Form states for LinkedIn post
   const [postSubject, setPostSubject] = useState("");
   const [postObjective, setPostObjective] = useState("");
   const [postTone, setPostTone] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
+  const [selectedPost, setSelectedPost] = useState<LinkedInPost | null>(null);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [generatedComments, setGeneratedComments] = useState<string[]>([]);
+  const [isGeneratingComment, setIsGeneratingComment] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (activeTab === "comment" && user) {
+      fetchLinkedInPosts();
+    }
+  }, [activeTab, user]);
+
+  const fetchLinkedInPosts = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("user_linkedin_posts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching posts:", error);
+      return;
+    }
+
+    setLinkedinPosts(data || []);
+  };
 
   const handleStartCreation = () => {
     setViewMode("form");
@@ -135,11 +175,67 @@ const GrowthMarketing = () => {
     }
   };
 
+  const handleSelectPost = (post: LinkedInPost) => {
+    setSelectedPost(post);
+    setGeneratedComments([]);
+    setCommentDraft("");
+  };
+
+  const handleGenerateComments = async () => {
+    if (!selectedPost) {
+      toast.error("Veuillez sélectionner un post");
+      return;
+    }
+
+    setIsGeneratingComment(true);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockComments = [
+        `Super analyse ! ${commentDraft ? `"${commentDraft}" - ` : ""}Je partage totalement ce point de vue. L'importance de cette approche est souvent sous-estimée dans notre secteur.`,
+        `Merci pour ce partage enrichissant ! ${commentDraft ? `Comme tu le soulignes, "${commentDraft}". ` : ""}C'est exactement le type de réflexion dont nous avons besoin.`,
+        `Très pertinent ! ${commentDraft ? `"${commentDraft}" ` : ""}Cette perspective apporte une vraie valeur ajoutée à la conversation. Hâte de lire la suite !`
+      ];
+      
+      setGeneratedComments(mockComments);
+      toast.success("Commentaires générés avec succès !");
+    } catch (error) {
+      console.error("Error generating comments:", error);
+      toast.error("Erreur lors de la génération des commentaires");
+    } finally {
+      setIsGeneratingComment(false);
+    }
+  };
+
+  const handleCopyComment = async (comment: string, index: number) => {
+    await navigator.clipboard.writeText(comment);
+    setCopiedIndex(index);
+    toast.success("Commentaire copié !");
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "Hier";
+    if (diffDays < 7) return `il y a ${diffDays} jours`;
+    if (diffDays < 30) return `il y a ${Math.floor(diffDays / 7)} semaine${Math.floor(diffDays / 7) > 1 ? "s" : ""}`;
+    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+  };
+
+  const truncateContent = (content: string, maxLength: number = 100) => {
+    if (content.length <= maxLength) return content;
+    return content.substring(0, maxLength) + "...";
+  };
+
   const filteredPosts = postFilter === "all" 
     ? recentPosts 
     : recentPosts.filter(p => p.source === postFilter);
 
-  // Get content based on active tab
   const getCreationContent = () => {
     switch (activeTab) {
       case "linkedin":
@@ -148,11 +244,11 @@ const GrowthMarketing = () => {
           description: "Créer un post engageant",
           icon: Linkedin
         };
-      case "brief":
+      case "comment":
         return {
-          title: "Communiqué de Presse",
-          description: "Générer un communiqué",
-          icon: FileText
+          title: "Commentaire LinkedIn",
+          description: "Générer des commentaires",
+          icon: MessageSquare
         };
     }
   };
@@ -174,7 +270,6 @@ const GrowthMarketing = () => {
       >
         <Header showTitle={false} />
         
-        {/* Tabs - Above the glass card */}
         <div className="flex items-center gap-2 mb-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -185,6 +280,8 @@ const GrowthMarketing = () => {
                 onClick={() => {
                   setActiveTab(tab.id);
                   setViewMode("menu");
+                  setSelectedPost(null);
+                  setGeneratedComments([]);
                 }}
                 className={cn(
                   "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
@@ -200,20 +297,15 @@ const GrowthMarketing = () => {
           })}
         </div>
 
-        {/* Page Container */}
         <div className="glass-card rounded-2xl p-8">
-          {/* Header - Title only, no icon */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground">Growth Marketing</h1>
             <p className="text-muted-foreground text-sm mt-1">Analysez vos performances et créez du contenu impactant</p>
           </div>
 
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left Side - Stats & Posts (3 cols) */}
-            <div className="lg:col-span-3 space-y-6">
-              {/* Analytics Card - Conditional based on tab */}
-              {activeTab === "linkedin" && (
+          {activeTab === "linkedin" && (
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-3 space-y-6">
                 <div className="bg-card rounded-2xl border border-border p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -231,7 +323,6 @@ const GrowthMarketing = () => {
                     </div>
                   </div>
 
-                  {/* Stats Grid */}
                   <div className="grid grid-cols-4 gap-3">
                     <div className="bg-secondary/40 rounded-xl p-4">
                       <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
@@ -263,26 +354,7 @@ const GrowthMarketing = () => {
                     </div>
                   </div>
                 </div>
-              )}
 
-              {activeTab === "brief" && (
-                <div className="bg-card rounded-2xl border border-border p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-foreground/5 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-semibold text-foreground">Briefs Client</h3>
-                      <p className="text-xs text-muted-foreground">Documents de cadrage générés</p>
-                    </div>
-                  </div>
-                  <p className="text-muted-foreground text-sm">Aucun brief généré pour le moment.</p>
-                </div>
-              )}
-
-
-              {/* Posts List - Only for LinkedIn */}
-              {activeTab === "linkedin" && (
                 <div className="bg-card rounded-2xl border border-border p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-base font-semibold text-foreground">Posts récents</h3>
@@ -360,20 +432,16 @@ const GrowthMarketing = () => {
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Right Side - Create Content Panel (2 cols) */}
-            <div className="lg:col-span-2">
-              <div className="bg-card rounded-2xl border border-border p-6 sticky top-8">
-                <div className="mb-6">
-                  <h3 className="text-base font-semibold text-foreground">Créer du contenu</h3>
-                  <p className="text-xs text-muted-foreground">Générez du contenu avec l'IA</p>
-                </div>
+              <div className="lg:col-span-2">
+                <div className="bg-card rounded-2xl border border-border p-6 sticky top-8">
+                  <div className="mb-6">
+                    <h3 className="text-base font-semibold text-foreground">Créer du contenu</h3>
+                    <p className="text-xs text-muted-foreground">Générez du contenu avec l'IA</p>
+                  </div>
 
-                {viewMode === "menu" ? (
-                  <>
-                    {/* Show only the content type matching active tab */}
+                  {viewMode === "menu" ? (
                     <button
                       onClick={handleStartCreation}
                       className="w-full flex items-center justify-between p-4 bg-secondary/30 rounded-xl hover:bg-secondary/50 transition-all duration-200 group"
@@ -389,18 +457,15 @@ const GrowthMarketing = () => {
                       </div>
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
                     </button>
-                  </>
-                ) : (
-                  <>
-                    {/* Back button */}
-                    <button
-                      onClick={handleBackToMenu}
-                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-                    >
-                      ← Retour
-                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleBackToMenu}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+                      >
+                        ← Retour
+                      </button>
 
-                    {activeTab === "linkedin" && (
                       <div className="space-y-5">
                         <div>
                           <label className="block text-sm font-medium text-foreground mb-2">
@@ -455,57 +520,222 @@ const GrowthMarketing = () => {
                           {isGenerating ? "Génération en cours..." : "Générer le post"}
                         </button>
                       </div>
-                    )}
-
-                    {activeTab === "brief" && (
-                      <div className="space-y-5">
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">
-                            Nom du client
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Nom du client..."
-                            className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">
-                            Contexte du projet
-                          </label>
-                          <textarea
-                            placeholder="Décrivez le contexte et les enjeux..."
-                            className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
-                            rows={4}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-foreground mb-2">
-                            Objectifs
-                          </label>
-                          <textarea
-                            placeholder="Quels sont les objectifs du brief ?"
-                            className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
-                            rows={3}
-                          />
-                        </div>
-
-                        <button
-                          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 text-sm"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          Générer le brief
-                        </button>
-                      </div>
-                    )}
-
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === "comment" && (
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="lg:col-span-3 space-y-6">
+                <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Linkedin className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Sélectionnez un post</h3>
+                      <p className="text-sm text-muted-foreground">Choisissez le post que vous souhaitez commenter</p>
+                    </div>
+                  </div>
+
+                  {linkedinPosts.length === 0 ? (
+                    <div className="text-center py-12 bg-secondary/20 rounded-2xl">
+                      <MessageSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                      <p className="text-muted-foreground">Aucun post LinkedIn enregistré</p>
+                      <p className="text-sm text-muted-foreground/70 mt-1">
+                        Ajoutez des posts dans votre profil pour pouvoir générer des commentaires
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {linkedinPosts.map((post) => (
+                        <button
+                          key={post.id}
+                          onClick={() => handleSelectPost(post)}
+                          className={cn(
+                            "w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 group",
+                            selectedPost?.id === post.id
+                              ? "border-primary bg-primary/5 shadow-md"
+                              : "border-border bg-secondary/20 hover:border-primary/30 hover:bg-secondary/40"
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground leading-relaxed">
+                                {truncateContent(post.content, 150)}
+                              </p>
+                              <div className="flex items-center gap-3 mt-3">
+                                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  {formatDate(post.created_at)}
+                                </span>
+                                {post.post_url && (
+                                  <a
+                                    href={post.post_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    Voir sur LinkedIn
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            <div className={cn(
+                              "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                              selectedPost?.id === post.id
+                                ? "border-primary bg-primary"
+                                : "border-border group-hover:border-primary/50"
+                            )}>
+                              {selectedPost?.id === post.id && (
+                                <Check className="w-4 h-4 text-primary-foreground" />
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {generatedComments.length > 0 && (
+                  <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-success" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">Commentaires générés</h3>
+                        <p className="text-sm text-muted-foreground">Choisissez et copiez le commentaire qui vous convient</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {generatedComments.map((comment, index) => (
+                        <div
+                          key={index}
+                          className="p-5 bg-gradient-to-br from-secondary/40 to-secondary/20 rounded-2xl border border-border/50 group"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-medium text-muted-foreground bg-background/50 px-2 py-1 rounded-full">
+                                  Version {index + 1}
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground leading-relaxed">{comment}</p>
+                            </div>
+                            <button
+                              onClick={() => handleCopyComment(comment, index)}
+                              className={cn(
+                                "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                copiedIndex === index
+                                  ? "bg-success text-success-foreground"
+                                  : "bg-background/50 text-muted-foreground hover:bg-background hover:text-foreground"
+                              )}
+                            >
+                              {copiedIndex === index ? (
+                                <Check className="w-5 h-5" />
+                              ) : (
+                                <Copy className="w-5 h-5" />
+                              )}
+                            </button>
+                          </div>
+                          {selectedPost?.post_url && (
+                            <a
+                              href={selectedPost.post_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 mt-4 text-xs text-primary hover:underline"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              Aller commenter sur LinkedIn
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="lg:col-span-2">
+                <div className="bg-card rounded-3xl border border-border p-6 sticky top-8 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center">
+                      <MessageSquare className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Générer un commentaire</h3>
+                      <p className="text-sm text-muted-foreground">L'IA va créer plusieurs versions</p>
+                    </div>
+                  </div>
+
+                  {selectedPost ? (
+                    <div className="space-y-5">
+                      <div className="p-4 bg-secondary/30 rounded-2xl border border-border/50">
+                        <p className="text-xs text-muted-foreground mb-2">Post sélectionné</p>
+                        <p className="text-sm text-foreground font-medium line-clamp-3">
+                          {truncateContent(selectedPost.content, 100)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Ébauche du commentaire (optionnel)
+                        </label>
+                        <textarea
+                          value={commentDraft}
+                          onChange={(e) => setCommentDraft(e.target.value)}
+                          placeholder="Donnez une direction à l'IA : idée principale, ton souhaité..."
+                          className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
+                          rows={4}
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleGenerateComments}
+                        disabled={isGeneratingComment}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-medium transition-all duration-200 text-sm",
+                          isGeneratingComment
+                            ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                            : "bg-foreground text-background hover:bg-foreground/90 shadow-lg hover:shadow-xl"
+                        )}
+                      >
+                        {isGeneratingComment ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Génération en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-5 h-5" />
+                            Générer 3 versions
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <div className="w-16 h-16 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+                        <Linkedin className="w-8 h-8 text-muted-foreground/50" />
+                      </div>
+                      <p className="font-medium">Sélectionnez un post</p>
+                      <p className="text-sm text-muted-foreground/70 mt-1">
+                        pour générer des commentaires personnalisés
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
