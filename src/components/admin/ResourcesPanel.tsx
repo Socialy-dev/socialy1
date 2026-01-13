@@ -179,12 +179,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Ressources Client</h2>
-            <p className="text-muted-foreground">
-              Informations pour la génération de contenu et l'analyse
-            </p>
-          </div>
+          <h2 className="text-2xl font-bold text-foreground">Ressources Organisation</h2>
         </div>
         <Button 
           onClick={handleSave} 
