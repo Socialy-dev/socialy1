@@ -84,7 +84,7 @@ const GrowthMarketing = () => {
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState<MainTab>("linkedin");
-  const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab | null>(null);
+  const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab>("generation");
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
   const [postFilter, setPostFilter] = useState<"all" | "linkedin" | "generated">("all");
   
