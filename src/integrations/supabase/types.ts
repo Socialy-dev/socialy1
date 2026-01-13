@@ -496,6 +496,83 @@ export type Database = {
           },
         ]
       }
+      organization_linkedin_posts: {
+        Row: {
+          activity_urn: string | null
+          author_avatar_url: string | null
+          author_headline: string | null
+          author_name: string | null
+          author_profile_url: string | null
+          clicks: number | null
+          comments_count: number | null
+          created_at: string
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          likes_count: number | null
+          media_items: Json | null
+          organization_id: string
+          post_url: string
+          posted_at_date: string | null
+          raw_data: Json | null
+          reposts_count: number | null
+          text: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_urn?: string | null
+          author_avatar_url?: string | null
+          author_headline?: string | null
+          author_name?: string | null
+          author_profile_url?: string | null
+          clicks?: number | null
+          comments_count?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes_count?: number | null
+          media_items?: Json | null
+          organization_id: string
+          post_url: string
+          posted_at_date?: string | null
+          raw_data?: Json | null
+          reposts_count?: number | null
+          text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_urn?: string | null
+          author_avatar_url?: string | null
+          author_headline?: string | null
+          author_name?: string | null
+          author_profile_url?: string | null
+          clicks?: number | null
+          comments_count?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes_count?: number | null
+          media_items?: Json | null
+          organization_id?: string
+          post_url?: string
+          posted_at_date?: string | null
+          raw_data?: Json | null
+          reposts_count?: number | null
+          text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_linkedin_posts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
