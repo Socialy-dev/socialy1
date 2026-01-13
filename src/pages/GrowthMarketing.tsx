@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
+import { OrganizationLinkedInPosts } from "@/components/growth/OrganizationLinkedInPosts";
 import { cn } from "@/lib/utils";
 import { 
   Linkedin, 
@@ -34,12 +35,21 @@ type MainTab = "linkedin" | "marche-public";
 type LinkedInSubTab = "generation" | "comment" | "classement";
 type ViewMode = "menu" | "form";
 
-interface LinkedInPost {
+interface OrganizationLinkedInPost {
   id: string;
-  content: string;
-  post_url: string | null;
-  posted_at: string | null;
-  created_at: string;
+  post_url: string;
+  text: string | null;
+  posted_at_date: string | null;
+  author_name: string | null;
+  author_headline: string | null;
+  author_profile_url: string | null;
+  author_avatar_url: string | null;
+  likes_count: number;
+  comments_count: number;
+  reposts_count: number;
+  impressions: number;
+  engagement_rate: number;
+  media_items: any[] | null;
 }
 
 const linkedinStats = {
@@ -81,7 +91,7 @@ const recentPosts = [
 ];
 
 const GrowthMarketing = () => {
-  const { user } = useAuth();
+  const { user, effectiveOrgId } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState<MainTab>("linkedin");
   const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab>("generation");
@@ -93,35 +103,12 @@ const GrowthMarketing = () => {
   const [postTone, setPostTone] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
-  const [selectedPost, setSelectedPost] = useState<LinkedInPost | null>(null);
+  const [selectedOrgPost, setSelectedOrgPost] = useState<OrganizationLinkedInPost | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
   const [generatedComments, setGeneratedComments] = useState<string[]>([]);
   const [isGeneratingComment, setIsGeneratingComment] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (linkedinSubTab === "comment" && user) {
-      fetchLinkedInPosts();
-    }
-  }, [linkedinSubTab, user]);
-
-  const fetchLinkedInPosts = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from("user_linkedin_posts")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching posts:", error);
-      return;
-    }
-
-    setLinkedinPosts(data || []);
-  };
 
   const handleStartCreation = () => {
     setViewMode("form");
@@ -170,14 +157,14 @@ const GrowthMarketing = () => {
     }
   };
 
-  const handleSelectPost = (post: LinkedInPost) => {
-    setSelectedPost(post);
+  const handleSelectOrgPost = (post: OrganizationLinkedInPost) => {
+    setSelectedOrgPost(post);
     setGeneratedComments([]);
     setCommentDraft("");
   };
 
   const handleGenerateComments = async () => {
-    if (!selectedPost) {
+    if (!selectedOrgPost) {
       toast.error("Veuillez sélectionner un post");
       return;
     }
@@ -272,7 +259,7 @@ const GrowthMarketing = () => {
                   setLinkedinSubTab("generation");
                 }
                 setViewMode("menu");
-                setSelectedPost(null);
+                setSelectedOrgPost(null);
                 setGeneratedComments([]);
               }}
               className={cn(
@@ -296,7 +283,7 @@ const GrowthMarketing = () => {
                 setActiveMainTab("marche-public");
                 setLinkedinSubTab(null);
                 setViewMode("menu");
-                setSelectedPost(null);
+                setSelectedOrgPost(null);
                 setGeneratedComments([]);
               }}
               className={cn(
@@ -612,71 +599,16 @@ const GrowthMarketing = () => {
                       <Linkedin className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-foreground">Sélectionnez un post</h3>
-                      <p className="text-sm text-muted-foreground">Choisissez le post que vous souhaitez commenter</p>
+                      <h3 className="text-lg font-semibold text-foreground">Posts de l'organisation</h3>
+                      <p className="text-sm text-muted-foreground">Sélectionnez un post à commenter</p>
                     </div>
                   </div>
 
-                  {linkedinPosts.length === 0 ? (
-                    <div className="text-center py-12 bg-secondary/20 rounded-2xl">
-                      <MessageSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                      <p className="text-muted-foreground">Aucun post LinkedIn enregistré</p>
-                      <p className="text-sm text-muted-foreground/70 mt-1">
-                        Ajoutez des posts dans votre profil pour pouvoir générer des commentaires
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {linkedinPosts.map((post) => (
-                        <button
-                          key={post.id}
-                          onClick={() => handleSelectPost(post)}
-                          className={cn(
-                            "w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 group",
-                            selectedPost?.id === post.id
-                              ? "border-primary bg-primary/5 shadow-md"
-                              : "border-border bg-secondary/20 hover:border-primary/30 hover:bg-secondary/40"
-                          )}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground leading-relaxed">
-                                {truncateContent(post.content, 150)}
-                              </p>
-                              <div className="flex items-center gap-3 mt-3">
-                                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <Clock className="w-3.5 h-3.5" />
-                                  {formatDate(post.created_at)}
-                                </span>
-                                {post.post_url && (
-                                  <a
-                                    href={post.post_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-1 text-xs text-primary hover:underline"
-                                  >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                    Voir sur LinkedIn
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                            <div className={cn(
-                              "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                              selectedPost?.id === post.id
-                                ? "border-primary bg-primary"
-                                : "border-border group-hover:border-primary/50"
-                            )}>
-                              {selectedPost?.id === post.id && (
-                                <Check className="w-4 h-4 text-primary-foreground" />
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <OrganizationLinkedInPosts
+                    organizationId={effectiveOrgId}
+                    selectedPost={selectedOrgPost}
+                    onSelectPost={handleSelectOrgPost}
+                  />
                 </div>
 
                 {generatedComments.length > 0 && (
@@ -722,9 +654,9 @@ const GrowthMarketing = () => {
                               )}
                             </button>
                           </div>
-                          {selectedPost?.post_url && (
+                          {selectedOrgPost?.post_url && (
                             <a
-                              href={selectedPost.post_url}
+                              href={selectedOrgPost.post_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-2 mt-4 text-xs text-primary hover:underline"
@@ -752,12 +684,12 @@ const GrowthMarketing = () => {
                     </div>
                   </div>
 
-                  {selectedPost ? (
+                  {selectedOrgPost ? (
                     <div className="space-y-5">
                       <div className="p-4 bg-secondary/30 rounded-2xl border border-border/50">
                         <p className="text-xs text-muted-foreground mb-2">Post sélectionné</p>
                         <p className="text-sm text-foreground font-medium line-clamp-3">
-                          {truncateContent(selectedPost.content, 100)}
+                          {truncateContent(selectedOrgPost.text || "", 100)}
                         </p>
                       </div>
 
