@@ -263,8 +263,8 @@ const GrowthMarketing = () => {
       >
         <Header showTitle={false} />
         
-        <div className="flex flex-col gap-2 mb-6">
-          <div className="flex items-center gap-2">
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 if (activeMainTab === "linkedin") {
@@ -286,7 +286,7 @@ const GrowthMarketing = () => {
             >
               <Linkedin className="w-4 h-4" />
               LinkedIn
-              {activeMainTab === "linkedin" && linkedinSubTab ? (
+              {activeMainTab === "linkedin" ? (
                 <ChevronDown className="w-3.5 h-3.5" />
               ) : (
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -313,8 +313,8 @@ const GrowthMarketing = () => {
             </button>
           </div>
 
-          {activeMainTab === "linkedin" && linkedinSubTab && (
-            <div className="flex items-center gap-2 ml-4">
+          {activeMainTab === "linkedin" && (
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setLinkedinSubTab("comment")}
                 className={cn(
@@ -784,22 +784,131 @@ const GrowthMarketing = () => {
           )}
 
           {activeMainTab === "linkedin" && linkedinSubTab === "classement" && (
-            <div className="bg-card rounded-2xl border border-border p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-primary" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-card rounded-2xl border border-border p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">🏆</span>
+                      <h3 className="text-lg font-bold text-foreground">Classement ce mois</h3>
+                    </div>
+                    <select className="bg-secondary/50 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground">
+                      <option>Cette semaine</option>
+                      <option>Ce mois</option>
+                      <option>Tout temps</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-amber-500">1.</span>
+                        <span className="font-semibold text-foreground">Paul</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">847 pts</span>
+                        <span className="text-lg">🔥🚀⭐</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-400/10 to-transparent rounded-xl border border-slate-400/20">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-slate-400">2.</span>
+                        <span className="font-semibold text-foreground">Sara</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">692 pts</span>
+                        <span className="text-lg">🔥⭐</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-700/10 to-transparent rounded-xl border border-amber-700/20">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-amber-700">3.</span>
+                        <span className="font-semibold text-foreground">Alex</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">531 pts</span>
+                        <span className="text-lg">🚀</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border-2 border-primary/30">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-muted-foreground">4.</span>
+                        <span className="font-semibold text-primary">Toi (Marie)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-foreground">423 pts</span>
+                        <span className="text-lg">🔥</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl">
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-bold text-muted-foreground">5.</span>
+                        <span className="font-semibold text-foreground">Thomas</span>
+                      </div>
+                      <span className="font-bold text-foreground">387 pts</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-secondary/20 rounded-xl flex items-center gap-3">
+                    <span className="text-xl">💡</span>
+                    <p className="text-sm text-muted-foreground">
+                      Encore <span className="font-semibold text-foreground">100pts</span> pour le badge ⭐
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Classement LinkedIn</h3>
-                  <p className="text-sm text-muted-foreground">Suivez vos performances et comparez-vous</p>
+
+                <div className="bg-card rounded-2xl border border-border p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">💬</span>
+                    <h3 className="text-lg font-bold text-foreground">Feed</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-secondary/20 rounded-xl text-sm">
+                      <span className="text-muted-foreground">Il y a 2h :</span>
+                      <span className="text-foreground ml-1">Paul a cité Socialy</span>
+                    </div>
+                    <div className="p-3 bg-secondary/20 rounded-xl text-sm">
+                      <span className="text-muted-foreground">Hier :</span>
+                      <span className="text-foreground ml-1">Sara badge 🔥 On Fire</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="text-center py-12 bg-secondary/20 rounded-2xl">
-                <Trophy className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <p className="text-muted-foreground font-medium">Fonctionnalité à venir</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">
-                  Le classement LinkedIn sera bientôt disponible
-                </p>
+
+              <div className="space-y-6">
+                <div className="bg-card rounded-2xl border border-border p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">📊</span>
+                    <h3 className="text-lg font-bold text-foreground">Ton mois</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-xl">
+                      <span className="text-sm text-foreground">Reposts</span>
+                      <span className="text-sm font-semibold text-foreground">12 <span className="text-primary">(+60pts)</span></span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-xl">
+                      <span className="text-sm text-foreground">Commentaires</span>
+                      <span className="text-sm font-semibold text-foreground">8 <span className="text-primary">(+40pts)</span></span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/20">
+                      <span className="text-sm text-foreground">Citations</span>
+                      <span className="text-sm font-semibold text-foreground">5 <span className="text-primary">(+250pts)</span> 💕</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-2xl border border-border p-6">
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-4">Badges à débloquer</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="aspect-square bg-secondary/30 rounded-xl flex items-center justify-center text-2xl opacity-50">⭐</div>
+                    <div className="aspect-square bg-secondary/30 rounded-xl flex items-center justify-center text-2xl opacity-50">💎</div>
+                    <div className="aspect-square bg-secondary/30 rounded-xl flex items-center justify-center text-2xl opacity-50">👑</div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
