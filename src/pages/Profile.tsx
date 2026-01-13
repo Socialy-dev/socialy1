@@ -92,13 +92,27 @@ const Profile = () => {
       const userEmail = user.email || "";
 
       if (profile) {
-        setProfileData(prev => ({
-          ...prev,
+        setProfileData({
           firstName: profile.first_name || "",
           lastName: profile.last_name || "",
           email: userEmail,
           contactEmail: profile.email || userEmail,
-        }));
+          brandName: profile.brand_name || "",
+          brandDescription: profile.brand_description || "",
+          brandColors: [],
+          brandFont: profile.brand_font || "",
+          companyName: profile.company_name || "",
+          companyDescription: profile.company_description || "",
+          companySector: profile.company_sector || "",
+          companySize: profile.company_size || "",
+          companyWebsite: profile.company_website || "",
+          contactPhone: profile.phone || "",
+          contactAddress: profile.address || "",
+          linkedinUrl: profile.linkedin_url || "",
+          twitterUrl: profile.twitter_url || "",
+          instagramUrl: profile.instagram_url || "",
+          facebookUrl: profile.facebook_url || "",
+        });
       } else {
         setProfileData(prev => ({
           ...prev,
@@ -132,6 +146,21 @@ const Profile = () => {
       .update({
         first_name: profileData.firstName,
         last_name: profileData.lastName,
+        email: profileData.contactEmail,
+        brand_name: profileData.brandName,
+        brand_description: profileData.brandDescription,
+        brand_font: profileData.brandFont,
+        company_name: profileData.companyName,
+        company_description: profileData.companyDescription,
+        company_sector: profileData.companySector,
+        company_size: profileData.companySize,
+        company_website: profileData.companyWebsite,
+        phone: profileData.contactPhone,
+        address: profileData.contactAddress,
+        linkedin_url: profileData.linkedinUrl,
+        twitter_url: profileData.twitterUrl,
+        instagram_url: profileData.instagramUrl,
+        facebook_url: profileData.facebookUrl,
       })
       .eq("user_id", user.id);
 

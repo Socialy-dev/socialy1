@@ -557,35 +557,77 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          brand_description: string | null
+          brand_font: string | null
+          brand_name: string | null
+          company_description: string | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
           competitor_agencies: string[] | null
           created_at: string
           email: string | null
+          facebook_url: string | null
           first_name: string | null
           id: string
+          instagram_url: string | null
           last_name: string | null
+          linkedin_url: string | null
+          phone: string | null
+          twitter_url: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          brand_description?: string | null
+          brand_font?: string | null
+          brand_name?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
           competitor_agencies?: string[] | null
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           first_name?: string | null
           id?: string
+          instagram_url?: string | null
           last_name?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          brand_description?: string | null
+          brand_font?: string | null
+          brand_name?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
           competitor_agencies?: string[] | null
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           first_name?: string | null
           id?: string
+          instagram_url?: string | null
           last_name?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          twitter_url?: string | null
           updated_at?: string
           user_id?: string
         }
