@@ -31,8 +31,8 @@ import {
 import { cn } from "@/lib/utils";
 
 interface ClientInfo {
-  id: string;
-  organization_id: string;
+  id?: string;
+  organization_id?: string;
   linkedin_url: string | null;
   instagram_url: string | null;
   twitter_url: string | null;
@@ -61,7 +61,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
   const [saving, setSaving] = useState(false);
   const { currentOrganization } = useAuth();
 
-  const [formData, setFormData] = useState<Partial<ClientInfo>>({
+  const [formData, setFormData] = useState<ClientInfo>({
     linkedin_url: "",
     instagram_url: "",
     twitter_url: "",
@@ -93,7 +93,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("organization_resources")
+        .from("organization_resources" as any)
         .select("*")
         .eq("organization_id", currentOrganization.id)
         .maybeSingle();
@@ -101,7 +101,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
       if (error && error.code !== "PGRST116") throw error;
       
       if (data) {
-        setFormData(data);
+        setFormData(data as unknown as ClientInfo);
       }
     } catch (error: any) {
       console.error("Error fetching client info:", error);
@@ -118,13 +118,30 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
 
     setSaving(true);
     try {
+      const payload = {
+        organization_id: currentOrganization.id,
+        linkedin_url: formData.linkedin_url || null,
+        instagram_url: formData.instagram_url || null,
+        twitter_url: formData.twitter_url || null,
+        youtube_url: formData.youtube_url || null,
+        facebook_url: formData.facebook_url || null,
+        website_url: formData.website_url || null,
+        company_name: formData.company_name || null,
+        company_description: formData.company_description || null,
+        industry: formData.industry || null,
+        target_audience: formData.target_audience || null,
+        key_messages: formData.key_messages || null,
+        tone_of_voice: formData.tone_of_voice || null,
+        hashtags: formData.hashtags || null,
+        competitors: formData.competitors || null,
+        contact_email: formData.contact_email || null,
+        contact_phone: formData.contact_phone || null,
+        address: formData.address || null,
+      };
+
       const { error } = await supabase
-        .from("organization_resources")
-        .upsert({
-          organization_id: currentOrganization.id,
-          ...formData,
-          updated_at: new Date().toISOString(),
-        }, {
+        .from("organization_resources" as any)
+        .upsert(payload as any, {
           onConflict: "organization_id"
         });
 

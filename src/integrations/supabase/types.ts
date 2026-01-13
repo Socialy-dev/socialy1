@@ -528,6 +528,86 @@ export type Database = {
           },
         ]
       }
+      organization_resources: {
+        Row: {
+          address: string | null
+          company_description: string | null
+          company_name: string | null
+          competitors: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          facebook_url: string | null
+          hashtags: string | null
+          id: string
+          industry: string | null
+          instagram_url: string | null
+          key_messages: string | null
+          linkedin_url: string | null
+          organization_id: string
+          target_audience: string | null
+          tone_of_voice: string | null
+          twitter_url: string | null
+          updated_at: string
+          website_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          competitors?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          hashtags?: string | null
+          id?: string
+          industry?: string | null
+          instagram_url?: string | null
+          key_messages?: string | null
+          linkedin_url?: string | null
+          organization_id: string
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          website_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_description?: string | null
+          company_name?: string | null
+          competitors?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          facebook_url?: string | null
+          hashtags?: string | null
+          id?: string
+          industry?: string | null
+          instagram_url?: string | null
+          key_messages?: string | null
+          linkedin_url?: string | null
+          organization_id?: string
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          website_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_resources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
