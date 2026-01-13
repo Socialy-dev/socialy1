@@ -267,11 +267,9 @@ const GrowthMarketing = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (activeMainTab === "linkedin") {
-                  setLinkedinSubTab(linkedinSubTab ? null : "generation");
-                } else {
+                if (activeMainTab !== "linkedin") {
                   setActiveMainTab("linkedin");
-                  setLinkedinSubTab(null);
+                  setLinkedinSubTab("generation");
                 }
                 setViewMode("menu");
                 setSelectedPost(null);
