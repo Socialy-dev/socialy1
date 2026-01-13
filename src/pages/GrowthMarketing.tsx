@@ -6,6 +6,7 @@ import {
   Linkedin, 
   MessageSquare, 
   ChevronRight,
+  ChevronDown,
   Eye,
   ThumbsUp,
   MessageCircle,
@@ -20,20 +21,18 @@ import {
   Loader2,
   ExternalLink,
   Check,
-  Copy
+  Copy,
+  Briefcase,
+  Trophy,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
-type ContentType = "linkedin" | "comment";
+type MainTab = "linkedin" | "marche-public";
+type LinkedInSubTab = "comment" | "classement";
 type ViewMode = "menu" | "form";
-
-interface Tab {
-  id: ContentType;
-  label: string;
-  icon: React.ElementType;
-}
 
 interface LinkedInPost {
   id: string;
@@ -42,11 +41,6 @@ interface LinkedInPost {
   posted_at: string | null;
   created_at: string;
 }
-
-const tabs: Tab[] = [
-  { id: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { id: "comment", label: "Commentaire LinkedIn", icon: MessageSquare },
-];
 
 const linkedinStats = {
   posts: 15,
@@ -89,7 +83,8 @@ const recentPosts = [
 const GrowthMarketing = () => {
   const { user } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<ContentType>("linkedin");
+  const [activeMainTab, setActiveMainTab] = useState<MainTab>("linkedin");
+  const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
   const [postFilter, setPostFilter] = useState<"all" | "linkedin" | "generated">("all");
   
@@ -106,10 +101,10 @@ const GrowthMarketing = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (activeTab === "comment" && user) {
+    if (linkedinSubTab === "comment" && user) {
       fetchLinkedInPosts();
     }
-  }, [activeTab, user]);
+  }, [linkedinSubTab, user]);
 
   const fetchLinkedInPosts = async () => {
     if (!user) return;
@@ -237,20 +232,18 @@ const GrowthMarketing = () => {
     : recentPosts.filter(p => p.source === postFilter);
 
   const getCreationContent = () => {
-    switch (activeTab) {
-      case "linkedin":
-        return {
-          title: "Post LinkedIn",
-          description: "Créer un post engageant",
-          icon: Linkedin
-        };
-      case "comment":
-        return {
-          title: "Commentaire LinkedIn",
-          description: "Générer des commentaires",
-          icon: MessageSquare
-        };
+    if (linkedinSubTab === "comment") {
+      return {
+        title: "Commentaire LinkedIn",
+        description: "Générer des commentaires",
+        icon: MessageSquare
+      };
     }
+    return {
+      title: "Post LinkedIn",
+      description: "Créer un post engageant",
+      icon: Linkedin
+    };
   };
 
   const creationContent = getCreationContent();
@@ -270,31 +263,84 @@ const GrowthMarketing = () => {
       >
         <Header showTitle={false} />
         
-        <div className="flex items-center gap-2 mb-6">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
+        <div className="flex flex-col gap-2 mb-6">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (activeMainTab === "linkedin") {
+                  setLinkedinSubTab(linkedinSubTab ? null : "comment");
+                } else {
+                  setActiveMainTab("linkedin");
+                  setLinkedinSubTab("comment");
+                }
+                setViewMode("menu");
+                setSelectedPost(null);
+                setGeneratedComments([]);
+              }}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                activeMainTab === "linkedin"
+                  ? "bg-foreground text-background border-foreground shadow-sm"
+                  : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+              )}
+            >
+              <Linkedin className="w-4 h-4" />
+              LinkedIn
+              {activeMainTab === "linkedin" && linkedinSubTab ? (
+                <ChevronDown className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveMainTab("marche-public");
+                setLinkedinSubTab(null);
+                setViewMode("menu");
+                setSelectedPost(null);
+                setGeneratedComments([]);
+              }}
+              className={cn(
+                "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                activeMainTab === "marche-public"
+                  ? "bg-foreground text-background border-foreground shadow-sm"
+                  : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+              )}
+            >
+              <Briefcase className="w-4 h-4" />
+              Marché Public
+            </button>
+          </div>
+
+          {activeMainTab === "linkedin" && linkedinSubTab && (
+            <div className="flex items-center gap-2 ml-4">
               <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  setViewMode("menu");
-                  setSelectedPost(null);
-                  setGeneratedComments([]);
-                }}
+                onClick={() => setLinkedinSubTab("comment")}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
-                  isActive
-                    ? "bg-foreground text-background border-foreground shadow-sm"
-                    : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                  linkedinSubTab === "comment"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
                 )}
               >
-                <Icon className="w-4 h-4" />
-                {tab.label}
+                <RefreshCw className="w-3.5 h-3.5" />
+                Commentaire / Repost
               </button>
-            );
-          })}
+              <button
+                onClick={() => setLinkedinSubTab("classement")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                  linkedinSubTab === "classement"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                Classement
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="glass-card rounded-2xl p-8">
@@ -303,7 +349,7 @@ const GrowthMarketing = () => {
             <p className="text-muted-foreground text-sm mt-1">Analysez vos performances et créez du contenu impactant</p>
           </div>
 
-          {activeTab === "linkedin" && (
+          {activeMainTab === "linkedin" && !linkedinSubTab && (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <div className="lg:col-span-3 space-y-6">
                 <div className="bg-card rounded-2xl border border-border p-6">
@@ -527,7 +573,7 @@ const GrowthMarketing = () => {
             </div>
           )}
 
-          {activeTab === "comment" && (
+          {activeMainTab === "linkedin" && linkedinSubTab === "comment" && (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <div className="lg:col-span-3 space-y-6">
                 <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
@@ -733,6 +779,48 @@ const GrowthMarketing = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeMainTab === "linkedin" && linkedinSubTab === "classement" && (
+            <div className="bg-card rounded-2xl border border-border p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Classement LinkedIn</h3>
+                  <p className="text-sm text-muted-foreground">Suivez vos performances et comparez-vous</p>
+                </div>
+              </div>
+              <div className="text-center py-12 bg-secondary/20 rounded-2xl">
+                <Trophy className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground font-medium">Fonctionnalité à venir</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  Le classement LinkedIn sera bientôt disponible
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeMainTab === "marche-public" && (
+            <div className="bg-card rounded-2xl border border-border p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Marché Public</h3>
+                  <p className="text-sm text-muted-foreground">Gérez vos appels d'offres et opportunités</p>
+                </div>
+              </div>
+              <div className="text-center py-12 bg-secondary/20 rounded-2xl">
+                <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground font-medium">Fonctionnalité à venir</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">
+                  La gestion des marchés publics sera bientôt disponible
+                </p>
               </div>
             </div>
           )}
