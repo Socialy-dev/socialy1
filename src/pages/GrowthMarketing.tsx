@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
 type MainTab = "linkedin" | "marche-public";
-type LinkedInSubTab = "comment" | "classement";
+type LinkedInSubTab = "generation" | "comment" | "classement";
 type ViewMode = "menu" | "form";
 
 interface LinkedInPost {
@@ -268,10 +268,10 @@ const GrowthMarketing = () => {
             <button
               onClick={() => {
                 if (activeMainTab === "linkedin") {
-                  setLinkedinSubTab(linkedinSubTab ? null : "comment");
+                  setLinkedinSubTab(linkedinSubTab ? null : "generation");
                 } else {
                   setActiveMainTab("linkedin");
-                  setLinkedinSubTab("comment");
+                  setLinkedinSubTab(null);
                 }
                 setViewMode("menu");
                 setSelectedPost(null);
@@ -316,6 +316,18 @@ const GrowthMarketing = () => {
           {activeMainTab === "linkedin" && (
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setLinkedinSubTab("generation")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                  linkedinSubTab === "generation"
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
+                )}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Génération de contenu
+              </button>
+              <button
                 onClick={() => setLinkedinSubTab("comment")}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
@@ -349,7 +361,7 @@ const GrowthMarketing = () => {
             <p className="text-muted-foreground text-sm mt-1">Analysez vos performances et créez du contenu impactant</p>
           </div>
 
-          {activeMainTab === "linkedin" && !linkedinSubTab && (
+          {activeMainTab === "linkedin" && linkedinSubTab === "generation" && (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               <div className="lg:col-span-3 space-y-6">
                 <div className="bg-card rounded-2xl border border-border p-6">
