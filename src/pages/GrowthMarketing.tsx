@@ -357,8 +357,28 @@ const GrowthMarketing = () => {
 
         <div className="glass-card rounded-2xl p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground">Growth Marketing</h1>
-            <p className="text-muted-foreground text-sm mt-1">Analysez vos performances et créez du contenu impactant</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              {activeMainTab === "marche-public" 
+                ? "Marché Public" 
+                : linkedinSubTab === "generation" 
+                  ? "Génération de contenu" 
+                  : linkedinSubTab === "comment" 
+                    ? "Commentaire / Repost LinkedIn" 
+                    : linkedinSubTab === "classement" 
+                      ? "Classement LinkedIn" 
+                      : "LinkedIn"}
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {activeMainTab === "marche-public" 
+                ? "Consultez les opportunités d'appels d'offres" 
+                : linkedinSubTab === "generation" 
+                  ? "Créez du contenu engageant avec l'IA" 
+                  : linkedinSubTab === "comment" 
+                    ? "Générez des commentaires et reposts personnalisés" 
+                    : linkedinSubTab === "classement" 
+                      ? "Suivez les performances de votre équipe" 
+                      : "Sélectionnez une catégorie"}
+            </p>
           </div>
 
           {activeMainTab === "linkedin" && linkedinSubTab === "generation" && (
