@@ -39,6 +39,7 @@ import {
   Eye,
   RotateCcw,
 } from "lucide-react";
+import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1649,172 +1650,11 @@ const RelationsPresse = () => {
         </div>
       </main>
 
-      {/* Add Communiqué Modal */}
-      {showAddCommuniqueForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-foreground">Nouveau communiqué de presse</h3>
-              <Button variant="ghost" size="icon" onClick={resetCommuniqueForm}>
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <Label className="text-sm font-semibold">Nom du communiqué</Label>
-                <Input
-                  value={formCommuniqueName}
-                  onChange={(e) => setFormCommuniqueName(e.target.value)}
-                  placeholder="Ex: Lancement nouveau produit 2026"
-                  className="mt-2"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label className="text-sm font-semibold mb-2 block">Communiqué PDF</Label>
-                  <input
-                    ref={pdfInputRef}
-                    type="file"
-                    onChange={(e) => e.target.files?.[0] && setFormCommuniquePdf(e.target.files[0])}
-                    className="hidden"
-                    accept=".pdf"
-                  />
-                  <div
-                    onClick={() => pdfInputRef.current?.click()}
-                    className={cn(
-                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
-                      formCommuniquePdf 
-                        ? "border-red-500 bg-red-500/5" 
-                        : "border-red-500/30 hover:border-red-500/60 hover:bg-red-500/5"
-                    )}
-                  >
-                    {formCommuniquePdf ? (
-                      <div className="space-y-2">
-                        <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto">
-                          <FileText className="w-6 h-6 text-red-500" />
-                        </div>
-                        <p className="text-xs font-medium text-foreground truncate">{formCommuniquePdf.name}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormCommuniquePdf(null);
-                            if (pdfInputRef.current) pdfInputRef.current.value = "";
-                          }}
-                        >
-                          Supprimer
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto">
-                          <FileText className="w-6 h-6 text-red-500/60" />
-                        </div>
-                        <p className="text-xs text-muted-foreground">Fichier PDF</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold mb-2 block">Communiqué Word</Label>
-                  <input
-                    ref={wordInputRef}
-                    type="file"
-                    onChange={(e) => e.target.files?.[0] && setFormCommuniqueWord(e.target.files[0])}
-                    className="hidden"
-                    accept=".doc,.docx"
-                  />
-                  <div
-                    onClick={() => wordInputRef.current?.click()}
-                    className={cn(
-                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
-                      formCommuniqueWord 
-                        ? "border-blue-500 bg-blue-500/5" 
-                        : "border-blue-500/30 hover:border-blue-500/60 hover:bg-blue-500/5"
-                    )}
-                  >
-                    {formCommuniqueWord ? (
-                      <div className="space-y-2">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto">
-                          <File className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <p className="text-xs font-medium text-foreground truncate">{formCommuniqueWord.name}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormCommuniqueWord(null);
-                            if (wordInputRef.current) wordInputRef.current.value = "";
-                          }}
-                        >
-                          Supprimer
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto">
-                          <File className="w-6 h-6 text-blue-500/60" />
-                        </div>
-                        <p className="text-xs text-muted-foreground">Fichier Word</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold mb-2 block">Lien Assets</Label>
-                  <div
-                    className={cn(
-                      "border-2 border-dashed rounded-xl p-6 text-center transition-all",
-                      formCommuniqueAssetsLink 
-                        ? "border-purple-500 bg-purple-500/5" 
-                        : "border-purple-500/30"
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center mx-auto",
-                        formCommuniqueAssetsLink ? "bg-purple-500/20" : "bg-purple-500/10"
-                      )}>
-                        <ExternalLink className={cn(
-                          "w-6 h-6",
-                          formCommuniqueAssetsLink ? "text-purple-500" : "text-purple-500/60"
-                        )} />
-                      </div>
-                      <Input
-                        value={formCommuniqueAssetsLink}
-                        onChange={(e) => setFormCommuniqueAssetsLink(e.target.value)}
-                        placeholder="https://drive.google.com/..."
-                        className="text-xs h-8"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={resetCommuniqueForm}>
-                  Annuler
-                </Button>
-                <Button onClick={handleCommuniqueSubmit} disabled={uploadingCommunique}>
-                  {uploadingCommunique ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    "Enregistrer"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateCommuniqueModal
+        isOpen={showAddCommuniqueForm}
+        onClose={resetCommuniqueForm}
+        onSuccess={fetchCommuniques}
+      />
 
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
