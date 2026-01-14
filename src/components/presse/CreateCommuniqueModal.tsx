@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { X, FileText, File, ExternalLink, Upload, Send, Target, Calendar, Users, Phone, MessageSquare, Check, Briefcase, Building2 } from "lucide-react";
+import { X, FileText, File, ExternalLink, Upload, Save, Sparkles, Target, Calendar, Users, Phone, MessageSquare, Check, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,13 +139,13 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
 
       if (error) throw error;
 
-      toast({ title: "Communiqué créé avec succès", description: "Votre communiqué de presse a été enregistré" });
+      toast({ title: "Communiqué sauvegardé", description: "Votre communiqué de presse a été enregistré" });
       resetForm();
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error adding communique:", error);
-      toast({ title: "Échec de la création", description: "Une erreur s'est produite lors de l'ajout du communiqué. Veuillez réessayer.", variant: "destructive" });
+      toast({ title: "Échec de la sauvegarde", description: "Une erreur s'est produite. Veuillez réessayer.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -171,31 +171,49 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
 
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Session expirée", description: "Veuillez vous reconnecter", variant: "destructive" });
+        return;
+      }
 
       let imageUrl: string | null = null;
       if (imageFile) {
         const fileExt = imageFile.name.split(".").pop();
         const fileName = `${Date.now()}-img-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${session.user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, imageFile);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
         imageUrl = urlData.publicUrl;
       }
 
-      const cpName = titre.trim() || `${clientMarque} - ${cpType === "autre" ? cpTypeOther : CP_TYPES.find(t => t.id === cpType)?.label || "Communiqué"}`;
-
-      const { error } = await supabase.from("communique_presse").insert({
-        name: cpName,
-        assets_link: lienAssets.trim() || imageUrl || null,
-        created_by: user.id,
+      const { data, error } = await supabase.functions.invoke("create-communique", {
+        body: {
+          cpType,
+          cpTypeOther,
+          clientMarque,
+          titre,
+          sousTitre,
+          sujetPrincipal,
+          angleCreatif,
+          messagesCles,
+          dateDiffusion,
+          lienAssets,
+          imageUrl,
+          equipeClient,
+          equipeSocialy,
+          contactNom,
+          contactFonction,
+          contactEmail,
+          contactTelephone,
+          infosSupplementaires,
+        },
       });
 
       if (error) throw error;
 
-      toast({ title: "Communiqué créé avec succès", description: "Votre communiqué de presse a été enregistré et sera généré prochainement" });
+      toast({ title: "Communiqué créé", description: "Votre communiqué de presse va être généré" });
       resetForm();
       onSuccess();
       onClose();
@@ -211,27 +229,27 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card rounded-3xl w-full max-w-6xl h-[95vh] border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-border bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex-shrink-0">
+      <div className="bg-card rounded-3xl w-full max-w-7xl h-[95vh] border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-border bg-gradient-to-r from-primary/10 via-primary/5 to-transparent flex-shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
-              <FileText className="w-7 h-7 text-primary" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Nouveau communiqué de presse</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Créez ou importez votre communiqué</p>
+              <h2 className="text-xl font-bold text-foreground">Nouveau communiqué de presse</h2>
+              <p className="text-sm text-muted-foreground">Créez ou importez votre communiqué</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="rounded-full h-12 w-12" onClick={handleClose}>
-            <X className="w-6 h-6" />
+          <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={handleClose}>
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 px-8 py-4 border-b border-border bg-secondary/30 flex-shrink-0">
+        <div className="flex items-center gap-2 px-8 py-3 border-b border-border bg-secondary/30 flex-shrink-0">
           <button
             onClick={() => setMode("upload")}
             className={cn(
-              "px-6 py-3 rounded-xl font-semibold text-sm transition-all",
+              "px-5 py-2.5 rounded-xl font-semibold text-sm transition-all",
               mode === "upload"
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                 : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -242,7 +260,7 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
           <button
             onClick={() => setMode("create")}
             className={cn(
-              "px-6 py-3 rounded-xl font-semibold text-sm transition-all",
+              "px-5 py-2.5 rounded-xl font-semibold text-sm transition-all",
               mode === "create"
                 ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                 : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -252,22 +270,22 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-6">
           {mode === "upload" ? (
-            <div className="space-y-6 max-w-3xl mx-auto">
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <Label className="text-base font-semibold mb-3 block">Nom du communiqué</Label>
+            <div className="space-y-5 max-w-3xl mx-auto">
+              <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                <Label className="text-sm font-semibold mb-2 block">Nom du communiqué</Label>
                 <Input
                   value={formCommuniqueName}
                   onChange={(e) => setFormCommuniqueName(e.target.value)}
                   placeholder="Ex: Lancement nouveau produit 2026"
-                  className="h-12 text-base"
+                  className="h-11"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                  <Label className="text-base font-semibold mb-4 block">Communiqué PDF</Label>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <Label className="text-sm font-semibold mb-3 block">Communiqué PDF</Label>
                   <input
                     ref={pdfInputRef}
                     type="file"
@@ -278,21 +296,22 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
                   <div
                     onClick={() => pdfInputRef.current?.click()}
                     className={cn(
-                      "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:scale-[1.02]",
+                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
                       formCommuniquePdf 
                         ? "border-red-500 bg-red-500/10" 
                         : "border-red-500/30 hover:border-red-500/60 hover:bg-red-500/5"
                     )}
                   >
                     {formCommuniquePdf ? (
-                      <div className="space-y-3">
-                        <div className="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto">
-                          <FileText className="w-7 h-7 text-red-500" />
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mx-auto">
+                          <FileText className="w-6 h-6 text-red-500" />
                         </div>
-                        <p className="text-sm font-medium text-foreground truncate">{formCommuniquePdf.name}</p>
+                        <p className="text-xs font-medium text-foreground truncate">{formCommuniquePdf.name}</p>
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             setFormCommuniquePdf(null);
@@ -303,18 +322,18 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <div className="w-14 h-14 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto">
-                          <FileText className="w-7 h-7 text-red-500/60" />
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center mx-auto">
+                          <FileText className="w-6 h-6 text-red-500/60" />
                         </div>
-                        <p className="text-sm text-muted-foreground">Cliquez pour ajouter un PDF</p>
+                        <p className="text-xs text-muted-foreground">Cliquez pour ajouter</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                  <Label className="text-base font-semibold mb-4 block">Communiqué Word</Label>
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <Label className="text-sm font-semibold mb-3 block">Communiqué Word</Label>
                   <input
                     ref={wordInputRef}
                     type="file"
@@ -325,21 +344,22 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
                   <div
                     onClick={() => wordInputRef.current?.click()}
                     className={cn(
-                      "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all hover:scale-[1.02]",
+                      "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all hover:scale-[1.02]",
                       formCommuniqueWord 
                         ? "border-blue-500 bg-blue-500/10" 
                         : "border-blue-500/30 hover:border-blue-500/60 hover:bg-blue-500/5"
                     )}
                   >
                     {formCommuniqueWord ? (
-                      <div className="space-y-3">
-                        <div className="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto">
-                          <File className="w-7 h-7 text-blue-500" />
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto">
+                          <File className="w-6 h-6 text-blue-500" />
                         </div>
-                        <p className="text-sm font-medium text-foreground truncate">{formCommuniqueWord.name}</p>
+                        <p className="text-xs font-medium text-foreground truncate">{formCommuniqueWord.name}</p>
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             setFormCommuniqueWord(null);
@@ -350,41 +370,41 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
                         </Button>
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <div className="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto">
-                          <File className="w-7 h-7 text-blue-500/60" />
+                      <div className="space-y-2">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center mx-auto">
+                          <File className="w-6 h-6 text-blue-500/60" />
                         </div>
-                        <p className="text-sm text-muted-foreground">Cliquez pour ajouter un Word</p>
+                        <p className="text-xs text-muted-foreground">Cliquez pour ajouter</p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                  <Label className="text-base font-semibold mb-4 block">Lien Assets</Label>
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <Label className="text-sm font-semibold mb-3 block">Lien Assets</Label>
                   <div
                     className={cn(
-                      "border-2 border-dashed rounded-xl p-8 text-center transition-all",
+                      "border-2 border-dashed rounded-xl p-6 text-center transition-all",
                       formCommuniqueAssetsLink 
                         ? "border-purple-500 bg-purple-500/10" 
                         : "border-purple-500/30"
                     )}
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <div className={cn(
-                        "w-14 h-14 rounded-xl flex items-center justify-center mx-auto",
+                        "w-12 h-12 rounded-xl flex items-center justify-center mx-auto",
                         formCommuniqueAssetsLink ? "bg-purple-500/20" : "bg-purple-500/10"
                       )}>
                         <ExternalLink className={cn(
-                          "w-7 h-7",
+                          "w-6 h-6",
                           formCommuniqueAssetsLink ? "text-purple-500" : "text-purple-500/60"
                         )} />
                       </div>
                       <Input
                         value={formCommuniqueAssetsLink}
                         onChange={(e) => setFormCommuniqueAssetsLink(e.target.value)}
-                        placeholder="https://drive.google.com/..."
-                        className="text-sm"
+                        placeholder="https://drive..."
+                        className="text-xs h-8"
                       />
                     </div>
                   </div>
@@ -392,268 +412,221 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
               </div>
             </div>
           ) : (
-            <div className="space-y-8 max-w-4xl mx-auto">
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Target className="w-5 h-5 text-primary" />
+            <div className="grid grid-cols-2 gap-5 max-w-6xl mx-auto">
+              <div className="space-y-4">
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Target className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Type de CP</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Type de CP</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {CP_TYPES.map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => setCpType(type.id)}
+                        className={cn(
+                          "relative p-3 rounded-lg border transition-all text-left text-xs",
+                          cpType === type.id
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-card hover:border-primary/40"
+                        )}
+                      >
+                        <span className="font-medium">{type.label}</span>
+                        {cpType === type.id && (
+                          <Check className="absolute top-2 right-2 w-3.5 h-3.5 text-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  {cpType === "autre" && (
+                    <Input
+                      value={cpTypeOther}
+                      onChange={(e) => setCpTypeOther(e.target.value)}
+                      placeholder="Précisez..."
+                      className="mt-3 h-9 text-sm"
+                    />
+                  )}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {CP_TYPES.map((type) => (
-                    <button
-                      key={type.id}
-                      onClick={() => setCpType(type.id)}
-                      className={cn(
-                        "relative p-4 rounded-xl border-2 transition-all text-left",
-                        cpType === type.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border bg-card hover:border-primary/40"
-                      )}
-                    >
-                      <span className="text-sm font-medium">{type.label}</span>
-                      {cpType === type.id && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-                {cpType === "autre" && (
-                  <Input
-                    value={cpTypeOther}
-                    onChange={(e) => setCpTypeOther(e.target.value)}
-                    placeholder="Précisez le type de communiqué..."
-                    className="mt-4"
-                  />
-                )}
-              </div>
 
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <Briefcase className="w-5 h-5 text-blue-500" />
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <Briefcase className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Informations principales</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Informations principales</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Client/Marque *</Label>
-                    <Input
-                      value={clientMarque}
-                      onChange={(e) => setClientMarque(e.target.value)}
-                      placeholder="Nom du client ou de la marque"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Titre du CP</Label>
-                    <Input
-                      value={titre}
-                      onChange={(e) => setTitre(e.target.value)}
-                      placeholder="Laissez vide pour génération auto"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-semibold mb-2 block">Sous-titre/Chapô</Label>
-                    <Input
-                      value={sousTitre}
-                      onChange={(e) => setSousTitre(e.target.value)}
-                      placeholder="Résumé accrocheur en une ligne"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label className="text-sm font-semibold mb-2 block">Sujet principal * (contexte)</Label>
-                    <Textarea
-                      value={sujetPrincipal}
-                      onChange={(e) => setSujetPrincipal(e.target.value)}
-                      placeholder="Décrivez le contexte et le sujet principal du communiqué..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Angle créatif / Concept clé</Label>
-                    <Input
-                      value={angleCreatif}
-                      onChange={(e) => setAngleCreatif(e.target.value)}
-                      placeholder="L'angle unique de cette annonce"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Messages clés (3-5 points max)</Label>
-                    <Textarea
-                      value={messagesCles}
-                      onChange={(e) => setMessagesCles(e.target.value)}
-                      placeholder="Un message par ligne"
-                      rows={3}
-                    />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Client/Marque *</Label>
+                        <Input value={clientMarque} onChange={(e) => setClientMarque(e.target.value)} placeholder="Nom du client" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Titre du CP</Label>
+                        <Input value={titre} onChange={(e) => setTitre(e.target.value)} placeholder="Auto si vide" className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1 block">Sous-titre/Chapô</Label>
+                      <Input value={sousTitre} onChange={(e) => setSousTitre(e.target.value)} placeholder="Résumé accrocheur" className="h-9 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1 block">Sujet principal * (contexte)</Label>
+                      <Textarea value={sujetPrincipal} onChange={(e) => setSujetPrincipal(e.target.value)} placeholder="Contexte et sujet..." rows={2} className="text-sm" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Angle créatif</Label>
+                        <Input value={angleCreatif} onChange={(e) => setAngleCreatif(e.target.value)} placeholder="Concept clé" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Messages clés</Label>
+                        <Input value={messagesCles} onChange={(e) => setMessagesCles(e.target.value)} placeholder="3-5 points max" className="h-9 text-sm" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-green-500" />
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Crédits</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Infos pratiques</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Date de diffusion *</Label>
-                    <Input
-                      type="date"
-                      value={dateDiffusion}
-                      onChange={(e) => setDateDiffusion(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Lien assets (logos, vidéos, visuels)</Label>
-                    <Input
-                      value={lienAssets}
-                      onChange={(e) => setLienAssets(e.target.value)}
-                      placeholder="https://drive.google.com/..."
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Upload image</Label>
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      onChange={(e) => e.target.files?.[0] && setImageFile(e.target.files[0])}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                    <div
-                      onClick={() => imageInputRef.current?.click()}
-                      className={cn(
-                        "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all hover:scale-[1.02]",
-                        imageFile 
-                          ? "border-green-500 bg-green-500/10" 
-                          : "border-border hover:border-green-500/60"
-                      )}
-                    >
-                      {imageFile ? (
-                        <p className="text-xs font-medium truncate">{imageFile.name}</p>
-                      ) : (
-                        <Upload className="w-5 h-5 text-muted-foreground mx-auto" />
-                      )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-semibold mb-1 block">Équipe client</Label>
+                      <Textarea value={equipeClient} onChange={(e) => setEquipeClient(e.target.value)} placeholder="Nom - Rôle" rows={2} className="text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1 block">Équipe Socialy</Label>
+                      <Textarea value={equipeSocialy} onChange={(e) => setEquipeSocialy(e.target.value)} placeholder="Auto-rempli" rows={2} className="text-sm" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-purple-500" />
+              <div className="space-y-4">
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                      <Calendar className="w-4 h-4 text-green-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Infos pratiques</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Crédits</h3>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Date de diffusion *</Label>
+                        <Input type="date" value={dateDiffusion} onChange={(e) => setDateDiffusion(e.target.value)} className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Lien assets</Label>
+                        <Input value={lienAssets} onChange={(e) => setLienAssets(e.target.value)} placeholder="https://drive..." className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1 block">Upload image</Label>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        onChange={(e) => e.target.files?.[0] && setImageFile(e.target.files[0])}
+                        className="hidden"
+                        accept="image/*"
+                      />
+                      <div
+                        onClick={() => imageInputRef.current?.click()}
+                        className={cn(
+                          "border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-all hover:scale-[1.01]",
+                          imageFile 
+                            ? "border-green-500 bg-green-500/10" 
+                            : "border-border hover:border-green-500/60"
+                        )}
+                      >
+                        {imageFile ? (
+                          <p className="text-xs font-medium truncate">{imageFile.name}</p>
+                        ) : (
+                          <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                            <Upload className="w-4 h-4" />
+                            <span className="text-xs">Cliquez pour ajouter</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Équipe client (noms + rôles)</Label>
-                    <Textarea
-                      value={equipeClient}
-                      onChange={(e) => setEquipeClient(e.target.value)}
-                      placeholder="Format: Nom - Rôle (un par ligne)"
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Équipe Socialy</Label>
-                    <Textarea
-                      value={equipeSocialy}
-                      onChange={(e) => setEquipeSocialy(e.target.value)}
-                      placeholder="Auto-rempli ou modifiable"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-orange-500" />
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                      <Phone className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Contact presse</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Contact presse</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Nom *</Label>
-                    <Input
-                      value={contactNom}
-                      onChange={(e) => setContactNom(e.target.value)}
-                      placeholder="Nom du contact presse"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Fonction</Label>
-                    <Input
-                      value={contactFonction}
-                      onChange={(e) => setContactFonction(e.target.value)}
-                      placeholder="Ex: Responsable communication"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Email *</Label>
-                    <Input
-                      type="email"
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Téléphone *</Label>
-                    <Input
-                      value={contactTelephone}
-                      onChange={(e) => setContactTelephone(e.target.value)}
-                      placeholder="+33 6 12 34 56 78"
-                    />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Nom *</Label>
+                        <Input value={contactNom} onChange={(e) => setContactNom(e.target.value)} placeholder="Nom du contact" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Fonction</Label>
+                        <Input value={contactFonction} onChange={(e) => setContactFonction(e.target.value)} placeholder="Responsable comm." className="h-9 text-sm" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Email *</Label>
+                        <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="email@..." className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold mb-1 block">Téléphone *</Label>
+                        <Input value={contactTelephone} onChange={(e) => setContactTelephone(e.target.value)} placeholder="+33 6..." className="h-9 text-sm" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-secondary/30 rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-gray-500" />
+                <div className="bg-secondary/30 rounded-2xl p-5 border border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-gray-500/10 flex items-center justify-center">
+                      <MessageSquare className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <h3 className="font-bold text-foreground">Autres</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">Autres</h3>
-                </div>
-                <div>
-                  <Label className="text-sm font-semibold mb-2 block">Informations supplémentaires</Label>
-                  <Textarea
-                    value={infosSupplementaires}
-                    onChange={(e) => setInfosSupplementaires(e.target.value)}
-                    placeholder="Ajoutez toute information complémentaire utile..."
-                    rows={4}
-                  />
+                  <div>
+                    <Label className="text-xs font-semibold mb-1 block">Informations supplémentaires</Label>
+                    <Textarea value={infosSupplementaires} onChange={(e) => setInfosSupplementaires(e.target.value)} placeholder="Infos complémentaires..." rows={3} className="text-sm" />
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-4 px-8 py-6 border-t border-border bg-secondary/30 flex-shrink-0">
-          <Button variant="outline" size="lg" onClick={handleClose}>
+        <div className="flex items-center justify-end gap-3 px-8 py-4 border-t border-border bg-secondary/30 flex-shrink-0">
+          <Button variant="outline" onClick={handleClose}>
             Annuler
           </Button>
           <Button 
-            size="lg" 
             onClick={mode === "upload" ? handleUploadSubmit : handleCreateSubmit} 
             disabled={isSubmitting}
-            className="min-w-40"
+            className="min-w-36"
           >
             {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+            ) : mode === "upload" ? (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Sauvegarder
+              </>
             ) : (
               <>
-                <Send className="w-5 h-5 mr-2" />
-                Envoyer
+                <Sparkles className="w-4 h-4 mr-2" />
+                Créer le CP
               </>
             )}
           </Button>
