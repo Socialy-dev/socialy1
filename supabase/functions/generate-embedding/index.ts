@@ -1,17 +1,63 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// Domaines autorisés pour CORS
+const ALLOWED_ORIGINS = [
+  "https://lypodfdlpbpjdsswmsni.supabase.co",
+  "http://localhost:5173",
+  "http://localhost:3000",
+];
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed.replace(/:\d+$/, '')))
+    ? origin
+    : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key",
+    "Access-Control-Allow-Credentials": "true",
+  };
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Vérifier l'authentification via JWT OU via API key (pour n8n/webhooks)
+    const authHeader = req.headers.get("Authorization");
+    const apiKey = req.headers.get("x-api-key");
+    const expectedApiKey = Deno.env.get("EMBEDDING_API_KEY");
+
+    // Option 1: Authentification via API key (pour n8n)
+    if (apiKey && expectedApiKey && apiKey === expectedApiKey) {
+      // OK, authentifié via API key
+    }
+    // Option 2: Authentification via JWT (pour appels frontend)
+    else if (authHeader?.startsWith("Bearer ")) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { error } = await supabase.auth.getUser();
+      if (error) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      return new Response(
+        JSON.stringify({ error: "Authentication required (JWT or API key)" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { content, document_type, source_id, user_id, metadata } = await req.json();
 
     if (!content || !document_type || !user_id) {
