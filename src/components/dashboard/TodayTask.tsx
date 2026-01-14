@@ -1,4 +1,4 @@
-import { Check, Circle } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -27,11 +27,11 @@ const tabs = [
 const getStatusStyles = (status: Task["status"]) => {
   switch (status) {
     case "Approved":
-      return "bg-success/10 text-success";
+      return "bg-success/10 text-success border-success/20";
     case "In review":
-      return "bg-warning/10 text-warning";
+      return "bg-warning/10 text-warning border-warning/20";
     case "On going":
-      return "bg-primary/10 text-primary";
+      return "bg-primary/10 text-primary border-primary/20";
   }
 };
 
@@ -39,58 +39,63 @@ export const TodayTask = () => {
   const [activeTab, setActiveTab] = useState("All");
 
   return (
-    <div className="glass-card rounded-2xl p-6 h-full">
-      <h3 className="text-lg font-bold text-foreground mb-4">Today task</h3>
-      
+    <div className="glass-card p-6 h-full">
+      <h3 className="text-lg font-bold text-foreground mb-5">Today task</h3>
+
       {/* Tabs */}
-      <div className="flex gap-6 mb-6 border-b border-border/30">
+      <div className="flex gap-1 mb-6 p-1 bg-secondary/50 rounded-xl">
         {tabs.map((tab) => (
           <button
             key={tab.label}
             onClick={() => setActiveTab(tab.label)}
             className={cn(
-              "pb-3 text-sm font-medium relative flex items-center gap-1.5 transition-colors",
+              "px-4 py-2.5 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200",
               activeTab === tab.label
-                ? "text-foreground"
+                ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
             {tab.label}
             {tab.count !== null && (
               <span className={cn(
-                "text-xs px-1.5 py-0.5 rounded",
+                "text-xs px-2 py-0.5 rounded-md font-semibold",
                 activeTab === tab.label
                   ? "bg-primary/10 text-primary"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-muted/50 text-muted-foreground"
               )}>
                 {tab.count}
               </span>
-            )}
-            {activeTab === tab.label && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />
             )}
           </button>
         ))}
       </div>
 
       {/* Task List */}
-      <ul className="space-y-4">
+      <ul className="space-y-3">
         {tasks.map((task) => (
-          <li key={task.id} className="flex items-start gap-3">
+          <li
+            key={task.id}
+            className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-all duration-200 group"
+          >
             <button
               className={cn(
-                "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors",
+                "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200",
                 task.completed
                   ? "bg-primary border-primary"
-                  : "border-muted-foreground hover:border-primary"
+                  : "border-border hover:border-primary group-hover:border-primary/50"
               )}
             >
-              {task.completed && <Check className="w-3 h-3 text-primary-foreground" />}
+              {task.completed && <Check className="w-3.5 h-3.5 text-white" />}
             </button>
             <div className="flex-1 flex items-center justify-between gap-4">
-              <p className="text-sm text-foreground leading-relaxed">{task.title}</p>
+              <p className={cn(
+                "text-sm text-foreground leading-relaxed font-medium",
+                task.completed && "text-muted-foreground"
+              )}>
+                {task.title}
+              </p>
               <span className={cn(
-                "px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap flex-shrink-0",
+                "px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap flex-shrink-0 border",
                 getStatusStyles(task.status)
               )}>
                 {task.status}

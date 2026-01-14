@@ -30,7 +30,7 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
           .select("first_name, last_name")
           .eq("user_id", user.id)
           .single();
-        
+
         if (profile) {
           const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(" ");
           setUserName(fullName || "Utilisateur");
@@ -57,32 +57,39 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
   };
 
   return (
-    <header className="flex items-center justify-between mb-8">
+    <header className="flex items-center justify-between mb-10">
       {showTitle ? (
-        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">{title}</h1>
+          <p className="text-muted-foreground mt-1">Welcome back! Here's what's happening.</p>
+        </div>
       ) : (
         <div />
       )}
-      
-      <div className="flex items-center gap-4">
+
+      <div className="flex items-center gap-3">
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search for anything..."
-            className="w-80 h-11 pl-12 pr-4 rounded-full bg-card border-0 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-72 h-12 pl-12 pr-4 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
           />
         </div>
-        
-        <button className="w-11 h-11 rounded-full bg-card flex items-center justify-center hover:bg-secondary transition-colors">
+
+        {/* Notifications */}
+        <button className="relative w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
           <Bell className="w-5 h-5 text-foreground" />
+          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
         </button>
-        
+
+        {/* User Menu */}
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
-            <button className="flex items-center gap-3 pl-3 hover:opacity-80 transition-opacity">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-warning overflow-hidden">
-                <img 
+            <button className="flex items-center gap-3 pl-3 pr-4 py-2 rounded-xl hover:bg-card border border-transparent hover:border-border transition-all duration-200">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-violet-600 overflow-hidden shadow-lg shadow-primary/20">
+                <img
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
                   alt={userName}
                   className="w-full h-full object-cover"
@@ -95,38 +102,38 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
               <ChevronDown className="w-4 h-4 text-muted-foreground" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="end" className="w-48 p-2 bg-white border border-border shadow-lg z-50">
+          <PopoverContent align="end" className="w-56 p-2 bg-card border border-border shadow-xl rounded-xl z-50">
             <div className="flex flex-col">
-              <button 
+              <button
                 onClick={handleOpenProfile}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full"
+                className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
               >
-                <User className="w-4 h-4" />
+                <User className="w-4 h-4 text-muted-foreground" />
                 Mon profil
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full">
-                <Settings className="w-4 h-4" />
+              <button className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium">
+                <Settings className="w-4 h-4 text-muted-foreground" />
                 Paramètres
               </button>
               {isOrgAdmin && (
                 <>
-                  <div className="h-px bg-border my-1" />
-                  <button 
+                  <div className="h-px bg-border my-1.5" />
+                  <button
                     onClick={() => {
                       setIsOpen(false);
                       navigate("/admin");
                     }}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-foreground rounded-md hover:bg-secondary transition-colors text-left w-full"
+                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
                   >
-                    <Shield className="w-4 h-4" />
+                    <Shield className="w-4 h-4 text-muted-foreground" />
                     Administration
                   </button>
                 </>
               )}
-              <div className="h-px bg-border my-1" />
-              <button 
+              <div className="h-px bg-border my-1.5" />
+              <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-danger rounded-md hover:bg-danger/10 transition-colors text-left w-full"
+                className="flex items-center gap-3 px-3 py-2.5 text-sm text-danger rounded-lg hover:bg-danger/10 transition-colors text-left w-full font-medium"
               >
                 <LogOut className="w-4 h-4" />
                 Se déconnecter

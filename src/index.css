@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,66 +6,70 @@
 
 @layer base {
   :root {
-    /* Main backgrounds */
-    --background: 26 30% 88%;
-    --foreground: 0 0% 2%;
+    /* Main backgrounds - More white/light like SMARTLY */
+    --background: 220 14% 96%;
+    --foreground: 222 47% 11%;
     
-    /* Cards with glassmorphism */
+    /* Cards - Pure white with shadows */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 2%;
+    --card-foreground: 222 47% 11%;
     
-    /* Sidebar */
-    --sidebar-background: 0 0% 2%;
+    /* Sidebar - Dark elegant */
+    --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 0 0% 100%;
     
-    /* Primary - Orange */
-    --primary: 16 79% 54%;
+    /* Primary - Modern purple/indigo like SMARTLY */
+    --primary: 252 85% 60%;
     --primary-foreground: 0 0% 100%;
     
-    /* Success - Green */
-    --success: 130 71% 33%;
+    /* Success - Fresh green */
+    --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     
-    /* Warning - Yellow */
-    --warning: 42 87% 47%;
-    --warning-foreground: 0 0% 2%;
+    /* Warning - Warm amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
     
-    /* Danger - Red */
-    --danger: 1 86% 52%;
+    /* Danger - Soft red */
+    --danger: 0 84% 60%;
     --danger-foreground: 0 0% 100%;
     
-    /* Secondary/Muted */
-    --secondary: 26 20% 92%;
-    --secondary-foreground: 0 0% 2%;
-    --muted: 26 15% 85%;
-    --muted-foreground: 0 0% 47%;
+    /* Secondary/Muted - Softer grays */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 215 16% 47%;
     
     /* Accent colors for icons */
-    --accent-purple: 270 50% 60%;
-    --accent-blue: 200 80% 55%;
-    --accent-yellow: 42 87% 55%;
+    --accent-purple: 252 85% 60%;
+    --accent-blue: 199 89% 48%;
+    --accent-yellow: 38 92% 50%;
+    --accent-green: 142 71% 45%;
+    --accent-pink: 330 81% 60%;
     
     /* UI Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 2%;
-    --border: 26 20% 80%;
+    --popover-foreground: 222 47% 11%;
+    --border: 220 13% 91%;
     --input: 0 0% 100%;
-    --ring: 16 79% 54%;
-    --radius: 1rem;
+    --ring: 252 85% 60%;
+    --radius: 0.75rem;
     
-    /* Glassmorphism */
-    --glass-bg: rgba(255, 255, 255, 0.34);
-    --glass-border: rgba(255, 255, 255, 0.5);
+    /* Card shadows - Soft and modern */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     
-    --destructive: 1 86% 52%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --accent: 26 20% 92%;
-    --accent-foreground: 0 0% 2%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
   }
 
   .dark {
-    --background: 0 0% 2%;
+    --background: 222 47% 11%;
     --foreground: 0 0% 100%;
   }
 }
@@ -77,16 +81,43 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer components {
+  /* Modern card with elevated shadow */
   .glass-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
+    @apply bg-card rounded-2xl;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid hsl(var(--border) / 0.5);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  
+  .glass-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+  
+  /* Elevated card - more prominent */
+  .elevated-card {
+    @apply bg-card rounded-2xl;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+  
+  /* Stat card with colored accent */
+  .stat-card {
+    @apply bg-card rounded-2xl p-6 relative overflow-hidden;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid hsl(var(--border) / 0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
   
   .sidebar-transition {
@@ -97,6 +128,28 @@
   .content-transition {
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  
+  /* Modern button styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground font-semibold rounded-xl px-6 py-3;
+    box-shadow: 0 4px 14px 0 hsl(var(--primary) / 0.25);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px 0 hsl(var(--primary) / 0.35);
+  }
+  
+  /* Icon container */
+  .icon-container {
+    @apply flex items-center justify-center rounded-xl;
+    transition: transform 0.2s ease;
+  }
+  
+  .icon-container:hover {
+    transform: scale(1.05);
+  }
 }
 
 @layer utilities {
@@ -106,5 +159,26 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent-blue bg-clip-text text-transparent;
+  }
+  
+  /* Smooth appear animation */
+  .animate-appear {
+    animation: appear 0.3s ease-out forwards;
+  }
+  
+  @keyframes appear {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

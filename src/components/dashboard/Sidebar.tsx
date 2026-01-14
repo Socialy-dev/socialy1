@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
-import socialyLogo from "@/assets/socialy-logo.png";
 
 interface MenuItem {
   icon: React.ElementType;
@@ -55,37 +54,38 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         "fixed left-0 top-0 h-screen bg-sidebar flex flex-col z-50 sidebar-transition overflow-hidden",
         collapsed ? "w-20" : "w-64"
       )}
+      style={{
+        background: 'linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 47% 8%) 100%)',
+      }}
     >
-      {/* Toggle Button - Inside sidebar at top */}
+      {/* Toggle Button */}
       <div className={cn(
-        "flex items-center px-4 pt-4",
+        "flex items-center px-4 pt-5",
         collapsed ? "justify-center" : "justify-end"
       )}>
         <button
           onClick={onToggle}
-          className="w-8 h-8 rounded-lg bg-sidebar-foreground/10 hover:bg-sidebar-foreground/20 flex items-center justify-center transition-colors group"
+          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
-            <ChevronRight className="w-4 h-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+            <ChevronRight className="w-4 h-4 text-white/50 group-hover:text-white" />
           ) : (
-            <ChevronLeft className="w-4 h-4 text-sidebar-foreground/70 group-hover:text-sidebar-foreground" />
+            <ChevronLeft className="w-4 h-4 text-white/50 group-hover:text-white" />
           )}
         </button>
       </div>
 
       {/* Logo */}
       <div className={cn(
-        "flex items-center gap-3 px-6 pb-4 pt-2",
+        "flex items-center gap-3 px-6 pb-6 pt-4",
         collapsed && "justify-center px-4"
       )}>
-        <img 
-          src={socialyLogo} 
-          alt="Socialy" 
-          className="w-10 h-10 rounded-full flex-shrink-0"
-        />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+          <span className="text-white font-bold text-lg">S</span>
+        </div>
         {!collapsed && (
-          <span className="text-sidebar-foreground font-bold text-xl">Socialy</span>
+          <span className="text-white font-bold text-xl tracking-tight">Socialy</span>
         )}
       </div>
 
@@ -103,16 +103,19 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                     "w-full flex items-center gap-3 py-3 rounded-xl transition-all duration-200",
                     collapsed ? "px-3 justify-center" : "px-4",
                     isActive
-                      ? "bg-card/10 text-primary"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground"
+                      ? "bg-white/10 text-white"
+                      : "text-white/50 hover:bg-white/5 hover:text-white/80"
                   )}
                 >
-                  <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
+                  <item.icon className={cn(
+                    "w-5 h-5 flex-shrink-0 transition-colors",
+                    isActive && "text-primary"
+                  )} />
                   {!collapsed && (
                     <span className="text-sm font-medium">{item.label}</span>
                   )}
                   {isActive && !collapsed && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-primary" />
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-lg shadow-primary/50" />
                   )}
                 </button>
               </li>
@@ -123,8 +126,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
       {/* Help Button */}
       <div className={cn("p-4", collapsed && "flex justify-center")}>
-        <button className="w-12 h-12 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors">
-          <HelpCircle className="w-6 h-6 text-primary-foreground" />
+        <button className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30">
+          <HelpCircle className="w-5 h-5 text-white" />
         </button>
       </div>
     </aside>

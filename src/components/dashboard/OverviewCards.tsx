@@ -1,9 +1,10 @@
-import { TrendingUp, TrendingDown, ChartBar, Briefcase, Clock, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Briefcase, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OverviewCard {
   icon: React.ElementType;
   iconBg: string;
+  iconColor: string;
   label: string;
   value: string;
   subValue?: string;
@@ -16,15 +17,17 @@ interface OverviewCard {
 
 const overviewData: OverviewCard[] = [
   {
-    icon: ChartBar,
-    iconBg: "bg-accent-purple/20",
+    icon: DollarSign,
+    iconBg: "bg-gradient-to-br from-violet-500 to-purple-600",
+    iconColor: "text-white",
     label: "Total revenue",
     value: "$53,00989",
     trend: { value: "12%", positive: true, label: "increase from last month" },
   },
   {
     icon: Briefcase,
-    iconBg: "bg-primary/20",
+    iconBg: "bg-gradient-to-br from-emerald-400 to-teal-500",
+    iconColor: "text-white",
     label: "Projects",
     value: "95",
     subValue: "/100",
@@ -32,7 +35,8 @@ const overviewData: OverviewCard[] = [
   },
   {
     icon: Clock,
-    iconBg: "bg-accent-blue/20",
+    iconBg: "bg-gradient-to-br from-blue-400 to-cyan-500",
+    iconColor: "text-white",
     label: "Time spent",
     value: "1022",
     subValue: "/1300 Hrs",
@@ -40,7 +44,8 @@ const overviewData: OverviewCard[] = [
   },
   {
     icon: Users,
-    iconBg: "bg-accent-yellow/20",
+    iconBg: "bg-gradient-to-br from-amber-400 to-orange-500",
+    iconColor: "text-white",
     label: "Resources",
     value: "101",
     subValue: "/120",
@@ -50,51 +55,56 @@ const overviewData: OverviewCard[] = [
 
 export const OverviewCards = () => {
   return (
-    <section className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-foreground">Overview</h2>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm text-foreground bg-card rounded-lg hover:bg-secondary transition-colors">
-          Last 30 days
-          <TrendingDown className="w-4 h-4" />
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Overview</h2>
+        <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-xl hover:bg-secondary transition-all duration-200 shadow-sm">
+          <span>Last 30 days</span>
+          <TrendingDown className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {overviewData.map((card, index) => (
           <div
             key={index}
-            className="glass-card rounded-lg p-5 hover:shadow-lg transition-shadow"
+            className="stat-card group"
+            style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4", card.iconBg)}>
-              <card.icon className={cn(
-                "w-6 h-6",
-                index === 0 && "text-accent-purple",
-                index === 1 && "text-primary",
-                index === 2 && "text-accent-blue",
-                index === 3 && "text-accent-yellow"
-              )} />
+            {/* Icon */}
+            <div className={cn(
+              "w-14 h-14 rounded-2xl flex items-center justify-center mb-5 shadow-lg",
+              card.iconBg
+            )}>
+              <card.icon className={cn("w-7 h-7", card.iconColor)} />
             </div>
-            
-            <p className="text-sm text-muted-foreground mb-1">{card.label}</p>
-            <div className="flex items-baseline gap-1 mb-3">
-              <span className="text-2xl font-bold text-foreground">{card.value}</span>
+
+            {/* Label */}
+            <p className="text-sm font-medium text-muted-foreground mb-2">{card.label}</p>
+
+            {/* Value */}
+            <div className="flex items-baseline gap-1 mb-4">
+              <span className="text-3xl font-bold text-foreground tracking-tight">{card.value}</span>
               {card.subValue && (
-                <span className="text-sm text-muted-foreground">{card.subValue}</span>
+                <span className="text-base font-medium text-muted-foreground">{card.subValue}</span>
               )}
             </div>
-            
-            <div className="flex items-center gap-1.5">
-              {card.trend.positive ? (
-                <TrendingUp className="w-4 h-4 text-success" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-danger" />
-              )}
-              <span className={cn(
-                "text-xs font-medium",
-                card.trend.positive ? "text-success" : "text-danger"
+
+            {/* Trend */}
+            <div className="flex items-center gap-2 pt-4 border-t border-border/50">
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold",
+                card.trend.positive
+                  ? "bg-success/10 text-success"
+                  : "bg-danger/10 text-danger"
               )}>
+                {card.trend.positive ? (
+                  <TrendingUp className="w-3.5 h-3.5" />
+                ) : (
+                  <TrendingDown className="w-3.5 h-3.5" />
+                )}
                 {card.trend.value}
-              </span>
+              </div>
               <span className="text-xs text-muted-foreground">
                 {card.trend.label}
               </span>
