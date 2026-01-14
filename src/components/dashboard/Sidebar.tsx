@@ -51,7 +51,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar flex flex-col z-50 sidebar-transition overflow-hidden",
+        "fixed left-0 top-0 h-screen flex flex-col z-50 sidebar-transition overflow-hidden border-r border-border/10",
         collapsed ? "w-20" : "w-64"
       )}
       style={{
@@ -65,7 +65,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       )}>
         <button
           onClick={onToggle}
-          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group"
+          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group border border-white/5"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -103,19 +103,19 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                     "w-full flex items-center gap-3 py-3 rounded-xl transition-all duration-200",
                     collapsed ? "px-3 justify-center" : "px-4",
                     isActive
-                      ? "bg-white/10 text-white"
+                      ? "bg-white/10 text-white shadow-lg shadow-black/5"
                       : "text-white/50 hover:bg-white/5 hover:text-white/80"
                   )}
                 >
                   <item.icon className={cn(
                     "w-5 h-5 flex-shrink-0 transition-colors",
-                    isActive && "text-primary"
+                    isActive && "text-primary dark:text-primary-foreground"
                   )} />
                   {!collapsed && (
                     <span className="text-sm font-medium">{item.label}</span>
                   )}
                   {isActive && !collapsed && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
                   )}
                 </button>
               </li>

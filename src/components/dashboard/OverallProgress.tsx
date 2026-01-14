@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { useTheme } from "@/components/theme-provider";
 
 const data = [
   { name: "Completed", value: 26, color: "#22c55e" },
@@ -10,7 +11,9 @@ const data = [
 const COLORS = ["#22c55e", "#f59e0b", "#8b5cf6"];
 
 export const OverallProgress = () => {
-  const total = data.reduce((acc, item) => acc + item.value, 0);
+  const { theme } = useTheme();
+  // Ensure stroke color adapts to theme
+  const strokeColor = theme === 'dark' ? '#080c14' : '#ffffff';
 
   return (
     <div className="glass-card p-6 h-full">
@@ -37,7 +40,8 @@ export const OverallProgress = () => {
               outerRadius={100}
               paddingAngle={3}
               dataKey="value"
-              stroke="none"
+              stroke={strokeColor} // Dynamic stroke
+              strokeWidth={2}
             >
               {data.map((entry, index) => (
                 <Cell
@@ -65,20 +69,20 @@ export const OverallProgress = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-3 pt-5 border-t border-border">
-        <div className="text-center p-3 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors">
+      <div className="grid grid-cols-4 gap-3 pt-5 border-t border-border/50">
+        <div className="text-center p-3 rounded-xl bg-secondary/50 dark:bg-secondary/20 hover:bg-secondary transition-colors">
           <p className="text-2xl font-bold text-foreground">95</p>
           <p className="text-xs text-muted-foreground font-medium mt-1">Total</p>
         </div>
-        <div className="text-center p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors">
+        <div className="text-center p-3 rounded-xl bg-success/10 hover:bg-success/20 transition-colors">
           <p className="text-2xl font-bold text-success">26</p>
           <p className="text-xs text-muted-foreground font-medium mt-1">Done</p>
         </div>
-        <div className="text-center p-3 rounded-xl bg-warning/5 hover:bg-warning/10 transition-colors">
+        <div className="text-center p-3 rounded-xl bg-warning/10 hover:bg-warning/20 transition-colors">
           <p className="text-2xl font-bold text-warning">35</p>
           <p className="text-xs text-muted-foreground font-medium mt-1">Delayed</p>
         </div>
-        <div className="text-center p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
+        <div className="text-center p-3 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors">
           <p className="text-2xl font-bold text-primary">35</p>
           <p className="text-xs text-muted-foreground font-medium mt-1">Active</p>
         </div>

@@ -21,12 +21,6 @@ const teamMembers = [
   { name: "Melm", avatar: "https://i.pravatar.cc/40?img=7" },
 ];
 
-// Modern gradient colors
-const getBarColor = (index: number, isHighlight: boolean) => {
-  if (isHighlight) return "url(#highlightGradient)";
-  return "url(#defaultGradient)";
-};
-
 export const ProjectsWorkload = () => {
   return (
     <div className="glass-card p-6 h-full">
@@ -44,12 +38,12 @@ export const ProjectsWorkload = () => {
           <BarChart data={workloadData} barCategoryGap="25%">
             <defs>
               <linearGradient id="defaultGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(222, 47%, 20%)" />
-                <stop offset="100%" stopColor="hsl(222, 47%, 11%)" />
+                <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0.4} />
               </linearGradient>
               <linearGradient id="highlightGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(252, 85%, 65%)" />
-                <stop offset="100%" stopColor="hsl(252, 85%, 50%)" />
+                <stop offset="0%" stopColor="hsl(var(--primary))" />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
               </linearGradient>
             </defs>
             <XAxis
@@ -87,12 +81,12 @@ export const ProjectsWorkload = () => {
       </div>
 
       {/* Team Members */}
-      <div className="flex justify-between px-1 pt-5 border-t border-border">
+      <div className="flex justify-between px-1 pt-5 border-t border-border/50">
         {teamMembers.map((member, index) => (
-          <div key={index} className="flex flex-col items-center gap-2 group">
+          <div key={index} className="flex flex-col items-center gap-2 group cursor-pointer">
             <div className={`w-10 h-10 rounded-xl overflow-hidden border-2 transition-all duration-200 ${member.name === "Dmitry"
-                ? "border-primary shadow-lg shadow-primary/20"
-                : "border-border group-hover:border-primary/50"
+                ? "border-primary shadow-lg shadow-primary/20 scale-110"
+                : "border-border group-hover:border-primary/50 group-hover:scale-105"
               }`}>
               <img
                 src={member.avatar}

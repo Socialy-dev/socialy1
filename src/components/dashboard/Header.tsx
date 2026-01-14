@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Search, Bell, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -83,6 +84,9 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
           <Bell className="w-5 h-5 text-foreground" />
           <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
         </button>
+
+        {/* Theme Toggle */}
+        <ModeToggle />
 
         {/* User Menu */}
         <Popover open={isOpen} onOpenChange={setIsOpen}>

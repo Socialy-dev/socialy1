@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { 
-  Users2, 
-  UserCircle, 
-  ChevronDown, 
-  ExternalLink, 
+import {
+  Users2,
+  UserCircle,
+  ChevronDown,
+  ExternalLink,
   Calendar,
   Building2,
   Filter,
@@ -149,7 +149,7 @@ export const ProjectSummary = () => {
     : "Tous les concurrents";
 
   const toggleJournalist = (id: string) => {
-    setJournalists(journalists.map(j => 
+    setJournalists(journalists.map(j =>
       j.id === id ? { ...j, selected: !j.selected } : j
     ));
   };
@@ -159,8 +159,8 @@ export const ProjectSummary = () => {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", { 
-      day: "numeric", 
+    return date.toLocaleDateString("fr-FR", {
+      day: "numeric",
       month: "short"
     });
   };
@@ -178,7 +178,7 @@ export const ProjectSummary = () => {
     setIsSending(true);
     // Simulate sending
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     toast({
       title: "Communiqué envoyé !",
       description: `Email envoyé à ${selectedJournalists.length} journaliste(s)`,
@@ -203,7 +203,7 @@ export const ProjectSummary = () => {
             </div>
             <h3 className="text-lg font-bold text-foreground">Relations Presse</h3>
           </div>
-          
+
           {/* Sub-tabs - Bigger & cleaner */}
           <div className="flex items-center gap-1.5 p-1.5 bg-secondary/50 rounded-xl">
             {subTabs.map((tab) => {
@@ -263,7 +263,7 @@ export const ProjectSummary = () => {
                     href={article.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg"
+                    className="group flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 dark:bg-card/40 dark:hover:bg-card/80 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg dark:hover:shadow-black/40"
                   >
                     {/* Thumbnail */}
                     <div className="relative w-24 h-20 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
@@ -274,7 +274,7 @@ export const ProjectSummary = () => {
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted dark:from-muted dark:to-background">
                           <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
                         </div>
                       )}
@@ -288,7 +288,7 @@ export const ProjectSummary = () => {
                       <h4 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
                         {article.title}
                       </h4>
-                      
+
                       <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
                           <Zap className="w-3 h-3" />
@@ -355,8 +355,8 @@ export const ProjectSummary = () => {
                         }}
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                          !selectedAgency 
-                            ? "bg-primary/10 text-primary" 
+                          !selectedAgency
+                            ? "bg-primary/10 text-primary"
                             : "text-foreground hover:bg-secondary"
                         )}
                       >
@@ -364,9 +364,9 @@ export const ProjectSummary = () => {
                         Tous les concurrents
                         {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
                       </button>
-                      
+
                       {agencies.length > 0 && <div className="border-t border-border my-2" />}
-                      
+
                       {agencies.map(agency => (
                         <button
                           key={agency.id}
@@ -376,8 +376,8 @@ export const ProjectSummary = () => {
                           }}
                           className={cn(
                             "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                            selectedAgency === agency.id 
-                              ? "bg-primary/10 text-primary" 
+                            selectedAgency === agency.id
+                              ? "bg-primary/10 text-primary"
                               : "text-foreground hover:bg-secondary"
                           )}
                         >
@@ -442,7 +442,7 @@ export const ProjectSummary = () => {
                       <h4 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
                         {article.title}
                       </h4>
-                      
+
                       <div className="flex items-center gap-3 mt-2.5 flex-wrap">
                         {article.competitor_name && (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
@@ -474,7 +474,7 @@ export const ProjectSummary = () => {
                 <Users2 className="w-12 h-12 text-muted-foreground/30 mb-4" />
                 <h4 className="text-base font-semibold text-foreground">Aucun article</h4>
                 <p className="text-sm text-muted-foreground mt-2 text-center max-w-xs">
-                  {selectedAgency 
+                  {selectedAgency
                     ? "Aucun article trouvé pour ce concurrent"
                     : "Ajoutez des concurrents dans votre profil pour voir leurs articles"}
                 </p>
@@ -491,9 +491,9 @@ export const ProjectSummary = () => {
               <p className="text-base font-medium text-foreground">
                 Sélectionnez pour envoyer un communiqué
               </p>
-              
+
               {selectedJournalists.length > 0 && (
-                <button 
+                <button
                   onClick={() => setShowEmailModal(true)}
                   className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-105"
                 >
@@ -579,7 +579,7 @@ export const ProjectSummary = () => {
                   <p className="text-base text-muted-foreground mt-1">{selectedJournalists.length} destinataire(s) sélectionné(s)</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setShowEmailModal(false)}
                 className="w-12 h-12 rounded-xl hover:bg-secondary flex items-center justify-center transition-colors"
               >
@@ -611,7 +611,7 @@ export const ProjectSummary = () => {
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
                   placeholder="Objet de votre communiqué de presse..."
-                  className="w-full px-5 py-4 bg-secondary/50 border border-border rounded-xl text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-5 py-4 bg-secondary/50 dark:bg-secondary/20 border border-border rounded-xl text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
@@ -623,7 +623,7 @@ export const ProjectSummary = () => {
                   onChange={(e) => setEmailMessage(e.target.value)}
                   placeholder="Rédigez votre message personnalisé pour accompagner le communiqué..."
                   rows={10}
-                  className="w-full px-5 py-4 bg-secondary/50 border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
+                  className="w-full px-5 py-4 bg-secondary/50 dark:bg-secondary/20 border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                 />
               </div>
 
