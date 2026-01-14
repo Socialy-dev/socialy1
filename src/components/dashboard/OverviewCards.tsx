@@ -63,7 +63,7 @@ export const OverviewCards = () => {
         {overviewData.map((card, index) => (
           <div
             key={index}
-            className="glass-card rounded-xl p-5 hover:shadow-lg transition-shadow"
+            className="glass-card rounded-lg p-5 hover:shadow-lg transition-shadow"
           >
             <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4", card.iconBg)}>
               <card.icon className={cn(
