@@ -120,13 +120,22 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   const isItemActive = (item: MenuItem) => {
     if (item.subItems) {
-      return item.subItems.some(sub => currentPath.startsWith(sub.path.split('?')[0]));
+      return currentPath.startsWith(item.path.split('?')[0]);
     }
-    return currentPath === item.path || currentPath.startsWith(item.path + '?');
+    return currentPath === item.path;
   };
 
   const isSubItemActive = (subPath: string) => {
-    return currentPath === subPath || currentPath.startsWith(subPath);
+    const [basePath, query] = subPath.split('?');
+    const [currentBase, currentQuery] = currentPath.split('?');
+    
+    if (basePath !== currentBase) return false;
+    
+    if (!query && !currentQuery) return true;
+    if (!query && currentQuery) return false;
+    if (query && !currentQuery) return false;
+    
+    return currentQuery === query;
   };
 
   return (
