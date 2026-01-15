@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { OrganizationLinkedInPosts } from "@/components/growth/OrganizationLinkedInPosts";
@@ -92,11 +93,31 @@ const recentPosts = [
 
 const GrowthMarketing = () => {
   const { user, effectiveOrgId } = useAuth();
+  const [searchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeMainTab, setActiveMainTab] = useState<MainTab>("linkedin");
-  const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab>("generation");
+  
+  const tabFromUrl = searchParams.get("tab");
+  const [linkedinSubTab, setLinkedinSubTab] = useState<LinkedInSubTab>(() => {
+    if (tabFromUrl === "engagement") return "comment";
+    if (tabFromUrl === "classement") return "classement";
+    return "generation";
+  });
+  
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
   const [postFilter, setPostFilter] = useState<"all" | "linkedin" | "generated">("all");
+
+  useEffect(() => {
+    if (tabFromUrl === "engagement") {
+      setLinkedinSubTab("comment");
+      setActiveMainTab("linkedin");
+    } else if (tabFromUrl === "classement") {
+      setLinkedinSubTab("classement");
+      setActiveMainTab("linkedin");
+    } else if (!tabFromUrl) {
+      setLinkedinSubTab("generation");
+    }
+  }, [tabFromUrl]);
 
   const [postSubject, setPostSubject] = useState("");
   const [postObjective, setPostObjective] = useState("");
