@@ -939,21 +939,21 @@ const RelationsPresse = () => {
         <main className="flex-1 p-6 pt-4 overflow-y-auto">
           {/* Full Page Relations Presse */}
           <div className="bg-card rounded-2xl border border-border/50 p-8">
-            {/* Header with title and sub-tabs */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Newspaper className="w-7 h-7 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Presse</h1>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    Gérez vos retombées presse et vos contacts journalistes
-                  </p>
-                </div>
+            {/* Header with title */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Newspaper className="w-6 h-6 text-primary" />
               </div>
+              <div>
+                <h1 className="text-xl font-bold text-foreground">Presse</h1>
+                <p className="text-muted-foreground text-sm">
+                  Gérez vos retombées presse et vos contacts journalistes
+                </p>
+              </div>
+            </div>
 
-              {/* Sub-tabs */}
+            {/* Sub-tabs - Full width below header */}
+            <div className="flex items-center justify-between mb-8 pb-6 border-b border-border/50">
               <div className="flex items-center gap-1 p-1.5 bg-secondary/50 rounded-xl">
                 {getSubTabs(effectiveOrgName).map((tab) => {
                   const Icon = tab.icon;
@@ -963,13 +963,13 @@ const RelationsPresse = () => {
                       key={tab.id}
                       onClick={() => setActiveSubTab(tab.id)}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap",
+                        "flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
                         isActive
                           ? "bg-foreground text-background shadow-md"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
                       )}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="w-4 h-4" />
                       {tab.label}
                     </button>
                   );
