@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import RelationsPresse from "./pages/RelationsPresse";
 import GrowthMarketing from "./pages/GrowthMarketing";
+import SocialMedia from "./pages/SocialMedia";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +56,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <GrowthMarketing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/social-media"
+              element={
+                <ProtectedRoute>
+                  <SocialMedia />
                 </ProtectedRoute>
               }
             />
