@@ -98,7 +98,9 @@ interface Journalist {
 
 const getSubTabs = (orgName: string) => [
   { id: "socialy", label: orgName, icon: Zap },
+  { id: "client", label: "Client", icon: Briefcase },
   { id: "concurrent", label: "Concurrents", icon: Users2 },
+  { id: "veille-marche", label: "Veille Marché", icon: Eye },
   { id: "journalistes", label: "Journalistes", icon: UserCircle },
   { id: "communiques", label: "Communiqués", icon: FileText },
 ];
@@ -178,7 +180,10 @@ const RelationsPresse = () => {
 
   useEffect(() => {
     fetchAgencies();
+    fetchClients();
     fetchArticles();
+    fetchClientArticles();
+    fetchVeilleArticles();
     fetchOrganizationArticles();
     fetchJournalists();
     fetchCommuniques();
@@ -203,6 +208,55 @@ const RelationsPresse = () => {
       const { data } = await query.order("name");
       setAgencies(data || []);
     }
+  };
+
+  const fetchClients = async () => {
+    setIsLoadingClients(true);
+    if (effectiveOrgId) {
+      const { data } = await supabase
+        .from("competitor_agencies")
+        .select("id, name")
+        .eq("organization_id", effectiveOrgId)
+        .order("name");
+      setClients(data || []);
+    }
+    setIsLoadingClients(false);
+  };
+
+  const fetchClientArticles = async () => {
+    if (effectiveOrgId) {
+      const { data, error } = await supabase
+        .from("competitor_articles")
+        .select("*")
+        .eq("hidden", false)
+        .not("title", "is", null)
+        .neq("title", "")
+        .eq("organization_id", effectiveOrgId)
+        .order("article_iso_date", { ascending: false });
+
+      if (!error && data) {
+        setClientArticles(data.filter(a => a.title && a.title.trim() !== ""));
+      }
+    }
+  };
+
+  const fetchVeilleArticles = async () => {
+    setIsLoadingVeille(true);
+    if (effectiveOrgId) {
+      const { data, error } = await supabase
+        .from("organization_articles")
+        .select("*")
+        .eq("hidden", false)
+        .not("title", "is", null)
+        .neq("title", "")
+        .eq("organization_id", effectiveOrgId)
+        .order("article_iso_date", { ascending: false });
+
+      if (!error && data) {
+        setVeilleArticles(data.filter(a => a.title && a.title.trim() !== ""));
+      }
+    }
+    setIsLoadingVeille(false);
   };
 
   const fetchArticles = async () => {
@@ -372,6 +426,8 @@ const RelationsPresse = () => {
 
   const [showAddSocialyModal, setShowAddSocialyModal] = useState(false);
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [showAddVeilleModal, setShowAddVeilleModal] = useState(false);
   const [newArticleLink, setNewArticleLink] = useState("");
   const [isAddingArticle, setIsAddingArticle] = useState(false);
   const [showHiddenOrganization, setShowHiddenOrganization] = useState(false);
@@ -379,9 +435,18 @@ const RelationsPresse = () => {
   const [hiddenOrganizationArticles, setHiddenOrganizationArticles] = useState<OrganizationArticle[]>([]);
   const [hiddenCompetitorArticles, setHiddenCompetitorArticles] = useState<Article[]>([]);
   const [showCompetitorManager, setShowCompetitorManager] = useState(false);
+  const [showClientManager, setShowClientManager] = useState(false);
   const [newCompetitorName, setNewCompetitorName] = useState("");
+  const [newClientName, setNewClientName] = useState("");
   const [isAddingCompetitor, setIsAddingCompetitor] = useState(false);
+  const [isAddingClient, setIsAddingClient] = useState(false);
   const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>("");
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [clients, setClients] = useState<Agency[]>([]);
+  const [clientArticles, setClientArticles] = useState<Article[]>([]);
+  const [veilleArticles, setVeilleArticles] = useState<OrganizationArticle[]>([]);
+  const [isLoadingClients, setIsLoadingClients] = useState(false);
+  const [isLoadingVeille, setIsLoadingVeille] = useState(false);
 
   const fetchHiddenOrganizationArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -567,6 +632,132 @@ const RelationsPresse = () => {
     setIsAddingCompetitor(false);
   };
 
+  const handleAddClient = async () => {
+    if (!newClientName.trim()) {
+      toast({ title: "Nom requis", description: "Veuillez saisir le nom du client", variant: "destructive" });
+      return;
+    }
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
+      return;
+    }
+    setIsAddingClient(true);
+
+    try {
+      const { error } = await supabase.from("competitor_agencies").insert({
+        organization_id: effectiveOrgId,
+        name: newClientName.trim(),
+      });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast({ title: "Client existant", description: "Ce client existe déjà dans votre liste", variant: "destructive" });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({ title: "Client ajouté", description: `${newClientName.trim()} a été ajouté à votre liste` });
+        setNewClientName("");
+        fetchClients();
+      }
+    } catch (error) {
+      console.error("Error adding client:", error);
+      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le client. Veuillez réessayer.", variant: "destructive" });
+    }
+
+    setIsAddingClient(false);
+  };
+
+  const handleDeleteClient = async (clientId: string, clientName: string) => {
+    const { error } = await supabase.from("competitor_agencies").delete().eq("id", clientId);
+    if (error) {
+      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le client. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Client supprimé", description: `${clientName} a été retiré de votre liste` });
+      fetchClients();
+    }
+  };
+
+  const handleAddClientArticle = async () => {
+    if (!newArticleLink.trim()) {
+      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+      return;
+    }
+    if (!selectedClientId) {
+      toast({ title: "Client requis", description: "Veuillez sélectionner un client pour cet article", variant: "destructive" });
+      return;
+    }
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
+      return;
+    }
+
+    const selectedClient = clients.find(c => c.id === selectedClientId);
+
+    setIsAddingArticle(true);
+
+    try {
+      const { error } = await supabase.functions.invoke("enrich-article", {
+        body: {
+          link: newArticleLink.trim(),
+          type: "competitor",
+          organization_id: effectiveOrgId,
+          competitor_id: selectedClientId,
+          competitor_name: selectedClient?.name || null,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({ title: "Enrichissement en cours", description: "L'article client sera disponible dans quelques instants" });
+    } catch (enrichError) {
+      console.error("Enrichment error:", enrichError);
+      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+    }
+
+    setNewArticleLink("");
+    setSelectedClientId("");
+    setShowAddClientModal(false);
+    setIsAddingArticle(false);
+  };
+
+  const handleAddVeilleArticle = async () => {
+    if (!newArticleLink.trim()) {
+      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+      return;
+    }
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
+      return;
+    }
+    setIsAddingArticle(true);
+
+    try {
+      const { error } = await supabase.functions.invoke("enrich-article", {
+        body: {
+          link: newArticleLink.trim(),
+          type: "socialy",
+          organization_id: effectiveOrgId,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({ title: "Enrichissement en cours", description: "L'article de veille sera disponible dans quelques instants" });
+    } catch (enrichError) {
+      console.error("Enrichment error:", enrichError);
+      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+    }
+
+    setNewArticleLink("");
+    setShowAddVeilleModal(false);
+    setIsAddingArticle(false);
+  };
+
   const handleDeleteCompetitor = async (agencyId: string, agencyName: string) => {
     const { error } = await supabase.from("competitor_agencies").delete().eq("id", agencyId);
     if (error) {
@@ -574,6 +765,18 @@ const RelationsPresse = () => {
     } else {
       toast({ title: "Concurrent supprimé", description: `${agencyName} a été retiré de votre liste` });
       fetchAgencies();
+    }
+  };
+
+  const handleDeleteJournalist = async (journalistId: string, journalistName: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("journalists").delete().eq("id", journalistId);
+    if (error) {
+      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le journaliste. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Journaliste supprimé", description: `${journalistName} a été retiré de votre liste de contacts` });
+      fetchJournalists();
     }
   };
 
@@ -1333,7 +1536,7 @@ const RelationsPresse = () => {
                 ) : filteredJournalists.length > 0 ? (
                   <div className="bg-card rounded-2xl border border-border overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px_50px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       <div className="w-10" />
                       <div>Contact</div>
                       <div>Média</div>
@@ -1355,20 +1558,20 @@ const RelationsPresse = () => {
                       <div>Email</div>
                       <div>Commentaire</div>
                       <div className="text-center">Sélect.</div>
+                      <div></div>
                     </div>
 
                     {/* Table Body */}
                     <div className="divide-y divide-border/50">
                       {filteredJournalists.map((journalist) => (
-                        <button
+                        <div
                           key={journalist.id}
                           onClick={() => toggleJournalist(journalist.id)}
                           className={cn(
-                            "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                            "group w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px_50px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50 cursor-pointer",
                             journalist.selected && "bg-primary/5",
                           )}
                         >
-                          {/* Avatar */}
                           <div
                             className={cn(
                               "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
@@ -1382,12 +1585,10 @@ const RelationsPresse = () => {
                               .slice(0, 2)}
                           </div>
 
-                          {/* Contact Name */}
                           <div className="flex items-center min-w-0">
                             <span className="font-semibold text-foreground truncate">{journalist.name}</span>
                           </div>
 
-                          {/* Media - Modern Tag */}
                           <div className="flex items-center min-w-0">
                             {journalist.media ? (
                               <span
@@ -1402,7 +1603,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* Media Specialty */}
                           <div className="flex items-center min-w-0">
                             {journalist.media_specialty ? (
                               <span
@@ -1417,7 +1617,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* Job - Poste */}
                           <div className="flex items-center min-w-0">
                             {journalist.job ? (
                               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 text-xs font-medium truncate">
@@ -1429,7 +1628,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* LinkedIn */}
                           <div className="flex items-center min-w-0">
                             {journalist.linkedin ? (
                               <a
@@ -1446,7 +1644,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* Email */}
                           <div className="flex items-center min-w-0">
                             {journalist.email ? (
                               <span className="text-sm text-primary truncate">{journalist.email}</span>
@@ -1455,7 +1652,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* Notes - Commentaire éditable */}
                           <div className="flex items-center min-w-0" onClick={(e) => e.stopPropagation()}>
                             {journalist.isEditingNotes ? (
                               <input
@@ -1492,7 +1688,6 @@ const RelationsPresse = () => {
                             )}
                           </div>
 
-                          {/* Checkbox */}
                           <div className="flex items-center justify-center">
                             <div
                               className={cn(
@@ -1505,7 +1700,17 @@ const RelationsPresse = () => {
                               {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
                             </div>
                           </div>
-                        </button>
+
+                          <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => handleDeleteJournalist(journalist.id, journalist.name, e)}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                              title="Supprimer le journaliste"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1517,6 +1722,166 @@ const RelationsPresse = () => {
                     <h4 className="text-2xl font-bold text-foreground">Vos contacts journalistes</h4>
                     <p className="text-muted-foreground mt-2 text-center max-w-md">
                       Les journalistes seront automatiquement ajoutés à partir des articles de votre veille presse.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CLIENT TAB */}
+            {activeSubTab === "client" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    Retombées presse de vos clients
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" onClick={() => setShowClientManager(true)} className="gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Clients
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setShowAddClientModal(true)} className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Ajouter
+                    </Button>
+                    <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                      {clientArticles.length} article{clientArticles.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
+
+                {clientArticles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {clientArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                        onClick={() => window.open(article.link, "_blank")}
+                      >
+                        <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
+                          {article.thumbnail ? (
+                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
+                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                            {article.competitor_name && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
+                                <Briefcase className="w-3 h-3" />
+                                {article.competitor_name}
+                              </span>
+                            )}
+                          </div>
+                          {article.article_date && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(article.article_date)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <Briefcase className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-foreground">Retombées clients</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Ajoutez des clients et leurs articles pour suivre leurs retombées presse.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* VEILLE MARCHÉ TAB */}
+            {activeSubTab === "veille-marche" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-primary" />
+                    Veille Marché
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" onClick={() => setShowAddVeilleModal(true)} className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Ajouter un article
+                    </Button>
+                    <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                      {veilleArticles.length} article{veilleArticles.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
+
+                {isLoadingVeille ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
+                        <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 bg-secondary rounded w-3/4" />
+                          <div className="h-4 bg-secondary rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : veilleArticles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {veilleArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                        onClick={() => window.open(article.link, "_blank")}
+                      >
+                        <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
+                          {article.thumbnail ? (
+                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
+                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 text-xs font-semibold">
+                              <Eye className="w-3 h-3" />
+                              Veille
+                            </span>
+                            {article.source_name && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                                {article.source_icon && <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />}
+                                {article.source_name}
+                              </span>
+                            )}
+                          </div>
+                          {article.article_date && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(article.article_date)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <Eye className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-foreground">Veille Marché</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Ajoutez des articles de veille pour suivre les tendances de votre marché.
                     </p>
                   </div>
                 )}
@@ -2034,6 +2399,151 @@ const RelationsPresse = () => {
                           className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                           onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
                         >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddClientModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Briefcase className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Nouvel article client</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse client</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); setSelectedClientId(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Client</Label>
+                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                    <SelectTrigger className="mt-3 h-12 text-base">
+                      <SelectValue placeholder="Sélectionnez un client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" />
+                            {client.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
+                  <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); setSelectedClientId(""); }}>Annuler</Button>
+                  <Button size="lg" onClick={handleAddClientArticle} disabled={isAddingArticle || !selectedClientId} className="min-w-32">
+                    {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddVeilleModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Eye className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Nouvel article de veille</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille marché</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
+                  <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
+                  <p className="text-xs text-muted-foreground mt-2">Les métadonnées seront récupérées automatiquement</p>
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); }}>Annuler</Button>
+                  <Button size="lg" onClick={handleAddVeilleArticle} disabled={isAddingArticle} className="min-w-32">
+                    {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showClientManager && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-2xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Briefcase className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Gérer les clients</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des clients</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowClientManager(false); setNewClientName(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div className="flex gap-3">
+                  <Input value={newClientName} onChange={(e) => setNewClientName(e.target.value)} placeholder="Nom du client..." className="flex-1 h-12 text-base" onKeyDown={(e) => e.key === "Enter" && handleAddClient()} />
+                  <Button size="lg" onClick={handleAddClient} disabled={isAddingClient} className="px-6">
+                    {isAddingClient ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                  </Button>
+                </div>
+                {clients.length === 0 ? (
+                  <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
+                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                      <Briefcase className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-base font-medium text-muted-foreground">Aucun client</p>
+                    <p className="text-sm text-muted-foreground mt-1">Ajoutez votre premier client ci-dessus</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {clients.map((client) => (
+                      <div key={client.id} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <Briefcase className="w-6 h-6 text-primary" />
+                          </div>
+                          <p className="font-semibold text-foreground text-base">{client.name}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleDeleteClient(client.id, client.name)}>
                           <Trash2 className="w-5 h-5" />
                         </Button>
                       </div>
