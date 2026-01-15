@@ -61,7 +61,15 @@ const menuItems: MenuItem[] = [
   },
   { icon: Handshake, label: "Biz Dev", path: "/biz-dev" },
   { icon: FileBarChart, label: "Reporting Client", path: "/reporting-client" },
-  { icon: Share2, label: "Social Media", path: "/social-media" },
+  {
+    icon: Share2,
+    label: "Social Media",
+    path: "/social-media",
+    subItems: [
+      { icon: Users, label: "Organique", path: "/social-media" },
+      { icon: Target, label: "Paid", path: "/social-media?tab=paid" },
+    ]
+  },
   { icon: Search, label: "SEO / GEO", path: "/seo-geo" },
   { icon: BarChart3, label: "Reporting Interne", path: "/reporting-interne" },
   { icon: Users, label: "RH", path: "/rh" },
