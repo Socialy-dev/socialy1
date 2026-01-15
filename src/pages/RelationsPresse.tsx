@@ -40,7 +40,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -2303,7 +2303,7 @@ const RelationsPresse = () => {
                       <SelectValue placeholder="Sélectionnez un concurrent" />
                     </SelectTrigger>
                     <SelectContent>
-                      {agencies.map((agency) => (
+                      {agencies.filter(a => a.name !== "Autre").map((agency) => (
                         <SelectItem key={agency.id} value={agency.id}>
                           <div className="flex items-center gap-2">
                             <Building2 className="w-4 h-4" />
@@ -2311,6 +2311,19 @@ const RelationsPresse = () => {
                           </div>
                         </SelectItem>
                       ))}
+                      {agencies.some(a => a.name === "Autre") && (
+                        <>
+                          <SelectSeparator />
+                          {agencies.filter(a => a.name === "Autre").map((agency) => (
+                            <SelectItem key={agency.id} value={agency.id}>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Building2 className="w-4 h-4" />
+                                {agency.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   {agencies.length === 0 && (
