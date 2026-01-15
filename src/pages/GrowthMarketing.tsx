@@ -245,8 +245,7 @@ const GrowthMarketing = () => {
       <div
         className={cn(
           "flex-1 flex flex-col min-h-screen content-transition",
-          sidebarCollapsed ? "ml-[120px]" : "ml-[320px]"
-
+          sidebarCollapsed ? "ml-20" : "ml-72"
         )}
       >
         <Header showTitle={false} sidebarCollapsed={sidebarCollapsed} />

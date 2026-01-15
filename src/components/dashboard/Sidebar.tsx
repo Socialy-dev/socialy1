@@ -2,6 +2,7 @@ import {
   LayoutGrid,
   HelpCircle,
   ChevronLeft,
+  ChevronRight,
   Newspaper,
   TrendingUp,
   Handshake,
@@ -12,6 +13,7 @@ import {
   Users,
   Leaf,
   Package,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,6 +22,7 @@ interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  adminOnly?: boolean;
 }
 
 const menuItems: MenuItem[] = [
@@ -49,132 +52,104 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   return (
     <aside
       className={cn(
-        "fixed left-4 top-4 shadow-2xl sidebar-transition z-50 rounded-[32px] border border-white/5",
-        "bg-[#0A0E17]/95 backdrop-blur-xl flex flex-col", // Dark glass aesthetics
-        collapsed
-          ? "w-[80px] h-[calc(100vh-32px)]"
-          : "w-[280px] h-[calc(100vh-32px)]"
+        "fixed left-0 top-0 h-screen flex flex-col z-50 sidebar-transition overflow-hidden",
+        collapsed ? "w-20" : "w-72"
       )}
+      style={{
+        background: 'linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 47% 5%) 100%)',
+      }}
     >
-      {/* Brand & Toggle */}
+      {/* Logo & Toggle */}
       <div className={cn(
-        "relative flex items-center px-6 py-8",
-        collapsed ? "justify-center" : "justify-between"
+        "flex px-4 border-b border-white/5 transition-all duration-300",
+        collapsed
+          ? "flex-col items-center justify-center gap-4 py-6 h-32"
+          : "items-center justify-between h-16"
       )}>
-        <button
-          onClick={() => collapsed && onToggle()}
-          className="flex items-center gap-4 overflow-hidden group/brand focus:outline-none"
-        >
-          <div className={cn(
-            "w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 transition-all duration-300",
-            "bg-gradient-to-tr from-primary via-violet-500 to-indigo-500",
-            collapsed ? "scale-100" : "group-hover/brand:scale-105"
-          )}>
-            <span className="text-white font-bold text-xl">S</span>
-          </div>
-          <span className={cn(
-            "text-white font-bold text-xl tracking-tight transition-all duration-300 whitespace-nowrap",
-            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
-          )}>
-            Socialy
-          </span>
-        </button>
-      </div>
+        {/* Toggle Button for Collapsed State (Top) */}
+        {collapsed && (
+          <button
+            onClick={onToggle}
+            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group border border-white/5 order-first mb-2"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="w-5 h-5 text-white/70 group-hover:text-white" />
+          </button>
+        )}
 
-      {/* Menu Items */}
-      <nav className="flex-1 px-4 overflow-y-auto scrollbar-hide py-2">
-        <ul className="space-y-2">
-          {menuItems.map((item, index) => {
-            const isActive = currentPath === item.path;
-
-            return (
-              <li key={index}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={cn(
-                    "relative group flex items-center w-full py-3.5 rounded-2xl transition-all duration-300 ease-out",
-                    collapsed ? "justify-center px-0" : "px-4",
-                    isActive
-                      ? "text-white"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  )}
-                >
-                  {/* Active Background Indicator */}
-                  {isActive && (
-                    <div className={cn(
-                      "absolute inset-0 rounded-2xl bg-gradient-to-r from-primary/20 to-violet-500/20 opacity-100",
-                      collapsed ? "w-12 h-12 left-1/2 -translate-x-1/2" : "w-full"
-                    )} />
-                  )}
-
-                  {/* Icon */}
-                  <div className={cn(
-                    "relative z-10 transition-all duration-300",
-                    isActive ? "text-primary scale-110" : "group-hover:text-white"
-                  )}>
-                    <item.icon className="w-[22px] h-[22px]" />
-                  </div>
-
-                  {/* Label (Expanded Only) */}
-                  <div className={cn(
-                    "relative z-10 flex-1 text-left ml-4 whitespace-nowrap overflow-hidden transition-all duration-300",
-                    collapsed ? "w-0 opacity-0 ml-0" : "w-auto opacity-100"
-                  )}>
-                    <span className={cn(
-                      "text-[15px] font-medium block truncate",
-                      isActive ? "font-semibold" : ""
-                    )}>
-                      {item.label}
-                    </span>
-                  </div>
-
-                  {/* Active Dot (Expanded Only) */}
-                  {!collapsed && isActive && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_currentColor] ml-2" />
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Bottom Actions */}
-      <div className="p-4 mt-auto space-y-2 relative z-20">
-
-        {/* Help Button */}
-        <button
-          className={cn(
-            "w-full rounded-2xl flex items-center transition-all duration-300 group border border-transparent",
-            "hover:bg-white/5 hover:border-white/5",
-            collapsed ? "justify-center h-12" : "px-4 py-3 gap-3"
-          )}
-        >
-          <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
-            <HelpCircle className="w-5 h-5 text-violet-400" />
+        <div className={cn(
+          "flex items-center gap-3",
+          collapsed && "justify-center"
+        )}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30 flex-shrink-0">
+            <span className="text-white font-bold text-lg">S</span>
           </div>
           {!collapsed && (
-            <span className="text-sm font-medium text-gray-400 group-hover:text-gray-200">
-              Aide & Support
-            </span>
+            <span className="text-white font-bold text-xl tracking-tight">Socialy</span>
           )}
-        </button>
+        </div>
 
-        {/* Separator */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-2" />
+        {/* Toggle Button for Expanded State (Right) */}
+        {!collapsed && (
+          <button
+            onClick={onToggle}
+            className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group border border-white/5"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="w-4 h-4 text-white/50 group-hover:text-white" />
+          </button>
+        )}
+      </div>
 
-        {/* Collapse Toggle (Bottom) */}
-        <button
-          onClick={onToggle}
-          className={cn(
-            "w-full flex items-center justify-center hover:bg-white/5 rounded-xl transition-all duration-300 text-gray-500 hover:text-white h-8",
-            collapsed ? "rotate-180" : ""
-          )}
-        >
-          <div className="flex items-center gap-2">
-            {!collapsed && <span className="text-xs font-medium uppercase tracking-widest opacity-50">Réduire</span>}
-            <ChevronLeft className="w-4 h-4" />
-          </div>
+      {/* Navigation Menu */}
+      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-hide">
+        <div className="space-y-1">
+          {menuItems.map((item, index) => {
+            const isActive = currentPath === item.path;
+            return (
+              <button
+                key={index}
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "w-full flex items-center gap-3 py-3 rounded-2xl transition-all duration-200 group",
+                  collapsed ? "px-3 justify-center" : "px-4",
+                  isActive
+                    ? "bg-white/10 text-white shadow-lg shadow-black/10"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                )}
+              >
+                <div className={cn(
+                  "flex items-center justify-center flex-shrink-0 transition-all duration-200",
+                  isActive && "text-primary"
+                )}>
+                  <item.icon className="w-5 h-5" />
+                </div>
+                {!collapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+                    {isActive && (
+                      <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
+                    )}
+                  </>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Bottom Section */}
+      <div className={cn(
+        "p-4 border-t border-white/5",
+        collapsed && "flex flex-col items-center gap-3"
+      )}>
+        {/* Help Button */}
+        <button className={cn(
+          "rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30",
+          collapsed ? "w-12 h-12" : "w-full py-3 gap-2"
+        )}>
+          <HelpCircle className="w-5 h-5 text-white" />
+          {!collapsed && <span className="text-sm font-medium text-white">Aide & Support</span>}
         </button>
       </div>
     </aside>
