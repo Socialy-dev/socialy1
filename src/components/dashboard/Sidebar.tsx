@@ -59,18 +59,18 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         background: 'linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 47% 5%) 100%)',
       }}
     >
-      {/* Logo & Toggle */}
+      {/* Logo & Toggle - Fixed height to prevent content jumping */}
       <div className={cn(
-        "flex px-4 border-b border-white/5 transition-all duration-300",
+        "flex px-4 border-b border-white/5 transition-all duration-300 h-24",
         collapsed
-          ? "flex-col items-center justify-center gap-4 py-6 h-32"
-          : "items-center justify-between h-16"
+          ? "flex-col items-center justify-center gap-3 py-4"
+          : "items-center justify-between py-4"
       )}>
         {/* Toggle Button for Collapsed State (Top) */}
         {collapsed && (
           <button
             onClick={onToggle}
-            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group border border-white/5 order-first mb-2"
+            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all duration-200 group border border-white/5"
             title="Expand sidebar"
           >
             <ChevronRight className="w-5 h-5 text-white/70 group-hover:text-white" />
