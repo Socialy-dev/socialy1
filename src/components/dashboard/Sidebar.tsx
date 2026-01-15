@@ -87,8 +87,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </span>
       </div>
 
-      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-hide">
-        <div className="space-y-1">
+      <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
+        <div className="space-y-1 px-3">
           {menuItems.map((item, index) => {
             const isActive = currentPath === item.path;
             return (
@@ -96,16 +96,16 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 key={index}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 py-3 rounded-2xl group relative",
+                  "w-full flex items-center py-3 rounded-2xl group",
                   "transition-all duration-200 ease-out",
-                  collapsed ? "justify-center" : "px-4",
+                  collapsed ? "justify-center px-0" : "px-4 gap-3",
                   isActive
                     ? "bg-white/10 text-white shadow-lg shadow-black/10"
                     : "text-white/50 hover:bg-white/5 hover:text-white/80"
                 )}
               >
                 <div className={cn(
-                  "w-12 h-5 flex items-center justify-center flex-shrink-0 transition-all duration-200",
+                  "flex items-center justify-center flex-shrink-0 transition-all duration-200",
                   isActive && "text-primary"
                 )}>
                   <item.icon className="w-5 h-5" />
@@ -113,7 +113,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 <span className={cn(
                   "text-sm font-medium flex-1 text-left whitespace-nowrap",
                   "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                  collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+                  collapsed ? "hidden" : "opacity-100"
                 )}>
                   {item.label}
                 </span>
@@ -126,26 +126,18 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </div>
       </nav>
 
-      <div className={cn(
-        "p-4 border-t border-white/5",
-        collapsed && "flex flex-col items-center"
-      )}>
+      <div className="p-3 border-t border-white/5">
         <button className={cn(
           "rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center",
           "hover:opacity-90 transition-all duration-200",
           "shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30",
-          collapsed ? "w-12 h-12 justify-center" : "w-full py-3 px-4 gap-3"
+          collapsed ? "w-full h-12 justify-center" : "w-full py-3 px-4 gap-3"
         )}>
-          <div className={cn(
-            "flex items-center justify-center flex-shrink-0",
-            collapsed ? "w-5" : "w-12"
-          )}>
-            <HelpCircle className="w-5 h-5 text-white" />
-          </div>
+          <HelpCircle className="w-5 h-5 text-white flex-shrink-0" />
           <span className={cn(
             "text-sm font-medium text-white whitespace-nowrap flex-1 text-left",
             "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+            collapsed ? "hidden" : "opacity-100"
           )}>
             Aide & Support
           </span>
