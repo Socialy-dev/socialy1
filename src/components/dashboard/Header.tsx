@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Search, Bell, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
+import { Search, Bell, ChevronDown, LogOut, User, Settings, Shield, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -10,13 +10,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   title?: string;
   showTitle?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
-export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) => {
+export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed = false }: HeaderProps) => {
   const [userName, setUserName] = useState("Utilisateur");
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -58,93 +60,104 @@ export const Header = ({ title = "Dashboard", showTitle = true }: HeaderProps) =
   };
 
   return (
-    <header className="flex items-center justify-between mb-10">
-      {showTitle ? (
-        <div>
-          <h1 className="text-3xl font-bold text-foreground tracking-tight">{title}</h1>
-          <p className="text-muted-foreground mt-1">Welcome back! Here's what's happening.</p>
-        </div>
-      ) : (
-        <div />
-      )}
-
-      <div className="flex items-center gap-3">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search for anything..."
-            className="w-72 h-12 pl-12 pr-4 rounded-xl bg-card border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-          />
-        </div>
-
-        {/* Notifications */}
-        <button className="relative w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center hover:bg-secondary transition-all shadow-sm">
-          <Bell className="w-5 h-5 text-foreground" />
-          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
-        </button>
-
-        {/* Theme Toggle */}
-        <ModeToggle />
-
-        {/* User Menu */}
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <button className="flex items-center gap-3 pl-3 pr-4 py-2 rounded-xl hover:bg-card border border-transparent hover:border-border transition-all duration-200">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-violet-600 overflow-hidden shadow-lg shadow-primary/20">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-                  alt={userName}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="font-semibold text-sm text-foreground">{userName}</span>
-                <span className="text-xs text-muted-foreground">Product manager</span>
-              </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-56 p-2 bg-card border border-border shadow-xl rounded-xl z-50">
-            <div className="flex flex-col">
-              <button
-                onClick={handleOpenProfile}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
-              >
-                <User className="w-4 h-4 text-muted-foreground" />
-                Mon profil
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium">
-                <Settings className="w-4 h-4 text-muted-foreground" />
-                Paramètres
-              </button>
-              {isOrgAdmin && (
-                <>
-                  <div className="h-px bg-border my-1.5" />
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      navigate("/admin");
-                    }}
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
-                  >
-                    <Shield className="w-4 h-4 text-muted-foreground" />
-                    Administration
-                  </button>
-                </>
-              )}
-              <div className="h-px bg-border my-1.5" />
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2.5 text-sm text-danger rounded-lg hover:bg-danger/10 transition-colors text-left w-full font-medium"
-              >
-                <LogOut className="w-4 h-4" />
-                Se déconnecter
-              </button>
+    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="flex items-center justify-between h-16 px-6">
+        {/* Left Section - Title */}
+        {showTitle ? (
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">{title}</h1>
+              <p className="text-sm text-muted-foreground">Bienvenue ! Voici un aperçu de votre journée.</p>
             </div>
-          </PopoverContent>
-        </Popover>
+          </div>
+        ) : (
+          <div />
+        )}
+
+        {/* Right Section - Actions */}
+        <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative hidden md:block">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              className="w-64 h-10 pl-10 pr-4 rounded-xl bg-secondary/50 border border-border/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+            />
+          </div>
+
+          {/* Add Button */}
+          <button className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+            <Plus className="w-5 h-5" />
+          </button>
+
+          {/* Notifications */}
+          <button className="relative w-10 h-10 rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center hover:bg-secondary transition-all">
+            <Bell className="w-4 h-4 text-foreground" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
+          </button>
+
+          {/* Theme Toggle */}
+          <ModeToggle />
+
+          {/* User Menu */}
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all duration-200">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-violet-600 overflow-hidden shadow-lg shadow-primary/20">
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="font-semibold text-sm text-foreground leading-tight">{userName}</span>
+                  <span className="text-xs text-muted-foreground leading-tight">Product manager</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56 p-2 bg-card border border-border shadow-xl rounded-xl z-50">
+              <div className="flex flex-col">
+                <button
+                  onClick={handleOpenProfile}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
+                >
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  Mon profil
+                </button>
+                <button className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium">
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  Paramètres
+                </button>
+                {isOrgAdmin && (
+                  <>
+                    <div className="h-px bg-border my-1.5" />
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate("/admin");
+                      }}
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-secondary transition-colors text-left w-full font-medium"
+                    >
+                      <Shield className="w-4 h-4 text-muted-foreground" />
+                      Administration
+                    </button>
+                  </>
+                )}
+                <div className="h-px bg-border my-1.5" />
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-danger rounded-lg hover:bg-danger/10 transition-colors text-left w-full font-medium"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Se déconnecter
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </header>
   );

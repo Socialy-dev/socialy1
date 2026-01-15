@@ -135,7 +135,7 @@ const RelationsPresse = () => {
   const [isLoadingOrganization, setIsLoadingOrganization] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<string | null>(null);
   const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
-  
+
   const [journalists, setJournalists] = useState<Journalist[]>([]);
   const [isLoadingJournalists, setIsLoadingJournalists] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -237,11 +237,11 @@ const RelationsPresse = () => {
       let query = supabase
         .from("communique_presse")
         .select("*");
-      
+
       if (isViewingAsOtherOrg && effectiveOrgId) {
         query = query.eq("organization_id", effectiveOrgId);
       }
-      
+
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -328,12 +328,12 @@ const RelationsPresse = () => {
   const handleDeleteCommunique = async (communique: Communique) => {
     try {
       const filesToDelete: string[] = [];
-      
+
       if (communique.pdf_url) {
         const pathMatch = communique.pdf_url.match(/communique_presse\/(.+)$/);
         if (pathMatch) filesToDelete.push(pathMatch[1]);
       }
-      
+
       if (communique.word_url) {
         const pathMatch = communique.word_url.match(/communique_presse\/(.+)$/);
         if (pathMatch) filesToDelete.push(pathMatch[1]);
@@ -461,7 +461,7 @@ const RelationsPresse = () => {
       return;
     }
     setIsAddingArticle(true);
-    
+
     try {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
@@ -470,17 +470,17 @@ const RelationsPresse = () => {
           organization_id: effectiveOrgId,
         },
       });
-      
+
       if (error) {
         throw error;
       }
-      
+
       toast({ title: "Enrichissement en cours", description: `L'article ${effectiveOrgName} sera disponible dans quelques instants` });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
       toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
-    
+
     setNewArticleLink("");
     setShowAddSocialyModal(false);
     setIsAddingArticle(false);
@@ -499,11 +499,11 @@ const RelationsPresse = () => {
       toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
-    
+
     const selectedCompetitor = agencies.find(a => a.id === selectedCompetitorId);
-    
+
     setIsAddingArticle(true);
-    
+
     try {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
@@ -514,17 +514,17 @@ const RelationsPresse = () => {
           competitor_name: selectedCompetitor?.name || null,
         },
       });
-      
+
       if (error) {
         throw error;
       }
-      
+
       toast({ title: "Enrichissement en cours", description: "L'article concurrent sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
       toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
-    
+
     setNewArticleLink("");
     setSelectedCompetitorId("");
     setShowAddCompetitorModal(false);
@@ -541,13 +541,13 @@ const RelationsPresse = () => {
       return;
     }
     setIsAddingCompetitor(true);
-    
+
     try {
       const { error } = await supabase.from("competitor_agencies").insert({
         organization_id: effectiveOrgId,
         name: newCompetitorName.trim(),
       });
-      
+
       if (error) {
         if (error.code === "23505") {
           toast({ title: "Concurrent existant", description: "Ce concurrent existe déjà dans votre liste", variant: "destructive" });
@@ -563,7 +563,7 @@ const RelationsPresse = () => {
       console.error("Error adding competitor:", error);
       toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le concurrent. Veuillez réessayer.", variant: "destructive" });
     }
-    
+
     setIsAddingCompetitor(false);
   };
 
@@ -727,1322 +727,1324 @@ const RelationsPresse = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <main className={cn("min-h-screen p-8 content-transition", sidebarCollapsed ? "ml-20" : "ml-64")}>
-        <Header />
+      <div className={cn("flex-1 flex flex-col min-h-screen content-transition", sidebarCollapsed ? "ml-20" : "ml-72")}>
+        <Header sidebarCollapsed={sidebarCollapsed} />
 
-        {/* Full Page Relations Presse */}
-        <div className="glass-card rounded-2xl p-8">
-          {/* Header with title and sub-tabs */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Newspaper className="w-7 h-7 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Presse</h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Gérez vos retombées presse et vos contacts journalistes
-                </p>
-              </div>
-            </div>
-
-            {/* Sub-tabs */}
-            <div className="flex items-center gap-2 p-2 bg-secondary/50 rounded-xl">
-              {getSubTabs(effectiveOrgName).map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeSubTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveSubTab(tab.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200",
-                      isActive
-                        ? "bg-foreground text-background shadow-md"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* SOCIALY TAB */}
-          {activeSubTab === "socialy" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
-                  Retombées presse de {effectiveOrgName}
-                </p>
-                <div className="flex items-center gap-3">
-                  {isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
-                    <Button 
-                      variant={showHiddenOrganization ? "default" : "outline"}
-                      size="sm" 
-                      onClick={() => {
-                        setShowHiddenOrganization(!showHiddenOrganization);
-                        if (!showHiddenOrganization) fetchHiddenOrganizationArticles();
-                      }}
-                      className="gap-2"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                      Masqués ({hiddenOrganizationArticles.length})
-                    </Button>
-                  )}
-                  {isOrgAdmin && hiddenOrganizationArticles.length === 0 && (
-                    <Button 
-                      variant="ghost"
-                      size="sm" 
-                      onClick={() => fetchHiddenOrganizationArticles()}
-                      className="gap-2 text-muted-foreground"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                      Voir masqués
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowAddSocialyModal(true)}
-                    className="gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Ajouter
-                  </Button>
-                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                    {organizationArticles.length} article{organizationArticles.length !== 1 ? "s" : ""}
-                  </span>
+        <main className="flex-1 p-6 pt-4 overflow-y-auto">
+          {/* Full Page Relations Presse */}
+          <div className="bg-card rounded-2xl border border-border/50 p-8">
+            {/* Header with title and sub-tabs */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Newspaper className="w-7 h-7 text-primary" />
                 </div>
-              </div>
-
-              {showHiddenOrganization && isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <EyeOff className="w-4 h-4" />
-                      Articles masqués
-                    </p>
-                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenOrganization(false)}>
-                      Fermer
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
-                    {hiddenOrganizationArticles.map((article) => (
-                      <div
-                        key={article.id}
-                        className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
-                      >
-                        <button
-                          onClick={(e) => handleRestoreOrganizationArticle(article.id, e)}
-                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
-                          title="Restaurer l'article"
-                        >
-                          <RotateCcw className="w-4 h-4 text-primary-foreground" />
-                        </button>
-                        <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
-                          {article.thumbnail ? (
-                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                              <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
-                          {article.article_date && (
-                            <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {isLoadingOrganization ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
-                      <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
-                      <div className="flex-1 space-y-3">
-                        <div className="h-5 bg-secondary rounded w-3/4" />
-                        <div className="h-4 bg-secondary rounded w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : organizationArticles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {organizationArticles.map((article) => (
-                    <div
-                      key={article.id}
-                      className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
-                      onClick={() => window.open(article.link, "_blank")}
-                    >
-                      {isOrgAdmin && (
-                        <button
-                          onClick={(e) => handleHideOrganizationArticle(article.id, e)}
-                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
-                          title="Masquer l'article"
-                        >
-                          <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      )}
-                      <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
-                        {article.thumbnail ? (
-                          <img
-                            src={article.thumbnail}
-                            alt=""
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                            <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2">
-                          <ExternalLink className="w-4 h-4 text-background" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                          {article.title}
-                        </h4>
-
-                        <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
-                            <Zap className="w-3 h-3" />
-                            {effectiveOrgName}
-                          </span>
-                          {article.source_name && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                              {article.source_icon && (
-                                <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />
-                              )}
-                              {article.source_name}
-                            </span>
-                          )}
-                        </div>
-                        {article.article_date && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(article.article_date)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                    <Zap className="w-10 h-10 text-primary-foreground" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-foreground">Vos retombées presse</h4>
-                  <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Aucun article trouvé. Configurez votre veille pour voir les mentions de {effectiveOrgName}.
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Presse</h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Gérez vos retombées presse et vos contacts journalistes
                   </p>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
 
-          {/* CONCURRENT TAB */}
-          {activeSubTab === "concurrent" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
-                    className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
-                  >
-                    <Filter className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">{selectedAgencyName}</span>
-                    <ChevronDown
+              {/* Sub-tabs */}
+              <div className="flex items-center gap-2 p-2 bg-secondary/50 rounded-xl">
+                {getSubTabs(effectiveOrgName).map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeSubTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSubTab(tab.id)}
                       className={cn(
-                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                        showAgencyDropdown && "rotate-180",
+                        "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200",
+                        isActive
+                          ? "bg-foreground text-background shadow-md"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
                       )}
-                    />
-                  </button>
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                  {showAgencyDropdown && (
-                    <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-2">
-                        <button
-                          onClick={() => {
-                            setSelectedAgency(null);
-                            setShowAgencyDropdown(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                            !selectedAgency ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
-                          )}
-                        >
-                          <Users2 className="w-5 h-5" />
-                          Tous les concurrents
-                          {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
-                        </button>
-
-                        {agencies.length > 0 && <div className="border-t border-border my-2" />}
-
-                        {agencies.map((agency) => (
-                          <button
-                            key={agency.id}
-                            onClick={() => {
-                              setSelectedAgency(agency.id);
-                              setShowAgencyDropdown(false);
-                            }}
-                            className={cn(
-                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              selectedAgency === agency.id
-                                ? "bg-primary/10 text-primary"
-                                : "text-foreground hover:bg-secondary",
-                            )}
-                          >
-                            <Building2 className="w-5 h-5" />
-                            {agency.name}
-                            {selectedAgency === agency.id && <Check className="w-5 h-5 ml-auto" />}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
-                    <Button 
-                      variant={showHiddenCompetitor ? "default" : "outline"}
-                      size="sm" 
-                      onClick={() => {
-                        setShowHiddenCompetitor(!showHiddenCompetitor);
-                        if (!showHiddenCompetitor) fetchHiddenCompetitorArticles();
-                      }}
+            {/* SOCIALY TAB */}
+            {activeSubTab === "socialy" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-primary" />
+                    Retombées presse de {effectiveOrgName}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    {isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
+                      <Button
+                        variant={showHiddenOrganization ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setShowHiddenOrganization(!showHiddenOrganization);
+                          if (!showHiddenOrganization) fetchHiddenOrganizationArticles();
+                        }}
+                        className="gap-2"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Masqués ({hiddenOrganizationArticles.length})
+                      </Button>
+                    )}
+                    {isOrgAdmin && hiddenOrganizationArticles.length === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fetchHiddenOrganizationArticles()}
+                        className="gap-2 text-muted-foreground"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Voir masqués
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAddSocialyModal(true)}
                       className="gap-2"
                     >
-                      <EyeOff className="w-4 h-4" />
-                      Masqués ({hiddenCompetitorArticles.length})
+                      <Plus className="w-4 h-4" />
+                      Ajouter
                     </Button>
-                  )}
-                  {isOrgAdmin && hiddenCompetitorArticles.length === 0 && (
-                    <Button 
-                      variant="ghost"
-                      size="sm" 
-                      onClick={() => fetchHiddenCompetitorArticles()}
-                      className="gap-2 text-muted-foreground"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                      Voir masqués
-                    </Button>
-                  )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowCompetitorManager(true)}
-                    className="gap-2"
-                  >
-                    <Building2 className="w-4 h-4" />
-                    Concurrents
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowAddCompetitorModal(true)}
-                    className="gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Ajouter
-                  </Button>
-                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                    {filteredArticles.length} article{filteredArticles.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              </div>
-
-              {showHiddenCompetitor && isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <EyeOff className="w-4 h-4" />
-                      Articles masqués
-                    </p>
-                    <Button variant="ghost" size="sm" onClick={() => setShowHiddenCompetitor(false)}>
-                      Fermer
-                    </Button>
+                    <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                      {organizationArticles.length} article{organizationArticles.length !== 1 ? "s" : ""}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
-                    {hiddenCompetitorArticles.map((article) => (
+                </div>
+
+                {showHiddenOrganization && isOrgAdmin && hiddenOrganizationArticles.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <EyeOff className="w-4 h-4" />
+                        Articles masqués
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHiddenOrganization(false)}>
+                        Fermer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                      {hiddenOrganizationArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                        >
+                          <button
+                            onClick={(e) => handleRestoreOrganizationArticle(article.id, e)}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                            title="Restaurer l'article"
+                          >
+                            <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                          </button>
+                          <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                            {article.thumbnail ? (
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                            {article.article_date && (
+                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isLoadingOrganization ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
+                        <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 bg-secondary rounded w-3/4" />
+                          <div className="h-4 bg-secondary rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : organizationArticles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {organizationArticles.map((article) => (
                       <div
                         key={article.id}
-                        className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                        className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                        onClick={() => window.open(article.link, "_blank")}
                       >
-                        <button
-                          onClick={(e) => handleRestoreCompetitorArticle(article.id, e)}
-                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
-                          title="Restaurer l'article"
-                        >
-                          <RotateCcw className="w-4 h-4 text-primary-foreground" />
-                        </button>
-                        <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                        {isOrgAdmin && (
+                          <button
+                            onClick={(e) => handleHideOrganizationArticle(article.id, e)}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                            title="Masquer l'article"
+                          >
+                            <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        )}
+                        <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                           {article.thumbnail ? (
-                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            <img
+                              src={article.thumbnail}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                              <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
                             </div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2">
+                            <ExternalLink className="w-4 h-4 text-background" />
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                            {article.title}
+                          </h4>
+
+                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
+                              <Zap className="w-3 h-3" />
+                              {effectiveOrgName}
+                            </span>
+                            {article.source_name && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                                {article.source_icon && (
+                                  <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />
+                                )}
+                                {article.source_name}
+                              </span>
+                            )}
+                          </div>
                           {article.article_date && (
-                            <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(article.article_date)}
+                            </span>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
-                      <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
-                      <div className="flex-1 space-y-3">
-                        <div className="h-5 bg-secondary rounded w-3/4" />
-                        <div className="h-4 bg-secondary rounded w-1/2" />
-                      </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <Zap className="w-10 h-10 text-primary-foreground" />
                     </div>
-                  ))}
-                </div>
-              ) : filteredArticles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filteredArticles.map((article) => (
-                    <div
-                      key={article.id}
-                      className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
-                      onClick={() => window.open(article.link, "_blank")}
-                    >
-                      {isOrgAdmin && (
-                        <button
-                          onClick={(e) => handleHideCompetitorArticle(article.id, e)}
-                          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
-                          title="Masquer l'article"
-                        >
-                          <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      )}
-                      <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
-                        {article.thumbnail ? (
-                          <img
-                            src={article.thumbnail}
-                            alt=""
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                            <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2">
-                          <ExternalLink className="w-4 h-4 text-background" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0 flex flex-col justify-center">
-                        <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
-                          {article.title}
-                        </h4>
-
-                        <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                          {article.competitor_name && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
-                              <Building2 className="w-3 h-3" />
-                              {article.competitor_name}
-                            </span>
-                          )}
-                          {article.source_name && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                              {article.source_icon && (
-                                <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />
-                              )}
-                              {article.source_name}
-                            </span>
-                          )}
-                        </div>
-                        {article.article_date && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(article.article_date)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                    <Users2 className="w-10 h-10 text-primary-foreground" />
+                    <h4 className="text-2xl font-bold text-foreground">Vos retombées presse</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Aucun article trouvé. Configurez votre veille pour voir les mentions de {effectiveOrgName}.
+                    </p>
                   </div>
-                  <h4 className="text-2xl font-bold text-foreground">Veille concurrentielle</h4>
-                  <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Aucun article trouvé. Ajoutez des concurrents et configurez votre veille.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          {/* JOURNALISTES TAB */}
-          {activeSubTab === "journalistes" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                    <UserCircle className="w-5 h-5 text-primary" />
-                    Vos contacts journalistes
-                  </p>
-
-                  {/* Media Filter Dropdown */}
+            {/* CONCURRENT TAB */}
+            {activeSubTab === "concurrent" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
                   <div className="relative">
                     <button
-                      onClick={() => setShowMediaDropdown(!showMediaDropdown)}
-                      className="flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                      onClick={() => setShowAgencyDropdown(!showAgencyDropdown)}
+                      className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
                     >
                       <Filter className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium text-foreground">{selectedMediaLabel}</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedAgencyName}</span>
                       <ChevronDown
                         className={cn(
                           "w-4 h-4 text-muted-foreground transition-transform duration-200",
-                          showMediaDropdown && "rotate-180",
+                          showAgencyDropdown && "rotate-180",
                         )}
                       />
                     </button>
 
-                    {showMediaDropdown && (
-                      <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="p-2 max-h-80 overflow-y-auto">
+                    {showAgencyDropdown && (
+                      <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-2">
                           <button
                             onClick={() => {
-                              setSelectedMedia(null);
-                              setShowMediaDropdown(false);
+                              setSelectedAgency(null);
+                              setShowAgencyDropdown(false);
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              !selectedMedia ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                              !selectedAgency ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
                             )}
                           >
-                            <Newspaper className="w-5 h-5" />
-                            Tous les médias
-                            {!selectedMedia && <Check className="w-5 h-5 ml-auto" />}
+                            <Users2 className="w-5 h-5" />
+                            Tous les concurrents
+                            {!selectedAgency && <Check className="w-5 h-5 ml-auto" />}
                           </button>
 
-                          {uniqueMedias.length > 0 && <div className="border-t border-border my-2" />}
+                          {agencies.length > 0 && <div className="border-t border-border my-2" />}
 
-                          {uniqueMedias.map((media) => (
+                          {agencies.map((agency) => (
                             <button
-                              key={media}
+                              key={agency.id}
                               onClick={() => {
-                                setSelectedMedia(media);
-                                setShowMediaDropdown(false);
+                                setSelectedAgency(agency.id);
+                                setShowAgencyDropdown(false);
                               }}
                               className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                                selectedMedia === media
+                                selectedAgency === agency.id
                                   ? "bg-primary/10 text-primary"
                                   : "text-foreground hover:bg-secondary",
                               )}
                             >
-                              <Newspaper className="w-5 h-5" />
-                              {media}
-                              {selectedMedia === media && <Check className="w-5 h-5 ml-auto" />}
+                              <Building2 className="w-5 h-5" />
+                              {agency.name}
+                              {selectedAgency === agency.id && <Check className="w-5 h-5 ml-auto" />}
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  {/* Import CSV Button */}
-                  <label
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
-                      isImporting && "opacity-50 cursor-not-allowed",
-                    )}
-                  >
-                    <Upload className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium text-foreground">
-                      {isImporting ? "Import..." : "Importer CSV"}
-                    </span>
-                    <input
-                      type="file"
-                      accept=".csv,.txt"
-                      className="hidden"
-                      onChange={handleCsvImport}
-                      disabled={isImporting}
-                    />
-                  </label>
-
-                  <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                    {filteredJournalists.length} journaliste{filteredJournalists.length !== 1 ? "s" : ""}
-                  </span>
-                  {selectedJournalists.length > 0 && (
-                    <button
-                      onClick={() => setShowEmailModal(true)}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25"
-                    >
-                      <Send className="w-4 h-4" />
-                      Envoyer un communiqué ({selectedJournalists.length})
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {isLoadingJournalists ? (
-                <div className="bg-secondary/30 rounded-2xl overflow-hidden">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-b-0 animate-pulse"
-                    >
-                      <div className="w-10 h-10 bg-secondary rounded-full flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-secondary rounded w-1/4" />
-                      </div>
-                      <div className="h-4 bg-secondary rounded w-1/6" />
-                      <div className="h-4 bg-secondary rounded w-1/5" />
-                      <div className="h-4 bg-secondary rounded w-1/6" />
-                    </div>
-                  ))}
-                </div>
-              ) : filteredJournalists.length > 0 ? (
-                <div className="bg-card rounded-2xl border border-border overflow-hidden">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    <div className="w-10" />
-                    <div>Contact</div>
-                    <div>Média</div>
-                    <div className="flex items-center gap-1">
-                      Spécialité
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Spécialité du média (Tech, Mode, Business...)</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div>Poste</div>
-                    <div>LinkedIn</div>
-                    <div>Email</div>
-                    <div>Commentaire</div>
-                    <div className="text-center">Sélect.</div>
-                  </div>
-
-                  {/* Table Body */}
-                  <div className="divide-y divide-border/50">
-                    {filteredJournalists.map((journalist) => (
-                      <button
-                        key={journalist.id}
-                        onClick={() => toggleJournalist(journalist.id)}
-                        className={cn(
-                          "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
-                          journalist.selected && "bg-primary/5",
-                        )}
+                  <div className="flex items-center gap-3">
+                    {isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
+                      <Button
+                        variant={showHiddenCompetitor ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setShowHiddenCompetitor(!showHiddenCompetitor);
+                          if (!showHiddenCompetitor) fetchHiddenCompetitorArticles();
+                        }}
+                        className="gap-2"
                       >
-                        {/* Avatar */}
+                        <EyeOff className="w-4 h-4" />
+                        Masqués ({hiddenCompetitorArticles.length})
+                      </Button>
+                    )}
+                    {isOrgAdmin && hiddenCompetitorArticles.length === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fetchHiddenCompetitorArticles()}
+                        className="gap-2 text-muted-foreground"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Voir masqués
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCompetitorManager(true)}
+                      className="gap-2"
+                    >
+                      <Building2 className="w-4 h-4" />
+                      Concurrents
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAddCompetitorModal(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Ajouter
+                    </Button>
+                    <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                      {filteredArticles.length} article{filteredArticles.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </div>
+
+                {showHiddenCompetitor && isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <EyeOff className="w-4 h-4" />
+                        Articles masqués
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHiddenCompetitor(false)}>
+                        Fermer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                      {hiddenCompetitorArticles.map((article) => (
                         <div
-                          className={cn(
-                            "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
-                            journalist.selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
-                          )}
+                          key={article.id}
+                          className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
                         >
-                          {journalist.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
-
-                        {/* Contact Name */}
-                        <div className="flex items-center min-w-0">
-                          <span className="font-semibold text-foreground truncate">{journalist.name}</span>
-                        </div>
-
-                        {/* Media - Modern Tag */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.media ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full"
-                              title={journalist.media}
-                            >
-                              <Newspaper className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{journalist.media}</span>
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-
-                        {/* Media Specialty */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.media_specialty ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium"
-                              title={journalist.media_specialty}
-                            >
-                              <Tag className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">{journalist.media_specialty}</span>
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-
-                        {/* Job - Poste */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.job ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 text-xs font-medium truncate">
-                              <Briefcase className="w-3 h-3 flex-shrink-0" />
-                              {journalist.job}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-
-                        {/* LinkedIn */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.linkedin ? (
-                            <a
-                              href={journalist.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A66C2]/15 text-[#0A66C2] hover:bg-[#0A66C2]/25 transition-colors"
-                            >
-                              <Linkedin className="w-4 h-4" />
-                            </a>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-
-                        {/* Email */}
-                        <div className="flex items-center min-w-0">
-                          {journalist.email ? (
-                            <span className="text-sm text-primary truncate">{journalist.email}</span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
-                          )}
-                        </div>
-
-                        {/* Notes - Commentaire éditable */}
-                        <div className="flex items-center min-w-0" onClick={(e) => e.stopPropagation()}>
-                          {journalist.isEditingNotes ? (
-                            <input
-                              type="text"
-                              defaultValue={journalist.notes || ""}
-                              autoFocus
-                              className="w-full px-2 py-1 text-sm bg-background border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                              onBlur={(e) => updateJournalistNotes(journalist.id, e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  updateJournalistNotes(journalist.id, e.currentTarget.value);
-                                }
-                                if (e.key === "Escape") {
-                                  setJournalists(
-                                    journalists.map((j) =>
-                                      j.id === journalist.id ? { ...j, isEditingNotes: false } : j,
-                                    ),
-                                  );
-                                }
-                              }}
-                            />
-                          ) : (
-                            <button
-                              onClick={(e) => startEditingNotes(journalist.id, e)}
-                              className={cn(
-                                "w-full text-left px-2 py-1 rounded-lg transition-colors text-sm",
-                                journalist.notes
-                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
-                                  : "text-muted-foreground/50 hover:bg-secondary hover:text-foreground",
-                              )}
-                            >
-                              {journalist.notes || "Ajouter..."}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Checkbox */}
-                        <div className="flex items-center justify-center">
-                          <div
-                            className={cn(
-                              "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                              journalist.selected
-                                ? "bg-primary border-primary"
-                                : "border-muted-foreground/30 hover:border-primary/50",
-                            )}
+                          <button
+                            onClick={(e) => handleRestoreCompetitorArticle(article.id, e)}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                            title="Restaurer l'article"
                           >
-                            {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                            <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                          </button>
+                          <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                            {article.thumbnail ? (
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                            {article.article_date && (
+                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                            )}
                           </div>
                         </div>
-                      </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="flex gap-4 p-4 bg-secondary/30 rounded-2xl animate-pulse">
+                        <div className="w-28 h-24 bg-secondary rounded-xl flex-shrink-0" />
+                        <div className="flex-1 space-y-3">
+                          <div className="h-5 bg-secondary rounded w-3/4" />
+                          <div className="h-4 bg-secondary rounded w-1/2" />
+                        </div>
+                      </div>
                     ))}
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                    <UserCircle className="w-10 h-10 text-primary-foreground" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-foreground">Vos contacts journalistes</h4>
-                  <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Les journalistes seront automatiquement ajoutés à partir des articles de votre veille presse.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* COMMUNIQUÉS TAB */}
-          {activeSubTab === "communiques" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    Vos communiqués de presse
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Gérez vos communiqués avec PDF, Word et assets
-                  </p>
-                </div>
-                <Button onClick={() => setShowAddCommuniqueForm(true)} className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Communiqué
-                </Button>
-              </div>
-
-              {isLoadingCommuniques ? (
-                <div className="flex justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                </div>
-              ) : communiques.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                    <FileText className="w-10 h-10 text-primary-foreground" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-foreground">Aucun communiqué</h4>
-                  <p className="text-muted-foreground mt-2 text-center max-w-md">
-                    Ajoutez votre premier communiqué de presse
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {communiques.map((communique) => {
-                    const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
-                    return (
-                      <div key={communique.id} className="relative bg-card/80 backdrop-blur-sm p-6 rounded-3xl group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/50 hover:border-primary/20 hover:-translate-y-1">
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/50 to-transparent pointer-events-none" />
-                        
-                        <div className="relative">
-                          <div className="flex items-start justify-between mb-5">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent flex items-center justify-center shadow-lg shadow-primary/10">
-                              <FileText className="w-7 h-7 text-primary" />
+                ) : filteredArticles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredArticles.map((article) => (
+                      <div
+                        key={article.id}
+                        className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                        onClick={() => window.open(article.link, "_blank")}
+                      >
+                        {isOrgAdmin && (
+                          <button
+                            onClick={(e) => handleHideCompetitorArticle(article.id, e)}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                            title="Masquer l'article"
+                          >
+                            <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        )}
+                        <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
+                          {article.thumbnail ? (
+                            <img
+                              src={article.thumbnail}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Select
-                                value={communique.status}
-                                onValueChange={async (newStatus) => {
-                                  await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
-                                  fetchCommuniques();
-                                }}
-                              >
-                                <SelectTrigger className={cn("h-8 text-xs font-semibold border rounded-full px-3 py-1 w-auto min-w-[100px] shadow-sm", statusInfo.color)}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {STATUS_OPTIONS.map(opt => (
-                                    <SelectItem key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                                onClick={() => handleDeleteCommunique(communique)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2">
+                            <ExternalLink className="w-4 h-4 text-background" />
                           </div>
+                        </div>
 
-                          <h4 className="font-bold text-lg text-foreground mb-4 line-clamp-2">{communique.name}</h4>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                            {article.title}
+                          </h4>
 
-                          <div className="flex flex-wrap gap-2 mb-5">
-                            {communique.pdf_url && (
-                              <a
-                                href={communique.pdf_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:shadow-md hover:shadow-red-500/10 transition-all text-xs font-semibold"
-                              >
-                                <FileText className="w-3.5 h-3.5" />
-                                PDF
-                              </a>
+                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                            {article.competitor_name && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
+                                <Building2 className="w-3 h-3" />
+                                {article.competitor_name}
+                              </span>
                             )}
-                            {communique.word_url && (
-                              <a
-                                href={communique.word_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 hover:shadow-md hover:shadow-blue-500/10 transition-all text-xs font-semibold"
-                              >
-                                <File className="w-3.5 h-3.5" />
-                                Word
-                              </a>
-                            )}
-                            {communique.assets_link && (
-                              <a
-                                href={communique.assets_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 hover:shadow-md hover:shadow-purple-500/10 transition-all text-xs font-semibold"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                Assets
-                              </a>
+                            {article.source_name && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                                {article.source_icon && (
+                                  <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />
+                                )}
+                                {article.source_name}
+                              </span>
                             )}
                           </div>
-
-                          <p className="text-xs text-muted-foreground font-medium">
-                            Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
-                          </p>
+                          {article.article_date && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(article.article_date)}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
-
-      <CreateCommuniqueModal
-        isOpen={showAddCommuniqueForm}
-        onClose={resetCommuniqueForm}
-        onSuccess={fetchCommuniques}
-      />
-
-      {showEmailModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
-            onClick={() => {
-              setShowEmailModal(false);
-              setSelectedCommunique(null);
-            }}
-          />
-
-          <div className="relative w-full max-w-3xl bg-card rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-foreground">Nouveau communiqué</h3>
-                  <p className="text-sm text-muted-foreground">
-                    À : {selectedJournalists.map((j) => j.name).join(", ")}
-                  </p>
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <Users2 className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-foreground">Veille concurrentielle</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Aucun article trouvé. Ajoutez des concurrents et configurez votre veille.
+                    </p>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => {
-                  setShowEmailModal(false);
-                  setSelectedCommunique(null);
-                }}
-                className="w-10 h-10 rounded-full hover:bg-secondary flex items-center justify-center transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
+            )}
 
-            <div className="p-6 space-y-6 overflow-y-auto flex-1">
-              <div>
-                <label className="text-sm font-semibold text-foreground mb-3 block">
-                  Sélectionnez un communiqué de presse
-                </label>
-                
-                {communiques.length === 0 ? (
-                  <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
-                    <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Aucun communiqué disponible</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Créez-en un dans l'onglet Communiqués
+            {/* JOURNALISTES TAB */}
+            {activeSubTab === "journalistes" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <p className="text-lg font-medium text-foreground flex items-center gap-2">
+                      <UserCircle className="w-5 h-5 text-primary" />
+                      Vos contacts journalistes
+                    </p>
+
+                    {/* Media Filter Dropdown */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowMediaDropdown(!showMediaDropdown)}
+                        className="flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                      >
+                        <Filter className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">{selectedMediaLabel}</span>
+                        <ChevronDown
+                          className={cn(
+                            "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                            showMediaDropdown && "rotate-180",
+                          )}
+                        />
+                      </button>
+
+                      {showMediaDropdown && (
+                        <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="p-2 max-h-80 overflow-y-auto">
+                            <button
+                              onClick={() => {
+                                setSelectedMedia(null);
+                                setShowMediaDropdown(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                !selectedMedia ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                              )}
+                            >
+                              <Newspaper className="w-5 h-5" />
+                              Tous les médias
+                              {!selectedMedia && <Check className="w-5 h-5 ml-auto" />}
+                            </button>
+
+                            {uniqueMedias.length > 0 && <div className="border-t border-border my-2" />}
+
+                            {uniqueMedias.map((media) => (
+                              <button
+                                key={media}
+                                onClick={() => {
+                                  setSelectedMedia(media);
+                                  setShowMediaDropdown(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                  selectedMedia === media
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-foreground hover:bg-secondary",
+                                )}
+                              >
+                                <Newspaper className="w-5 h-5" />
+                                {media}
+                                {selectedMedia === media && <Check className="w-5 h-5 ml-auto" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Import CSV Button */}
+                    <label
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
+                        isImporting && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <Upload className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-foreground">
+                        {isImporting ? "Import..." : "Importer CSV"}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".csv,.txt"
+                        className="hidden"
+                        onChange={handleCsvImport}
+                        disabled={isImporting}
+                      />
+                    </label>
+
+                    <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
+                      {filteredJournalists.length} journaliste{filteredJournalists.length !== 1 ? "s" : ""}
+                    </span>
+                    {selectedJournalists.length > 0 && (
+                      <button
+                        onClick={() => setShowEmailModal(true)}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25"
+                      >
+                        <Send className="w-4 h-4" />
+                        Envoyer un communiqué ({selectedJournalists.length})
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isLoadingJournalists ? (
+                  <div className="bg-secondary/30 rounded-2xl overflow-hidden">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-4 px-5 py-4 border-b border-border/50 last:border-b-0 animate-pulse"
+                      >
+                        <div className="w-10 h-10 bg-secondary rounded-full flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-secondary rounded w-1/4" />
+                        </div>
+                        <div className="h-4 bg-secondary rounded w-1/6" />
+                        <div className="h-4 bg-secondary rounded w-1/5" />
+                        <div className="h-4 bg-secondary rounded w-1/6" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredJournalists.length > 0 ? (
+                  <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-3 bg-secondary/60 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      <div className="w-10" />
+                      <div>Contact</div>
+                      <div>Média</div>
+                      <div className="flex items-center gap-1">
+                        Spécialité
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Spécialité du média (Tech, Mode, Business...)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div>Poste</div>
+                      <div>LinkedIn</div>
+                      <div>Email</div>
+                      <div>Commentaire</div>
+                      <div className="text-center">Sélect.</div>
+                    </div>
+
+                    {/* Table Body */}
+                    <div className="divide-y divide-border/50">
+                      {filteredJournalists.map((journalist) => (
+                        <button
+                          key={journalist.id}
+                          onClick={() => toggleJournalist(journalist.id)}
+                          className={cn(
+                            "w-full grid grid-cols-[auto_1.5fr_1.2fr_1fr_0.8fr_0.5fr_1.2fr_1.5fr_60px] gap-3 px-5 py-4 text-left transition-all duration-200 hover:bg-secondary/50",
+                            journalist.selected && "bg-primary/5",
+                          )}
+                        >
+                          {/* Avatar */}
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
+                              journalist.selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
+                            )}
+                          >
+                            {journalist.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)}
+                          </div>
+
+                          {/* Contact Name */}
+                          <div className="flex items-center min-w-0">
+                            <span className="font-semibold text-foreground truncate">{journalist.name}</span>
+                          </div>
+
+                          {/* Media - Modern Tag */}
+                          <div className="flex items-center min-w-0">
+                            {journalist.media ? (
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full"
+                                title={journalist.media}
+                              >
+                                <Newspaper className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{journalist.media}</span>
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground/50">—</span>
+                            )}
+                          </div>
+
+                          {/* Media Specialty */}
+                          <div className="flex items-center min-w-0">
+                            {journalist.media_specialty ? (
+                              <span
+                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-medium"
+                                title={journalist.media_specialty}
+                              >
+                                <Tag className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">{journalist.media_specialty}</span>
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground/50">—</span>
+                            )}
+                          </div>
+
+                          {/* Job - Poste */}
+                          <div className="flex items-center min-w-0">
+                            {journalist.job ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-400 text-xs font-medium truncate">
+                                <Briefcase className="w-3 h-3 flex-shrink-0" />
+                                {journalist.job}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground/50">—</span>
+                            )}
+                          </div>
+
+                          {/* LinkedIn */}
+                          <div className="flex items-center min-w-0">
+                            {journalist.linkedin ? (
+                              <a
+                                href={journalist.linkedin}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A66C2]/15 text-[#0A66C2] hover:bg-[#0A66C2]/25 transition-colors"
+                              >
+                                <Linkedin className="w-4 h-4" />
+                              </a>
+                            ) : (
+                              <span className="text-sm text-muted-foreground/50">—</span>
+                            )}
+                          </div>
+
+                          {/* Email */}
+                          <div className="flex items-center min-w-0">
+                            {journalist.email ? (
+                              <span className="text-sm text-primary truncate">{journalist.email}</span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground/50">—</span>
+                            )}
+                          </div>
+
+                          {/* Notes - Commentaire éditable */}
+                          <div className="flex items-center min-w-0" onClick={(e) => e.stopPropagation()}>
+                            {journalist.isEditingNotes ? (
+                              <input
+                                type="text"
+                                defaultValue={journalist.notes || ""}
+                                autoFocus
+                                className="w-full px-2 py-1 text-sm bg-background border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                onBlur={(e) => updateJournalistNotes(journalist.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    updateJournalistNotes(journalist.id, e.currentTarget.value);
+                                  }
+                                  if (e.key === "Escape") {
+                                    setJournalists(
+                                      journalists.map((j) =>
+                                        j.id === journalist.id ? { ...j, isEditingNotes: false } : j,
+                                      ),
+                                    );
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <button
+                                onClick={(e) => startEditingNotes(journalist.id, e)}
+                                className={cn(
+                                  "w-full text-left px-2 py-1 rounded-lg transition-colors text-sm",
+                                  journalist.notes
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                                    : "text-muted-foreground/50 hover:bg-secondary hover:text-foreground",
+                                )}
+                              >
+                                {journalist.notes || "Ajouter..."}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Checkbox */}
+                          <div className="flex items-center justify-center">
+                            <div
+                              className={cn(
+                                "w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                                journalist.selected
+                                  ? "bg-primary border-primary"
+                                  : "border-muted-foreground/30 hover:border-primary/50",
+                              )}
+                            >
+                              {journalist.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <UserCircle className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-foreground">Vos contacts journalistes</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Les journalistes seront automatiquement ajoutés à partir des articles de votre veille presse.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* COMMUNIQUÉS TAB */}
+            {activeSubTab === "communiques" && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-primary" />
+                      Vos communiqués de presse
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Gérez vos communiqués avec PDF, Word et assets
+                    </p>
+                  </div>
+                  <Button onClick={() => setShowAddCommuniqueForm(true)} className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Communiqué
+                  </Button>
+                </div>
+
+                {isLoadingCommuniques ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : communiques.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                      <FileText className="w-10 h-10 text-primary-foreground" />
+                    </div>
+                    <h4 className="text-2xl font-bold text-foreground">Aucun communiqué</h4>
+                    <p className="text-muted-foreground mt-2 text-center max-w-md">
+                      Ajoutez votre premier communiqué de presse
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {communiques.map((communique) => (
-                      <button
-                        key={communique.id}
-                        onClick={() => setSelectedCommunique(communique)}
-                        className={cn(
-                          "group relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
-                          selectedCommunique?.id === communique.id
-                            ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
-                            : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                            selectedCommunique?.id === communique.id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-primary/10 text-primary group-hover:bg-primary/20"
-                          )}>
-                            <FileText className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-sm text-foreground truncate">
-                                {communique.name}
-                              </h4>
-                              {(() => {
-                                const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
-                                return (
-                                  <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border", statusInfo.color)}>
-                                    {statusInfo.label}
-                                  </span>
-                                );
-                              })()}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {communiques.map((communique) => {
+                      const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                      return (
+                        <div key={communique.id} className="relative bg-card/80 backdrop-blur-sm p-6 rounded-3xl group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/50 hover:border-primary/20 hover:-translate-y-1">
+                          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/50 to-transparent pointer-events-none" />
+
+                          <div className="relative">
+                            <div className="flex items-start justify-between mb-5">
+                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent flex items-center justify-center shadow-lg shadow-primary/10">
+                                <FileText className="w-7 h-7 text-primary" />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={communique.status}
+                                  onValueChange={async (newStatus) => {
+                                    await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
+                                    fetchCommuniques();
+                                  }}
+                                >
+                                  <SelectTrigger className={cn("h-8 text-xs font-semibold border rounded-full px-3 py-1 w-auto min-w-[100px] shadow-sm", statusInfo.color)}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {STATUS_OPTIONS.map(opt => (
+                                      <SelectItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                                  onClick={() => handleDeleteCommunique(communique)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 mt-2">
+
+                            <h4 className="font-bold text-lg text-foreground mb-4 line-clamp-2">{communique.name}</h4>
+
+                            <div className="flex flex-wrap gap-2 mb-5">
                               {communique.pdf_url && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-600 text-[10px] font-medium">
+                                <a
+                                  href={communique.pdf_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:shadow-md hover:shadow-red-500/10 transition-all text-xs font-semibold"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
                                   PDF
-                                </span>
+                                </a>
                               )}
                               {communique.word_url && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 text-[10px] font-medium">
+                                <a
+                                  href={communique.word_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 hover:shadow-md hover:shadow-blue-500/10 transition-all text-xs font-semibold"
+                                >
+                                  <File className="w-3.5 h-3.5" />
                                   Word
-                                </span>
+                                </a>
                               )}
                               {communique.assets_link && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 text-[10px] font-medium">
+                                <a
+                                  href={communique.assets_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 hover:shadow-md hover:shadow-purple-500/10 transition-all text-xs font-semibold"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
                                   Assets
-                                </span>
+                                </a>
                               )}
                             </div>
+
+                            <p className="text-xs text-muted-foreground font-medium">
+                              Ajouté le {new Date(communique.created_at).toLocaleDateString("fr-FR")}
+                            </p>
                           </div>
                         </div>
-                        {selectedCommunique?.id === communique.id && (
-                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
-
-              {selectedCommunique && (
-                <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <div className="h-px bg-border" />
-                  
-                  <div>
-                    <label className="text-sm font-semibold text-foreground mb-2 block">Objet</label>
-                    <input
-                      type="text"
-                      value={emailSubject}
-                      onChange={(e) => setEmailSubject(e.target.value)}
-                      placeholder="Objet de votre email..."
-                      className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-semibold text-foreground mb-2 block">Message</label>
-                    <textarea
-                      value={emailMessage}
-                      onChange={(e) => setEmailMessage(e.target.value)}
-                      placeholder="Rédigez le message qui accompagne votre communiqué..."
-                      rows={6}
-                      className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground resize-none"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-secondary/30 flex-shrink-0">
-              <button
-                onClick={() => {
-                  setShowEmailModal(false);
-                  setSelectedCommunique(null);
-                }}
-                className="px-5 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all font-medium"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleSendEmail}
-                disabled={isSending || !selectedCommunique}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Envoi...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Envoyer
-                  </>
-                )}
-              </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        </main>
 
-      {showAddSocialyModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
-                    <Zap className="w-7 h-7 text-primary" />
+        <CreateCommuniqueModal
+          isOpen={showAddCommuniqueForm}
+          onClose={resetCommuniqueForm}
+          onSuccess={fetchCommuniques}
+        />
+
+        {showEmailModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
+              onClick={() => {
+                setShowEmailModal(false);
+                setSelectedCommunique(null);
+              }}
+            />
+
+            <div className="relative w-full max-w-3xl bg-card rounded-3xl shadow-2xl border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-transparent flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Mail className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">Nouvel article {effectiveOrgName}</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse</p>
+                    <h3 className="text-xl font-bold text-foreground">Nouveau communiqué</h3>
+                    <p className="text-sm text-muted-foreground">
+                      À : {selectedJournalists.map((j) => j.name).join(", ")}
+                    </p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-8 space-y-6">
-              <div>
-                <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
-                <Input
-                  value={newArticleLink}
-                  onChange={(e) => setNewArticleLink(e.target.value)}
-                  placeholder="https://example.com/article..."
-                  className="mt-3 h-12 text-base"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Les métadonnées seront récupérées automatiquement
-                </p>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" size="lg" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
-                  Annuler
-                </Button>
-                <Button size="lg" onClick={handleAddOrganizationArticle} disabled={isAddingArticle} className="min-w-32">
-                  {isAddingArticle ? (
-                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-5 h-5 mr-2" />
-                      Ajouter
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddCompetitorModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
-                    <Users2 className="w-7 h-7 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">Nouvel article concurrent</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-            <div className="p-8 space-y-6">
-              <div>
-                <Label className="text-sm font-semibold text-foreground">Concurrent</Label>
-                <Select value={selectedCompetitorId} onValueChange={setSelectedCompetitorId}>
-                  <SelectTrigger className="mt-3 h-12 text-base">
-                    <SelectValue placeholder="Sélectionnez un concurrent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agencies.map((agency) => (
-                      <SelectItem key={agency.id} value={agency.id}>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4" />
-                          {agency.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {agencies.length === 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Aucun concurrent disponible. Ajoutez-en via le bouton "Concurrents".
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
-                <Input
-                  value={newArticleLink}
-                  onChange={(e) => setNewArticleLink(e.target.value)}
-                  placeholder="https://example.com/article..."
-                  className="mt-3 h-12 text-base"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Les métadonnées seront récupérées automatiquement
-                </p>
-              </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
-                  Annuler
-                </Button>
-                <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId} className="min-w-32">
-                  {isAddingArticle ? (
-                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-5 h-5 mr-2" />
-                      Ajouter
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCompetitorManager && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-3xl w-full max-w-2xl border border-border shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
-                    <Building2 className="w-7 h-7 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">Gérer les concurrents</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des concurrents</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="p-8 space-y-6">
-              <div className="flex gap-3">
-                <Input
-                  value={newCompetitorName}
-                  onChange={(e) => setNewCompetitorName(e.target.value)}
-                  placeholder="Nom du concurrent..."
-                  className="flex-1 h-12 text-base"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddCompetitor()}
-                />
-                <Button size="lg" onClick={handleAddCompetitor} disabled={isAddingCompetitor} className="px-6">
-                  {isAddingCompetitor ? (
-                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Plus className="w-5 h-5 mr-2" />
-                      Ajouter
-                    </>
-                  )}
-                </Button>
+                <button
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setSelectedCommunique(null);
+                  }}
+                  className="w-10 h-10 rounded-full hover:bg-secondary flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
               </div>
 
-              {agencies.length === 0 ? (
-                <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
-                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
-                    <Building2 className="w-8 h-8 text-muted-foreground/50" />
-                  </div>
-                  <p className="text-base font-medium text-muted-foreground">Aucun concurrent</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Ajoutez votre premier concurrent ci-dessus
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {agencies.map((agency) => (
-                    <div 
-                      key={agency.id}
-                      className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                          <Building2 className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground text-base">{agency.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {articles.filter(a => a.competitor_id === agency.id).length} article(s)
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                        onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </Button>
+              <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-3 block">
+                    Sélectionnez un communiqué de presse
+                  </label>
+
+                  {communiques.length === 0 ? (
+                    <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
+                      <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">Aucun communiqué disponible</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Créez-en un dans l'onglet Communiqués
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {communiques.map((communique) => (
+                        <button
+                          key={communique.id}
+                          onClick={() => setSelectedCommunique(communique)}
+                          className={cn(
+                            "group relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
+                            selectedCommunique?.id === communique.id
+                              ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                              : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={cn(
+                              "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                              selectedCommunique?.id === communique.id
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-primary/10 text-primary group-hover:bg-primary/20"
+                            )}>
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-sm text-foreground truncate">
+                                  {communique.name}
+                                </h4>
+                                {(() => {
+                                  const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                                  return (
+                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border", statusInfo.color)}>
+                                      {statusInfo.label}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                {communique.pdf_url && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-600 text-[10px] font-medium">
+                                    PDF
+                                  </span>
+                                )}
+                                {communique.word_url && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 text-[10px] font-medium">
+                                    Word
+                                  </span>
+                                )}
+                                {communique.assets_link && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 text-[10px] font-medium">
+                                    Assets
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {selectedCommunique?.id === communique.id && (
+                            <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {selectedCommunique && (
+                  <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="h-px bg-border" />
+
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Objet</label>
+                      <input
+                        type="text"
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        placeholder="Objet de votre email..."
+                        className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Message</label>
+                      <textarea
+                        value={emailMessage}
+                        onChange={(e) => setEmailMessage(e.target.value)}
+                        placeholder="Rédigez le message qui accompagne votre communiqué..."
+                        rows={6}
+                        className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-foreground placeholder:text-muted-foreground resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-border bg-secondary/30 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setSelectedCommunique(null);
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all font-medium"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleSendEmail}
+                  disabled={isSending || !selectedCommunique}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-semibold shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSending ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      Envoi...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Envoyer
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {showAddSocialyModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Zap className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Nouvel article {effectiveOrgName}</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
+                  <Input
+                    value={newArticleLink}
+                    onChange={(e) => setNewArticleLink(e.target.value)}
+                    placeholder="https://example.com/article..."
+                    className="mt-3 h-12 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Les métadonnées seront récupérées automatiquement
+                  </p>
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                    Annuler
+                  </Button>
+                  <Button size="lg" onClick={handleAddOrganizationArticle} disabled={isAddingArticle} className="min-w-32">
+                    {isAddingArticle ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAddCompetitorModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Users2 className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Nouvel article concurrent</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Concurrent</Label>
+                  <Select value={selectedCompetitorId} onValueChange={setSelectedCompetitorId}>
+                    <SelectTrigger className="mt-3 h-12 text-base">
+                      <SelectValue placeholder="Sélectionnez un concurrent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {agencies.map((agency) => (
+                        <SelectItem key={agency.id} value={agency.id}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4" />
+                            {agency.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {agencies.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Aucun concurrent disponible. Ajoutez-en via le bouton "Concurrents".
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
+                  <Input
+                    value={newArticleLink}
+                    onChange={(e) => setNewArticleLink(e.target.value)}
+                    placeholder="https://example.com/article..."
+                    className="mt-3 h-12 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Les métadonnées seront récupérées automatiquement
+                  </p>
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+                    Annuler
+                  </Button>
+                  <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId} className="min-w-32">
+                    {isAddingArticle ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showCompetitorManager && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-2xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Building2 className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Gérer les concurrents</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des concurrents</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="flex gap-3">
+                  <Input
+                    value={newCompetitorName}
+                    onChange={(e) => setNewCompetitorName(e.target.value)}
+                    placeholder="Nom du concurrent..."
+                    className="flex-1 h-12 text-base"
+                    onKeyDown={(e) => e.key === "Enter" && handleAddCompetitor()}
+                  />
+                  <Button size="lg" onClick={handleAddCompetitor} disabled={isAddingCompetitor} className="px-6">
+                    {isAddingCompetitor ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {agencies.length === 0 ? (
+                  <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
+                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                      <Building2 className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-base font-medium text-muted-foreground">Aucun concurrent</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Ajoutez votre premier concurrent ci-dessus
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {agencies.map((agency) => (
+                      <div
+                        key={agency.id}
+                        className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground text-base">{agency.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {articles.filter(a => a.competitor_id === agency.id).length} article(s)
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                          onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

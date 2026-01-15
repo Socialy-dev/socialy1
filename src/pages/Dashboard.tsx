@@ -31,37 +31,44 @@ const Dashboard = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar - Fixed left */}
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <main
+      {/* Main Content Area */}
+      <div
         className={cn(
-          "min-h-screen p-8 content-transition",
-          sidebarCollapsed ? "ml-20" : "ml-64"
+          "flex-1 flex flex-col min-h-screen content-transition",
+          sidebarCollapsed ? "ml-20" : "ml-72"
         )}
       >
-        <div className="max-w-[1600px] mx-auto">
-          <Header />
+        {/* Header - Fixed top, adapts to sidebar */}
+        <Header sidebarCollapsed={sidebarCollapsed} />
 
-          <OverviewCards />
+        {/* Scrollable Content */}
+        <main className="flex-1 p-6 pt-4 overflow-y-auto">
+          <div className="max-w-[1600px] mx-auto space-y-6">
+            {/* Overview Stats */}
+            <OverviewCards />
 
-          {/* Middle Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-2">
-              <ProjectSummary />
+            {/* Middle Section - Bento Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ProjectSummary />
+              </div>
+              <div className="lg:col-span-1">
+                <OverallProgress />
+              </div>
             </div>
-            <div className="lg:col-span-1">
-              <OverallProgress />
+
+            {/* Bottom Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TodayTask />
+              <ProjectsWorkload />
             </div>
           </div>
-
-          {/* Bottom Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <TodayTask />
-            <ProjectsWorkload />
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

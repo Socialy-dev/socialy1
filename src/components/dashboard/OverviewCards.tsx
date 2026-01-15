@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, Briefcase, Clock, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Briefcase, Clock, Users, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OverviewCard {
@@ -11,104 +11,105 @@ interface OverviewCard {
   trend: {
     value: string;
     positive: boolean;
-    label: string;
   };
 }
 
 const overviewData: OverviewCard[] = [
   {
     icon: DollarSign,
-    iconBg: "bg-gradient-to-br from-violet-500 to-purple-600 shadow-purple-500/20",
+    iconBg: "bg-gradient-to-br from-violet-500 to-purple-600",
     iconColor: "text-white",
     label: "Total revenue",
-    value: "$53,00989",
-    trend: { value: "12%", positive: true, label: "increase from last month" },
+    value: "$53,009",
+    trend: { value: "+12%", positive: true },
   },
   {
     icon: Briefcase,
-    iconBg: "bg-gradient-to-br from-emerald-400 to-teal-500 shadow-emerald-500/20",
+    iconBg: "bg-gradient-to-br from-emerald-400 to-teal-500",
     iconColor: "text-white",
     label: "Projects",
     value: "95",
     subValue: "/100",
-    trend: { value: "10%", positive: false, label: "decrease from last month" },
+    trend: { value: "-10%", positive: false },
   },
   {
     icon: Clock,
-    iconBg: "bg-gradient-to-br from-blue-400 to-cyan-500 shadow-blue-500/20",
+    iconBg: "bg-gradient-to-br from-blue-400 to-cyan-500",
     iconColor: "text-white",
     label: "Time spent",
-    value: "1022",
-    subValue: "/1300 Hrs",
-    trend: { value: "8%", positive: true, label: "increase from last month" },
+    value: "1,022",
+    subValue: "hrs",
+    trend: { value: "+8%", positive: true },
   },
   {
     icon: Users,
-    iconBg: "bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/20",
+    iconBg: "bg-gradient-to-br from-amber-400 to-orange-500",
     iconColor: "text-white",
     label: "Resources",
     value: "101",
     subValue: "/120",
-    trend: { value: "2%", positive: true, label: "increase from last month" },
+    trend: { value: "+2%", positive: true },
   },
 ];
 
 export const OverviewCards = () => {
   return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">Overview</h2>
-        <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-foreground bg-card border border-border rounded-xl hover:bg-secondary transition-all duration-200 shadow-sm">
-          <span>Last 30 days</span>
-          <TrendingDown className="w-4 h-4 text-muted-foreground" />
+    <section className="mb-2">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg font-bold text-foreground">Aperçu</h2>
+        <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground bg-secondary/50 border border-border/50 rounded-xl hover:bg-secondary transition-all duration-200">
+          30 derniers jours
+          <TrendingDown className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {overviewData.map((card, index) => (
           <div
             key={index}
-            className="stat-card group"
-            style={{ animationDelay: `${index * 50}ms` }}
+            className="group relative p-5 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 cursor-pointer"
           >
-            {/* Icon */}
-            <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center mb-5 shadow-lg relative overflow-hidden",
-              card.iconBg
-            )}>
-              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <card.icon className={cn("w-7 h-7 relative z-10", card.iconColor)} />
-            </div>
-
-            {/* Label */}
-            <p className="text-sm font-medium text-muted-foreground mb-2 group-hover:text-foreground transition-colors">{card.label}</p>
-
-            {/* Value */}
-            <div className="flex items-baseline gap-1 mb-4">
-              <span className="text-3xl font-bold text-foreground tracking-tight">{card.value}</span>
-              {card.subValue && (
-                <span className="text-base font-medium text-muted-foreground">{card.subValue}</span>
-              )}
-            </div>
-
-            {/* Trend */}
-            <div className="flex items-center gap-2 pt-4 border-t border-border/50">
+            {/* Top Row */}
+            <div className="flex items-start justify-between mb-4">
               <div className={cn(
-                "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold backdrop-blur-sm",
+                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
+                card.iconBg
+              )}>
+                <card.icon className={cn("w-6 h-6", card.iconColor)} />
+              </div>
+
+              {/* Trend Badge */}
+              <div className={cn(
+                "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold",
                 card.trend.positive
-                  ? "bg-success/10 text-success border border-success/20"
-                  : "bg-danger/10 text-danger border border-danger/20"
+                  ? "bg-success/10 text-success"
+                  : "bg-danger/10 text-danger"
               )}>
                 {card.trend.positive ? (
-                  <TrendingUp className="w-3.5 h-3.5" />
+                  <TrendingUp className="w-3 h-3" />
                 ) : (
-                  <TrendingDown className="w-3.5 h-3.5" />
+                  <TrendingDown className="w-3 h-3" />
                 )}
                 {card.trend.value}
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">
-                {card.trend.label}
-              </span>
+            </div>
+
+            {/* Value */}
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-2xl font-bold text-foreground tracking-tight">{card.value}</span>
+              {card.subValue && (
+                <span className="text-sm font-medium text-muted-foreground">{card.subValue}</span>
+              )}
+            </div>
+
+            {/* Label */}
+            <p className="text-sm text-muted-foreground font-medium">{card.label}</p>
+
+            {/* Hover Arrow */}
+            <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <ArrowUpRight className="w-4 h-4 text-primary" />
             </div>
           </div>
         ))}
