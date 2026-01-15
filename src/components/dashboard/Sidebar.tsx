@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   LayoutGrid,
   HelpCircle,
@@ -11,25 +12,73 @@ import {
   Users,
   Leaf,
   Package,
+  ChevronDown,
+  FileText,
+  UserCheck,
+  MessageSquare,
+  Trophy,
+  Globe,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
+
+interface SubMenuItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+}
 
 interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
   adminOnly?: boolean;
+  subItems?: SubMenuItem[];
 }
 
 const menuItems: MenuItem[] = [
   { icon: LayoutGrid, label: "Accueil", path: "/dashboard" },
-  { icon: Newspaper, label: "Presse", path: "/relations-presse" },
-  { icon: TrendingUp, label: "Growth Marketing", path: "/growth-marketing" },
+  { 
+    icon: Newspaper, 
+    label: "Presse", 
+    path: "/relations-presse",
+    subItems: [
+      { icon: FileText, label: "Retombées", path: "/relations-presse" },
+      { icon: UserCheck, label: "Journalistes", path: "/relations-presse?tab=journalistes" },
+      { icon: FileBarChart, label: "Communiqués", path: "/relations-presse?tab=communiques" },
+    ]
+  },
+  { 
+    icon: TrendingUp, 
+    label: "Growth Marketing", 
+    path: "/growth-marketing",
+    subItems: [
+      { icon: MessageSquare, label: "Génération", path: "/growth-marketing" },
+      { icon: Share2, label: "Engagement", path: "/growth-marketing?tab=engagement" },
+      { icon: Trophy, label: "Classement", path: "/growth-marketing?tab=classement" },
+    ]
+  },
   { icon: Handshake, label: "Biz Dev", path: "/biz-dev" },
   { icon: FileBarChart, label: "Reporting Client", path: "/reporting-client" },
-  { icon: Share2, label: "Social Media", path: "/social-media" },
-  { icon: Search, label: "SEO / GEO", path: "/seo-geo" },
+  { 
+    icon: Share2, 
+    label: "Social Media", 
+    path: "/social-media",
+    subItems: [
+      { icon: MessageSquare, label: "Publications", path: "/social-media" },
+      { icon: BarChart3, label: "Analytics", path: "/social-media?tab=analytics" },
+    ]
+  },
+  { 
+    icon: Search, 
+    label: "SEO / GEO", 
+    path: "/seo-geo",
+    subItems: [
+      { icon: Globe, label: "Positions", path: "/seo-geo" },
+      { icon: Target, label: "Keywords", path: "/seo-geo?tab=keywords" },
+    ]
+  },
   { icon: BarChart3, label: "Reporting Interne", path: "/reporting-interne" },
   { icon: Users, label: "RH", path: "/rh" },
   { icon: Leaf, label: "RSE", path: "/rse" },
@@ -44,7 +93,8 @@ interface SidebarProps {
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const currentPath = location.pathname;
+  const currentPath = location.pathname + location.search;
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const handleMouseEnter = () => {
     if (collapsed) {
@@ -55,7 +105,28 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const handleMouseLeave = () => {
     if (!collapsed) {
       onToggle();
+      setExpandedItems([]);
     }
+  };
+
+  const toggleExpand = (path: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedItems(prev => 
+      prev.includes(path) 
+        ? prev.filter(p => p !== path)
+        : [...prev, path]
+    );
+  };
+
+  const isItemActive = (item: MenuItem) => {
+    if (item.subItems) {
+      return item.subItems.some(sub => currentPath.startsWith(sub.path.split('?')[0]));
+    }
+    return currentPath === item.path || currentPath.startsWith(item.path + '?');
+  };
+
+  const isSubItemActive = (subPath: string) => {
+    return currentPath === subPath || currentPath.startsWith(subPath);
   };
 
   return (
@@ -81,7 +152,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         <span className={cn(
           "text-white font-bold text-xl tracking-tight whitespace-nowrap",
           "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+          collapsed ? "hidden" : "opacity-100"
         )}>
           Socialy
         </span>
@@ -90,37 +161,80 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
         <div className="space-y-1 px-3">
           {menuItems.map((item, index) => {
-            const isActive = currentPath === item.path;
+            const isActive = isItemActive(item);
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const isExpanded = expandedItems.includes(item.path);
+
             return (
-              <button
-                key={index}
-                onClick={() => navigate(item.path)}
-                className={cn(
-                  "w-full flex items-center py-3 rounded-2xl group",
-                  "transition-all duration-200 ease-out",
-                  collapsed ? "justify-center px-0" : "px-4 gap-3",
-                  isActive
-                    ? "bg-white/10 text-white shadow-lg shadow-black/10"
-                    : "text-white/50 hover:bg-white/5 hover:text-white/80"
+              <div key={index}>
+                <button
+                  onClick={(e) => {
+                    if (hasSubItems && !collapsed) {
+                      toggleExpand(item.path, e);
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
+                  className={cn(
+                    "w-full flex items-center py-3 rounded-2xl group",
+                    "transition-all duration-200 ease-out",
+                    collapsed ? "justify-center px-0" : "px-4 gap-3",
+                    isActive
+                      ? "bg-white/10 text-white shadow-lg shadow-black/10"
+                      : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center justify-center flex-shrink-0 transition-all duration-200",
+                    isActive && "text-primary"
+                  )}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <span className={cn(
+                    "text-sm font-medium flex-1 text-left whitespace-nowrap",
+                    "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                    collapsed ? "hidden" : "opacity-100"
+                  )}>
+                    {item.label}
+                  </span>
+                  {!collapsed && hasSubItems && (
+                    <ChevronDown className={cn(
+                      "w-4 h-4 transition-transform duration-200",
+                      isExpanded && "rotate-180"
+                    )} />
+                  )}
+                  {!collapsed && !hasSubItems && isActive && (
+                    <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)] transition-all duration-300" />
+                  )}
+                </button>
+
+                {!collapsed && hasSubItems && isExpanded && (
+                  <div className="mt-1 ml-4 pl-4 border-l border-white/10 space-y-1">
+                    {item.subItems?.map((subItem, subIndex) => {
+                      const isSubActive = isSubItemActive(subItem.path);
+                      return (
+                        <button
+                          key={subIndex}
+                          onClick={() => navigate(subItem.path)}
+                          className={cn(
+                            "w-full flex items-center gap-3 py-2.5 px-3 rounded-xl",
+                            "transition-all duration-200 ease-out text-sm",
+                            isSubActive
+                              ? "bg-white/10 text-white"
+                              : "text-white/40 hover:bg-white/5 hover:text-white/70"
+                          )}
+                        >
+                          <subItem.icon className="w-4 h-4" />
+                          <span className="flex-1 text-left">{subItem.label}</span>
+                          {isSubActive && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              >
-                <div className={cn(
-                  "flex items-center justify-center flex-shrink-0 transition-all duration-200",
-                  isActive && "text-primary"
-                )}>
-                  <item.icon className="w-5 h-5" />
-                </div>
-                <span className={cn(
-                  "text-sm font-medium flex-1 text-left whitespace-nowrap",
-                  "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                  collapsed ? "hidden" : "opacity-100"
-                )}>
-                  {item.label}
-                </span>
-                {!collapsed && isActive && (
-                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(139,92,246,0.8)] transition-all duration-300" />
-                )}
-              </button>
+              </div>
             );
           })}
         </div>
