@@ -1,0 +1,1 @@
+UPDATE competitor_articles SET hidden = false WHERE competitor_name = 'Agence Babel';
