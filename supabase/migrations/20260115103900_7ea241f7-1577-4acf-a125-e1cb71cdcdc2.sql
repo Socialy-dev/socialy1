@@ -1,0 +1,1 @@
+ALTER TABLE competitor_articles ALTER COLUMN hidden SET DEFAULT false;
