@@ -321,7 +321,7 @@ const Auth = () => {
                         placeholder="Jean"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                        className="pl-12 h-12 rounded-xl bg-white dark:bg-white border-border/50 dark:border-white/30 focus:border-primary focus:ring-primary/20 transition-all text-black dark:text-black placeholder:text-gray-500"
                         required={!isLogin}
                       />
                     </div>
@@ -338,7 +338,7 @@ const Auth = () => {
                         placeholder="Dupont"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                        className="pl-12 h-12 rounded-xl bg-white dark:bg-white border-border/50 dark:border-white/30 focus:border-primary focus:ring-primary/20 transition-all text-black dark:text-black placeholder:text-gray-500"
                         required={!isLogin}
                       />
                     </div>
@@ -358,7 +358,7 @@ const Auth = () => {
                     placeholder="vous@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                    className="pl-12 h-12 rounded-xl bg-white dark:bg-white border-border/50 dark:border-white/30 focus:border-primary focus:ring-primary/20 transition-all text-black dark:text-black placeholder:text-gray-500"
                     required
                     disabled={invitation !== null}
                   />
@@ -377,7 +377,7 @@ const Auth = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-12 pr-12 h-12 rounded-xl bg-white/50 border-border/50 focus:border-primary focus:ring-primary/20 transition-all"
+                    className="pl-12 pr-12 h-12 rounded-xl bg-white dark:bg-white border-border/50 dark:border-white/30 focus:border-primary focus:ring-primary/20 transition-all text-black dark:text-black placeholder:text-gray-500"
                     required
                     minLength={6}
                   />
