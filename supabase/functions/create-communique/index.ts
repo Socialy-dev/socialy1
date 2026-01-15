@@ -105,10 +105,11 @@ Deno.serve(async (req) => {
     if (n8nWebhookUrl) {
       try {
         const webhookPayload = {
-          communiqueId: communique.id,
-          userId: user.id,
+          communique_id: communique.id,
+          user_id: user.id,
+          organization_id: communique.organization_id,
           ...payload,
-          createdAt: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         };
 
         await fetch(n8nWebhookUrl, {
