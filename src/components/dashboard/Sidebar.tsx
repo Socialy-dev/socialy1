@@ -66,7 +66,7 @@ const menuItems: MenuItem[] = [
     label: "Social Media",
     path: "/social-media",
     subItems: [
-      { icon: Users, label: "Organique", path: "/social-media" },
+      { icon: Users, label: "Social Media Organique", path: "/social-media" },
       { icon: Target, label: "Paid", path: "/social-media?tab=paid" },
     ]
   },
