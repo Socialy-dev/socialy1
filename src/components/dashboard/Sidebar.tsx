@@ -96,16 +96,16 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 key={index}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 py-3 rounded-2xl group",
+                  "w-full flex items-center gap-3 py-3 rounded-2xl group relative",
                   "transition-all duration-200 ease-out",
-                  collapsed ? "px-3 justify-center" : "px-4",
+                  collapsed ? "justify-center" : "px-4",
                   isActive
                     ? "bg-white/10 text-white shadow-lg shadow-black/10"
                     : "text-white/50 hover:bg-white/5 hover:text-white/80"
                 )}
               >
                 <div className={cn(
-                  "flex items-center justify-center flex-shrink-0 transition-all duration-200",
+                  "w-12 h-5 flex items-center justify-center flex-shrink-0 transition-all duration-200",
                   isActive && "text-primary"
                 )}>
                   <item.icon className="w-5 h-5" />
@@ -131,14 +131,19 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         collapsed && "flex flex-col items-center"
       )}>
         <button className={cn(
-          "rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center justify-center",
+          "rounded-xl bg-gradient-to-br from-primary to-violet-600 flex items-center",
           "hover:opacity-90 transition-all duration-200",
           "shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30",
-          collapsed ? "w-12 h-12" : "w-full py-3 gap-2"
+          collapsed ? "w-12 h-12 justify-center" : "w-full py-3 px-4 gap-3"
         )}>
-          <HelpCircle className="w-5 h-5 text-white flex-shrink-0" />
+          <div className={cn(
+            "flex items-center justify-center flex-shrink-0",
+            collapsed ? "w-5" : "w-12"
+          )}>
+            <HelpCircle className="w-5 h-5 text-white" />
+          </div>
           <span className={cn(
-            "text-sm font-medium text-white whitespace-nowrap",
+            "text-sm font-medium text-white whitespace-nowrap flex-1 text-left",
             "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
           )}>
