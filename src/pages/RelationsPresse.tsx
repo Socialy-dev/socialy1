@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
@@ -126,10 +126,26 @@ const STATUS_ORDER = ["en_cours", "envoye", "archive"];
 const RelationsPresse = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isOrgAdmin, isSuperAdmin, effectiveOrgId, viewAsOrgId, currentOrganization, effectiveOrgName } = useAuth();
   const isViewingAsOtherOrg = isSuperAdmin && viewAsOrgId && viewAsOrgId !== currentOrganization?.id;
 
-  const [activeSubTab, setActiveSubTab] = useState("socialy");
+  const tabFromUrl = searchParams.get("tab");
+  const [activeSubTab, setActiveSubTab] = useState(() => {
+    if (tabFromUrl === "journalistes") return "journalistes";
+    if (tabFromUrl === "communiques") return "communiques";
+    return "socialy";
+  });
+
+  useEffect(() => {
+    if (tabFromUrl === "journalistes") {
+      setActiveSubTab("journalistes");
+    } else if (tabFromUrl === "communiques") {
+      setActiveSubTab("communiques");
+    } else if (!tabFromUrl) {
+      setActiveSubTab("socialy");
+    }
+  }, [tabFromUrl]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [organizationArticles, setOrganizationArticles] = useState<OrganizationArticle[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
