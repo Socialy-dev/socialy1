@@ -97,12 +97,12 @@ interface Journalist {
 }
 
 const getSubTabs = (orgName: string) => [
-  { id: "socialy", label: orgName, icon: Zap },
-  { id: "client", label: "Client", icon: Briefcase },
-  { id: "concurrent", label: "Concurrents", icon: Users2 },
-  { id: "veille-marche", label: "Veille Marché", icon: Eye },
-  { id: "journalistes", label: "Journalistes", icon: UserCircle },
-  { id: "communiques", label: "Communiqués", icon: FileText },
+  { id: "socialy", label: orgName, group: "articles" },
+  { id: "concurrent", label: "Concurrents", group: "articles" },
+  { id: "client", label: "Client", group: "articles" },
+  { id: "veille-marche", label: "Veille Marché", group: "articles" },
+  { id: "journalistes", label: "Journalistes", group: "contacts" },
+  { id: "communiques", label: "Communiqués", group: "contacts" },
 ];
 
 interface Communique {
@@ -955,23 +955,28 @@ const RelationsPresse = () => {
             {/* Sub-tabs - Full width below header */}
             <div className="flex items-center justify-between mb-8 pb-6 border-b border-border/50">
               <div className="flex items-center gap-1 p-1.5 bg-secondary/50 rounded-xl">
-                {getSubTabs(effectiveOrgName).map((tab) => {
-                  const Icon = tab.icon;
+                {getSubTabs(effectiveOrgName).map((tab, index, arr) => {
                   const isActive = activeSubTab === tab.id;
+                  const prevTab = arr[index - 1];
+                  const showSeparator = prevTab && prevTab.group !== tab.group;
+                  
                   return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveSubTab(tab.id)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
-                        isActive
-                          ? "bg-foreground text-background shadow-md"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
+                    <div key={tab.id} className="flex items-center">
+                      {showSeparator && (
+                        <div className="w-px h-6 bg-border mx-2" />
                       )}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {tab.label}
-                    </button>
+                      <button
+                        onClick={() => setActiveSubTab(tab.id)}
+                        className={cn(
+                          "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                          isActive
+                            ? "bg-foreground text-background shadow-md"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
