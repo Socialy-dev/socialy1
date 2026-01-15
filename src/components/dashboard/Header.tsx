@@ -62,14 +62,12 @@ export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
-        {/* Left Section - Personalized Greeting */}
+        {/* Left Section - Title */}
         {showTitle ? (
           <div className="flex items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Hello {userName.split(' ')[0]} ! 👋
-              </h1>
-              <p className="text-sm text-muted-foreground">Voici un aperçu de votre journée</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">{title}</h1>
+              <p className="text-sm text-muted-foreground">Bienvenue ! Voici un aperçu de votre journée.</p>
             </div>
           </div>
         ) : (
