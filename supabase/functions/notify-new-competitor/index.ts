@@ -78,7 +78,7 @@ serve(async (req) => {
         competitor_id,
         competitor_name,
         organization_id,
-        created_by: user.id,
+        user_id: user.id,
         created_at: new Date().toISOString(),
       }),
     });
