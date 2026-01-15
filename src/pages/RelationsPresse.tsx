@@ -206,7 +206,29 @@ const RelationsPresse = () => {
     if (effectiveOrgId) {
       let query = supabase.from("competitor_agencies").select("id, name").eq("organization_id", effectiveOrgId);
       const { data } = await query.order("name");
-      setAgencies(data || []);
+      
+      let agenciesList = data || [];
+      
+      const hasAutre = agenciesList.some(a => a.name === "Autre");
+      if (!hasAutre) {
+        const { data: newAutre, error } = await supabase
+          .from("competitor_agencies")
+          .insert({ organization_id: effectiveOrgId, name: "Autre" })
+          .select("id, name")
+          .single();
+        
+        if (!error && newAutre) {
+          agenciesList = [newAutre, ...agenciesList];
+        }
+      } else {
+        agenciesList = agenciesList.sort((a, b) => {
+          if (a.name === "Autre") return -1;
+          if (b.name === "Autre") return 1;
+          return a.name.localeCompare(b.name);
+        });
+      }
+      
+      setAgencies(agenciesList);
     }
   };
 
@@ -2398,14 +2420,16 @@ const RelationsPresse = () => {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                          onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
+                        {agency.name !== "Autre" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                            onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
