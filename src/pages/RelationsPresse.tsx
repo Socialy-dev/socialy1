@@ -630,10 +630,10 @@ const RelationsPresse = () => {
     setIsAddingCompetitor(true);
 
     try {
-      const { error } = await supabase.from("competitor_agencies").insert({
+      const { data: newCompetitor, error } = await supabase.from("competitor_agencies").insert({
         organization_id: effectiveOrgId,
         name: newCompetitorName.trim(),
-      });
+      }).select("id, name").single();
 
       if (error) {
         if (error.code === "23505") {
@@ -642,6 +642,18 @@ const RelationsPresse = () => {
           throw error;
         }
       } else {
+        try {
+          await supabase.functions.invoke("notify-new-competitor", {
+            body: {
+              competitor_id: newCompetitor.id,
+              competitor_name: newCompetitor.name,
+              organization_id: effectiveOrgId,
+            },
+          });
+        } catch (webhookError) {
+          console.error("Webhook notification failed:", webhookError);
+        }
+        
         toast({ title: "Concurrent ajouté", description: `${newCompetitorName.trim()} a été ajouté à votre liste` });
         setNewCompetitorName("");
         fetchAgencies();
@@ -2417,7 +2429,7 @@ const RelationsPresse = () => {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {agencies.map((agency) => (
+                    {agencies.filter(a => a.name !== "Autre").map((agency) => (
                       <div
                         key={agency.id}
                         className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
@@ -2433,16 +2445,14 @@ const RelationsPresse = () => {
                             </p>
                           </div>
                         </div>
-                        {agency.name !== "Autre" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                            onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                          onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
                       </div>
                     ))}
                   </div>

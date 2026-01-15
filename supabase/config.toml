@@ -12,3 +12,7 @@ verify_jwt = false
 # enrich-article : garde verify_jwt = false car peut être appelé par des webhooks
 [functions.enrich-article]
 verify_jwt = false
+
+# notify-new-competitor : garde verify_jwt = false car on vérifie manuellement le JWT
+[functions.notify-new-competitor]
+verify_jwt = false
