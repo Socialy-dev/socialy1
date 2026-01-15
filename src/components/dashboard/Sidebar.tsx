@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   LayoutGrid,
   HelpCircle,
@@ -79,17 +79,47 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const navigate = useNavigate();
   const currentPath = location.pathname + location.search;
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const openTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Nettoyer les timeouts au démontage
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      if (openTimeoutRef.current) clearTimeout(openTimeoutRef.current);
+    };
+  }, []);
 
   const handleMouseEnter = () => {
+    // Annuler tout timeout de fermeture en cours
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+
+    // Ouvrir immédiatement si collapsed
     if (collapsed) {
-      onToggle();
+      if (openTimeoutRef.current) clearTimeout(openTimeoutRef.current);
+      openTimeoutRef.current = setTimeout(() => {
+        onToggle();
+      }, 50); // Petit délai pour éviter les ouvertures accidentelles
     }
   };
 
   const handleMouseLeave = () => {
+    // Annuler tout timeout d'ouverture en cours
+    if (openTimeoutRef.current) {
+      clearTimeout(openTimeoutRef.current);
+      openTimeoutRef.current = null;
+    }
+
+    // Fermer avec délai si ouvert
     if (!collapsed) {
-      onToggle();
-      setExpandedItems([]);
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = setTimeout(() => {
+        onToggle();
+        setExpandedItems([]);
+      }, 250); // Délai de 250ms avant fermeture
     }
   };
 
@@ -128,11 +158,12 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       onMouseLeave={handleMouseLeave}
       className={cn(
         "fixed left-0 top-0 h-screen flex flex-col z-50 overflow-hidden",
-        "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        "transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
         collapsed ? "w-20" : "w-72"
       )}
       style={{
         background: 'linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 47% 5%) 100%)',
+        willChange: 'width',
       }}
     >
       <div className={cn(
@@ -144,8 +175,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </div>
         <span className={cn(
           "text-white font-bold text-xl tracking-tight whitespace-nowrap",
-          "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          collapsed ? "hidden" : "opacity-100"
+          "transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+          collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
         )}>
           Socialy
         </span>
@@ -185,8 +216,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                   </div>
                   <span className={cn(
                     "text-sm font-medium flex-1 text-left whitespace-nowrap",
-                    "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                    collapsed ? "hidden" : "opacity-100"
+                    "transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+                    collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
                   )}>
                     {item.label}
                   </span>
@@ -243,8 +274,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           <HelpCircle className="w-5 h-5 text-white flex-shrink-0" />
           <span className={cn(
             "text-sm font-medium text-white whitespace-nowrap flex-1 text-left",
-            "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            collapsed ? "hidden" : "opacity-100"
+            "transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+            collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
           )}>
             Aide & Support
           </span>
