@@ -954,7 +954,7 @@ const RelationsPresse = () => {
               </div>
 
               {/* Sub-tabs */}
-              <div className="flex items-center gap-2 p-2 bg-secondary/50 rounded-xl">
+              <div className="flex items-center gap-1 p-1.5 bg-secondary/50 rounded-xl">
                 {getSubTabs(effectiveOrgName).map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeSubTab === tab.id;
@@ -963,13 +963,13 @@ const RelationsPresse = () => {
                       key={tab.id}
                       onClick={() => setActiveSubTab(tab.id)}
                       className={cn(
-                        "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200",
+                        "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 whitespace-nowrap",
                         isActive
                           ? "bg-foreground text-background shadow-md"
                           : "text-muted-foreground hover:text-foreground hover:bg-secondary/80",
                       )}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5" />
                       {tab.label}
                     </button>
                   );
