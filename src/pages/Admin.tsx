@@ -110,11 +110,11 @@ const Admin = () => {
     }
   }, [currentOrganization, viewAsOrgId, setViewAsOrgId]);
 
-  const filteredUsers = isViewingAsOtherOrg 
+  const filteredUsers = isViewingAsOtherOrg
     ? users.filter(u => {
-        const userOrg = organizations.find(o => o.name === u.organization_name);
-        return userOrg?.id === viewAsOrgId;
-      })
+      const userOrg = organizations.find(o => o.name === u.organization_name);
+      return userOrg?.id === viewAsOrgId;
+    })
     : users;
 
   const filteredInvitations = isViewingAsOtherOrg
@@ -126,7 +126,7 @@ const Admin = () => {
       .from("organizations")
       .select("id, name, slug")
       .order("name");
-    
+
     if (!error && data) {
       setOrganizations(data);
     }
@@ -388,7 +388,8 @@ const Admin = () => {
       <main
         className={cn(
           "min-h-screen p-8 content-transition",
-          collapsed ? "ml-20" : "ml-64"
+          collapsed ? "ml-[120px]" : "ml-[320px]"
+
         )}
       >
         <Header title="Administration" />
@@ -637,8 +638,8 @@ const Admin = () => {
                             isUsed
                               ? "border-green-500/30 bg-green-500/5"
                               : isExpired
-                              ? "border-red-500/30 bg-red-500/5"
-                              : "border-border bg-muted/30"
+                                ? "border-red-500/30 bg-red-500/5"
+                                : "border-border bg-muted/30"
                           )}
                         >
                           <div className="flex items-start justify-between">
