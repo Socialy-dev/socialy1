@@ -595,16 +595,16 @@ const RelationsPresse = () => {
       toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
-    if (!selectedCompetitorId) {
-      toast({ title: "Concurrent requis", description: "Veuillez sélectionner un concurrent pour cet article", variant: "destructive" });
-      return;
-    }
     if (!effectiveOrgId) {
       toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
 
-    const selectedCompetitor = agencies.find(a => a.id === selectedCompetitorId);
+    const autreCompetitor = agencies.find(a => a.name === "Autre");
+    if (!autreCompetitor) {
+      toast({ title: "Erreur", description: "Le concurrent 'Autre' n'existe pas. Veuillez l'ajouter d'abord.", variant: "destructive" });
+      return;
+    }
 
     setIsAddingArticle(true);
 
@@ -614,8 +614,8 @@ const RelationsPresse = () => {
           link: newArticleLink.trim(),
           type: "competitor",
           organization_id: effectiveOrgId,
-          competitor_id: selectedCompetitorId,
-          competitor_name: selectedCompetitor?.name || null,
+          competitor_id: autreCompetitor.id,
+          competitor_name: "Autre",
         },
       });
 
@@ -623,14 +623,13 @@ const RelationsPresse = () => {
         throw error;
       }
 
-      toast({ title: "Enrichissement en cours", description: "L'article concurrent sera disponible dans quelques instants" });
+      toast({ title: "Enrichissement en cours", description: "L'article sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
       toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
 
     setNewArticleLink("");
-    setSelectedCompetitorId("");
     setShowAddCompetitorModal(false);
     setIsAddingArticle(false);
   };
@@ -2327,42 +2326,6 @@ const RelationsPresse = () => {
               </div>
               <div className="p-8 space-y-6">
                 <div>
-                  <Label className="text-sm font-semibold text-foreground">Concurrent</Label>
-                  <Select value={selectedCompetitorId} onValueChange={setSelectedCompetitorId}>
-                    <SelectTrigger className="mt-3 h-12 text-base">
-                      <SelectValue placeholder="Sélectionnez un concurrent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agencies.filter(a => a.name !== "Autre").map((agency) => (
-                        <SelectItem key={agency.id} value={agency.id}>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4" />
-                            {agency.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                      {agencies.some(a => a.name === "Autre") && (
-                        <>
-                          <SelectSeparator />
-                          {agencies.filter(a => a.name === "Autre").map((agency) => (
-                            <SelectItem key={agency.id} value={agency.id}>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Building2 className="w-4 h-4" />
-                                {agency.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {agencies.length === 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Aucun concurrent disponible. Ajoutez-en via le bouton "Concurrents".
-                    </p>
-                  )}
-                </div>
-                <div>
                   <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
                   <Input
                     value={newArticleLink}
@@ -2375,10 +2338,10 @@ const RelationsPresse = () => {
                   </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
                     Annuler
                   </Button>
-                  <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !selectedCompetitorId} className="min-w-32">
+                  <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !newArticleLink.trim()} className="min-w-32">
                     {isAddingArticle ? (
                       <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     ) : (
