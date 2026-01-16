@@ -52,7 +52,7 @@ serve(async (req) => {
       });
     }
 
-    const { link, type, user_id, competitor_id, competitor_name, organization_id } = await req.json();
+    const { link, type, user_id, competitor_id, competitor_name, client_id, client_name, organization_id } = await req.json();
 
     if (!link || !type) {
       return new Response(JSON.stringify({ error: "Missing required fields: link, type" }), {
@@ -61,8 +61,8 @@ serve(async (req) => {
       });
     }
 
-    if (type !== "socialy" && type !== "competitor") {
-      return new Response(JSON.stringify({ error: "Invalid type. Must be 'socialy' or 'competitor'" }), {
+    if (type !== "socialy" && type !== "competitor" && type !== "client") {
+      return new Response(JSON.stringify({ error: "Invalid type. Must be 'socialy', 'competitor', or 'client'" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -82,6 +82,8 @@ serve(async (req) => {
       user_id: user_id || user.id,
       competitor_id: competitor_id || null,
       competitor_name: competitor_name || null,
+      client_id: client_id || null,
+      client_name: client_name || null,
       organization_id: organization_id || null,
       timestamp: new Date().toISOString(),
     };
