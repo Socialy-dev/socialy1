@@ -433,53 +433,68 @@ export type Database = {
       }
       market_watch_topics: {
         Row: {
+          article_date: string | null
+          article_iso_date: string | null
           author: string | null
+          authors: string | null
           created_at: string
           created_by: string
+          hidden: boolean
           id: string
-          image: string | null
-          image_small: string | null
           link: string | null
-          media_logo: string | null
-          media_name: string | null
-          name: string
           organization_id: string
+          position: number | null
           published_at: string | null
+          snippet: string | null
+          source_icon: string | null
+          source_name: string | null
           status: string
+          thumbnail: string | null
+          thumbnail_small: string | null
           title: string | null
           updated_at: string
         }
         Insert: {
+          article_date?: string | null
+          article_iso_date?: string | null
           author?: string | null
+          authors?: string | null
           created_at?: string
           created_by: string
+          hidden?: boolean
           id?: string
-          image?: string | null
-          image_small?: string | null
           link?: string | null
-          media_logo?: string | null
-          media_name?: string | null
-          name: string
           organization_id: string
+          position?: number | null
           published_at?: string | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
           status?: string
+          thumbnail?: string | null
+          thumbnail_small?: string | null
           title?: string | null
           updated_at?: string
         }
         Update: {
+          article_date?: string | null
+          article_iso_date?: string | null
           author?: string | null
+          authors?: string | null
           created_at?: string
           created_by?: string
+          hidden?: boolean
           id?: string
-          image?: string | null
-          image_small?: string | null
           link?: string | null
-          media_logo?: string | null
-          media_name?: string | null
-          name?: string
           organization_id?: string
+          position?: number | null
           published_at?: string | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
           status?: string
+          thumbnail?: string | null
+          thumbnail_small?: string | null
           title?: string | null
           updated_at?: string
         }
