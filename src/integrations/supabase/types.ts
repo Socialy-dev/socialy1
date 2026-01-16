@@ -433,33 +433,54 @@ export type Database = {
       }
       market_watch_topics: {
         Row: {
+          author: string | null
           created_at: string
           created_by: string
           id: string
+          image: string | null
+          image_small: string | null
           link: string | null
+          media_logo: string | null
+          media_name: string | null
           name: string
           organization_id: string
+          published_at: string | null
           status: string
+          title: string | null
           updated_at: string
         }
         Insert: {
+          author?: string | null
           created_at?: string
           created_by: string
           id?: string
+          image?: string | null
+          image_small?: string | null
           link?: string | null
+          media_logo?: string | null
+          media_name?: string | null
           name: string
           organization_id: string
+          published_at?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
+          author?: string | null
           created_at?: string
           created_by?: string
           id?: string
+          image?: string | null
+          image_small?: string | null
           link?: string | null
+          media_logo?: string | null
+          media_name?: string | null
           name?: string
           organization_id?: string
+          published_at?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
