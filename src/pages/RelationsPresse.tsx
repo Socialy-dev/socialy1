@@ -76,6 +76,21 @@ interface OrganizationArticle {
   hidden?: boolean;
 }
 
+interface ClientArticle {
+  id: string;
+  title: string;
+  link: string;
+  thumbnail: string | null;
+  source_name: string | null;
+  source_icon: string | null;
+  authors: string | null;
+  article_date: string | null;
+  snippet: string | null;
+  client_name: string | null;
+  client_id: string;
+  hidden?: boolean;
+}
+
 interface Agency {
   id: string;
   name: string;
@@ -251,12 +266,25 @@ const RelationsPresse = () => {
   const fetchClients = async () => {
     setIsLoadingClients(true);
     if (effectiveOrgId) {
-      const { data } = await supabase
-        .from("competitor_agencies")
-        .select("id, name")
-        .eq("organization_id", effectiveOrgId)
-        .order("name");
-      setClients(data || []);
+      let query = supabase.from("client_agencies").select("id, name").eq("organization_id", effectiveOrgId);
+      const { data } = await query.order("name");
+      
+      let clientsList = data || [];
+      
+      const hasAutre = clientsList.some(c => c.name === "Autre");
+      if (!hasAutre) {
+        const { data: newAutre, error } = await supabase
+          .from("client_agencies")
+          .insert({ organization_id: effectiveOrgId, name: "Autre" })
+          .select("id, name")
+          .single();
+        
+        if (!error && newAutre) {
+          clientsList = [newAutre, ...clientsList];
+        }
+      }
+      
+      setClients(clientsList);
     }
     setIsLoadingClients(false);
   };
@@ -264,7 +292,7 @@ const RelationsPresse = () => {
   const fetchClientArticles = async () => {
     if (effectiveOrgId) {
       const { data, error } = await supabase
-        .from("competitor_articles")
+        .from("client_articles")
         .select("*")
         .eq("hidden", false)
         .not("title", "is", null)
@@ -273,7 +301,7 @@ const RelationsPresse = () => {
         .order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setClientArticles(data.filter(a => a.title && a.title.trim() !== ""));
+        setClientArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
       }
     }
   };
@@ -482,7 +510,7 @@ const RelationsPresse = () => {
   const [selectedCompetitorId, setSelectedCompetitorId] = useState<string>("");
   const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [clients, setClients] = useState<Agency[]>([]);
-  const [clientArticles, setClientArticles] = useState<Article[]>([]);
+  const [clientArticles, setClientArticles] = useState<ClientArticle[]>([]);
   const [veilleArticles, setVeilleArticles] = useState<OrganizationArticle[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [isLoadingVeille, setIsLoadingVeille] = useState(false);
@@ -694,7 +722,7 @@ const RelationsPresse = () => {
     setIsAddingClient(true);
 
     try {
-      const { error } = await supabase.from("competitor_agencies").insert({
+      const { error } = await supabase.from("client_agencies").insert({
         organization_id: effectiveOrgId,
         name: newClientName.trim(),
       });
@@ -719,7 +747,11 @@ const RelationsPresse = () => {
   };
 
   const handleDeleteClient = async (clientId: string, clientName: string) => {
-    const { error } = await supabase.from("competitor_agencies").delete().eq("id", clientId);
+    if (clientName === "Autre") {
+      toast({ title: "Action non autorisée", description: "Le client 'Autre' ne peut pas être supprimé", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("client_agencies").delete().eq("id", clientId);
     if (error) {
       toast({ title: "Échec de la suppression", description: "Impossible de supprimer le client. Veuillez réessayer.", variant: "destructive" });
     } else {
@@ -733,16 +765,16 @@ const RelationsPresse = () => {
       toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
       return;
     }
-    if (!selectedClientId) {
-      toast({ title: "Client requis", description: "Veuillez sélectionner un client pour cet article", variant: "destructive" });
-      return;
-    }
     if (!effectiveOrgId) {
       toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
 
-    const selectedClient = clients.find(c => c.id === selectedClientId);
+    const autreClient = clients.find(c => c.name === "Autre");
+    if (!autreClient) {
+      toast({ title: "Erreur", description: "Le client 'Autre' n'existe pas. Veuillez rafraîchir la page.", variant: "destructive" });
+      return;
+    }
 
     setIsAddingArticle(true);
 
@@ -750,10 +782,10 @@ const RelationsPresse = () => {
       const { error } = await supabase.functions.invoke("enrich-article", {
         body: {
           link: newArticleLink.trim(),
-          type: "competitor",
+          type: "client",
           organization_id: effectiveOrgId,
-          competitor_id: selectedClientId,
-          competitor_name: selectedClient?.name || null,
+          client_id: autreClient.id,
+          client_name: "Autre",
         },
       });
 
@@ -761,14 +793,13 @@ const RelationsPresse = () => {
         throw error;
       }
 
-      toast({ title: "Enrichissement en cours", description: "L'article client sera disponible dans quelques instants" });
+      toast({ title: "Enrichissement en cours", description: "L'article sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
       toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
     }
 
     setNewArticleLink("");
-    setSelectedClientId("");
     setShowAddClientModal(false);
     setIsAddingArticle(false);
   };
@@ -1827,10 +1858,10 @@ const RelationsPresse = () => {
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
                           <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                            {article.competitor_name && (
+                            {article.client_name && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
                                 <Briefcase className="w-3 h-3" />
-                                {article.competitor_name}
+                                {article.client_name}
                               </span>
                             )}
                           </div>
@@ -2464,30 +2495,13 @@ const RelationsPresse = () => {
               </div>
               <div className="p-8 space-y-6">
                 <div>
-                  <Label className="text-sm font-semibold text-foreground">Client</Label>
-                  <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-                    <SelectTrigger className="mt-3 h-12 text-base">
-                      <SelectValue placeholder="Sélectionnez un client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} value={client.id}>
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="w-4 h-4" />
-                            {client.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
                   <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
                   <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
+                  <p className="text-xs text-muted-foreground mt-2">Les métadonnées seront récupérées automatiquement</p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); setSelectedClientId(""); }}>Annuler</Button>
-                  <Button size="lg" onClick={handleAddClientArticle} disabled={isAddingArticle || !selectedClientId} className="min-w-32">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); }}>Annuler</Button>
+                  <Button size="lg" onClick={handleAddClientArticle} disabled={isAddingArticle || !newArticleLink.trim()} className="min-w-32">
                     {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
                   </Button>
                 </div>
@@ -2573,7 +2587,7 @@ const RelationsPresse = () => {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {clients.map((client) => (
+                    {clients.filter(c => c.name !== "Autre").map((client) => (
                       <div key={client.id} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">

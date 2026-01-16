@@ -50,6 +50,131 @@ export type Database = {
         }
         Relationships: []
       }
+      client_agencies: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          linkedin: string | null
+          name: string
+          notes: string | null
+          organization_id: string
+          specialty: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name: string
+          notes?: string | null
+          organization_id: string
+          specialty?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          linkedin?: string | null
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          specialty?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_agencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_articles: {
+        Row: {
+          article_date: string | null
+          article_iso_date: string | null
+          authors: string | null
+          client_id: string
+          client_name: string | null
+          created_at: string
+          hidden: boolean
+          id: string
+          link: string
+          organization_id: string
+          position: number | null
+          snippet: string | null
+          source_icon: string | null
+          source_name: string | null
+          thumbnail: string | null
+          thumbnail_small: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          client_id: string
+          client_name?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          link: string
+          organization_id: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          article_date?: string | null
+          article_iso_date?: string | null
+          authors?: string | null
+          client_id?: string
+          client_name?: string | null
+          created_at?: string
+          hidden?: boolean
+          id?: string
+          link?: string
+          organization_id?: string
+          position?: number | null
+          snippet?: string | null
+          source_icon?: string | null
+          source_name?: string | null
+          thumbnail?: string | null
+          thumbnail_small?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_articles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communique_presse: {
         Row: {
           assets_link: string | null
