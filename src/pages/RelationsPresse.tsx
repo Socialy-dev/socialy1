@@ -467,6 +467,7 @@ const RelationsPresse = () => {
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [showAddVeilleModal, setShowAddVeilleModal] = useState(false);
   const [newArticleLink, setNewArticleLink] = useState("");
+  const [newTopicName, setNewTopicName] = useState("");
   const [isAddingArticle, setIsAddingArticle] = useState(false);
   const [showHiddenOrganization, setShowHiddenOrganization] = useState(false);
   const [showHiddenCompetitor, setShowHiddenCompetitor] = useState(false);
@@ -774,8 +775,8 @@ const RelationsPresse = () => {
   };
 
   const handleAddVeilleArticle = async () => {
-    if (!newArticleLink.trim()) {
-      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+    if (!newTopicName.trim()) {
+      toast({ title: "Sujet manquant", description: "Veuillez saisir un sujet de veille (ex: IA générative, Blockchain...)", variant: "destructive" });
       return;
     }
     if (!effectiveOrgId) {
@@ -785,10 +786,10 @@ const RelationsPresse = () => {
     setIsAddingArticle(true);
 
     try {
-      const { error } = await supabase.functions.invoke("enrich-article", {
+      const { error } = await supabase.functions.invoke("add-market-topic", {
         body: {
-          link: newArticleLink.trim(),
-          type: "socialy",
+          topic_name: newTopicName.trim(),
+          topic_link: newArticleLink.trim() || null,
           organization_id: effectiveOrgId,
         },
       });
@@ -797,13 +798,14 @@ const RelationsPresse = () => {
         throw error;
       }
 
-      toast({ title: "Enrichissement en cours", description: "L'article de veille sera disponible dans quelques instants" });
-    } catch (enrichError) {
-      console.error("Enrichment error:", enrichError);
-      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+      toast({ title: "Sujet ajouté", description: "La veille sur ce sujet sera configurée sous peu" });
+    } catch (addError) {
+      console.error("Add topic error:", addError);
+      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le sujet. Veuillez réessayer.", variant: "destructive" });
     }
 
     setNewArticleLink("");
+    setNewTopicName("");
     setShowAddVeilleModal(false);
     setIsAddingArticle(false);
   };
@@ -1868,7 +1870,7 @@ const RelationsPresse = () => {
                   <div className="flex items-center gap-3">
                     <Button variant="outline" size="sm" onClick={() => setShowAddVeilleModal(true)} className="gap-2">
                       <Plus className="w-4 h-4" />
-                      Ajouter un article
+                      Ajouter un sujet
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
                       {veilleArticles.length} article{veilleArticles.length !== 1 ? "s" : ""}
@@ -2541,24 +2543,29 @@ const RelationsPresse = () => {
                       <Eye className="w-7 h-7 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-foreground">Nouvel article de veille</h3>
-                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille marché</p>
+                      <h3 className="text-xl font-bold text-foreground">Nouveau sujet de veille</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un sujet à surveiller</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); }}>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); setNewTopicName(""); }}>
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
               <div className="p-8 space-y-6">
                 <div>
-                  <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
+                  <Label className="text-sm font-semibold text-foreground">Sujet de veille *</Label>
+                  <Input value={newTopicName} onChange={(e) => setNewTopicName(e.target.value)} placeholder="Ex: IA générative, Green Tech, Blockchain..." className="mt-3 h-12 text-base" />
+                  <p className="text-xs text-muted-foreground mt-2">Le sujet sur lequel vous souhaitez configurer une veille marché</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-semibold text-foreground">Lien de référence (optionnel)</Label>
                   <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
-                  <p className="text-xs text-muted-foreground mt-2">Les métadonnées seront récupérées automatiquement</p>
+                  <p className="text-xs text-muted-foreground mt-2">Un lien vers un article de référence sur ce sujet</p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); }}>Annuler</Button>
-                  <Button size="lg" onClick={handleAddVeilleArticle} disabled={isAddingArticle} className="min-w-32">
+                  <Button variant="outline" size="lg" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); setNewTopicName(""); }}>Annuler</Button>
+                  <Button size="lg" onClick={handleAddVeilleArticle} disabled={isAddingArticle || !newTopicName.trim()} className="min-w-32">
                     {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
                   </Button>
                 </div>

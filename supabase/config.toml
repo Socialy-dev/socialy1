@@ -16,3 +16,6 @@ verify_jwt = false
 # notify-new-competitor : garde verify_jwt = false car on vérifie manuellement le JWT
 [functions.notify-new-competitor]
 verify_jwt = false
+
+[functions.add-market-topic]
+verify_jwt = false
