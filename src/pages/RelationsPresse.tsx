@@ -179,6 +179,7 @@ const RelationsPresse = () => {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isEnrichingJournalists, setIsEnrichingJournalists] = useState(false);
 
   const [communiques, setCommuniques] = useState<Communique[]>([]);
   const [isLoadingCommuniques, setIsLoadingCommuniques] = useState(false);
@@ -878,6 +879,49 @@ const RelationsPresse = () => {
     } else {
       toast({ title: "Journaliste supprimé", description: `${journalistName} a été retiré de votre liste de contacts` });
       fetchJournalists();
+    }
+  };
+
+  const handleEnrichJournalists = async () => {
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
+      return;
+    }
+
+    const journalistsToEnrich = journalists.filter(j => !j.linkedin);
+    
+    if (journalistsToEnrich.length === 0) {
+      toast({ title: "Aucun journaliste à enrichir", description: "Tous les journalistes ont déjà un profil LinkedIn renseigné" });
+      return;
+    }
+
+    setIsEnrichingJournalists(true);
+
+    try {
+      const { error } = await supabase.functions.invoke("notify-new-journalist", {
+        body: {
+          journalists: journalistsToEnrich.map(j => ({
+            journalist_id: j.id,
+            name: j.name,
+            media: j.media,
+            email: j.email,
+            organization_id: effectiveOrgId,
+          })),
+          organization_id: effectiveOrgId,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Enrichissement lancé", 
+        description: `${journalistsToEnrich.length} journaliste${journalistsToEnrich.length > 1 ? 's' : ''} envoyé${journalistsToEnrich.length > 1 ? 's' : ''} pour enrichissement` 
+      });
+    } catch (err) {
+      console.error("Enrichment error:", err);
+      toast({ title: "Échec de l'enrichissement", description: "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+    } finally {
+      setIsEnrichingJournalists(false);
     }
   };
 
@@ -1587,7 +1631,17 @@ const RelationsPresse = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {/* Import CSV Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEnrichJournalists}
+                      disabled={isEnrichingJournalists || journalists.filter(j => !j.linkedin).length === 0}
+                      className="gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      {isEnrichingJournalists ? "Enrichissement..." : `Enrichir (${journalists.filter(j => !j.linkedin).length})`}
+                    </Button>
+
                     <label
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",

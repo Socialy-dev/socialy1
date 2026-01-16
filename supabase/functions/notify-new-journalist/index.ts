@@ -35,14 +35,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const { journalist_id, name, media, email, organization_id } = body;
-
-    if (!journalist_id || !name || !organization_id) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: journalist_id, name, organization_id" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { journalists, organization_id, journalist_id, name, media, email } = body;
 
     const webhookUrl = Deno.env.get("N8N_JOURNALIST_WEBHOOK_URL");
     if (!webhookUrl) {
@@ -50,6 +43,42 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Webhook not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (journalists && Array.isArray(journalists) && journalists.length > 0) {
+      console.log(`Sending ${journalists.length} journalists to n8n`);
+
+      const webhookResponse = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          journalists,
+          organization_id,
+          batch: true,
+          created_at: new Date().toISOString(),
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        console.error("Webhook failed:", await webhookResponse.text());
+        return new Response(
+          JSON.stringify({ error: "Webhook delivery failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log("Batch journalist notification sent successfully");
+      return new Response(
+        JSON.stringify({ success: true, count: journalists.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!journalist_id || !name || !organization_id) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: journalist_id, name, organization_id or journalists array" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
