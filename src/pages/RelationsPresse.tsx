@@ -282,7 +282,7 @@ const RelationsPresse = () => {
     setIsLoadingVeille(true);
     if (effectiveOrgId) {
       const { data, error } = await supabase
-        .from("organization_articles")
+        .from("market_watch_topics")
         .select("*")
         .eq("hidden", false)
         .not("title", "is", null)
@@ -291,7 +291,7 @@ const RelationsPresse = () => {
         .order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setVeilleArticles(data.filter(a => a.title && a.title.trim() !== ""));
+        setVeilleArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
       }
     }
     setIsLoadingVeille(false);
