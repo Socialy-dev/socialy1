@@ -722,10 +722,10 @@ const RelationsPresse = () => {
     setIsAddingClient(true);
 
     try {
-      const { error } = await supabase.from("client_agencies").insert({
+      const { data: insertedClient, error } = await supabase.from("client_agencies").insert({
         organization_id: effectiveOrgId,
         name: newClientName.trim(),
-      });
+      }).select().single();
 
       if (error) {
         if (error.code === "23505") {
@@ -734,6 +734,25 @@ const RelationsPresse = () => {
           throw error;
         }
       } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token && insertedClient) {
+          try {
+            await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-new-client`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                client_id: insertedClient.id,
+                client_name: insertedClient.name,
+                organization_id: effectiveOrgId,
+              }),
+            });
+          } catch (webhookError) {
+            console.error("Webhook notification failed:", webhookError);
+          }
+        }
         toast({ title: "Client ajouté", description: `${newClientName.trim()} a été ajouté à votre liste` });
         setNewClientName("");
         fetchClients();
