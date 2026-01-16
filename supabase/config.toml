@@ -19,3 +19,6 @@ verify_jwt = false
 
 [functions.add-market-topic]
 verify_jwt = false
+
+[functions.notify-new-journalist]
+verify_jwt = false
