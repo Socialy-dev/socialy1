@@ -70,7 +70,7 @@ serve(async (req) => {
         created_by: user.id,
         status: "pending",
       }, {
-        onConflict: "organization_id,name",
+        onConflict: "organization_id,link",
       })
       .select()
       .single();
