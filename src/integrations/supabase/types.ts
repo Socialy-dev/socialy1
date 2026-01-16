@@ -435,16 +435,14 @@ export type Database = {
         Row: {
           article_date: string | null
           article_iso_date: string | null
-          author: string | null
           authors: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           hidden: boolean
           id: string
-          link: string | null
+          link: string
           organization_id: string
           position: number | null
-          published_at: string | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
@@ -457,16 +455,14 @@ export type Database = {
         Insert: {
           article_date?: string | null
           article_iso_date?: string | null
-          author?: string | null
           authors?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           hidden?: boolean
           id?: string
-          link?: string | null
+          link: string
           organization_id: string
           position?: number | null
-          published_at?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
@@ -479,16 +475,14 @@ export type Database = {
         Update: {
           article_date?: string | null
           article_iso_date?: string | null
-          author?: string | null
           authors?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           hidden?: boolean
           id?: string
-          link?: string | null
+          link?: string
           organization_id?: string
           position?: number | null
-          published_at?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
@@ -498,15 +492,7 @@ export type Database = {
           title?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "market_watch_topics_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       organization_articles: {
         Row: {
