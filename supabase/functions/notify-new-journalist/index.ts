@@ -45,13 +45,14 @@ serve(async (req) => {
       const errors = [];
 
       for (const journalist of journalists) {
+        const journalistId = journalist.journalist_id || journalist.id;
         try {
           const { data: jobLogId, error } = await supabase.rpc('enqueue_job', {
             p_queue_name: 'journalist_enrichment',
             p_job_type: 'enrich_journalist',
             p_organization_id: organization_id || journalist.organization_id,
             p_payload: {
-              journalist_id: journalist.id,
+              journalist_id: journalistId,
               name: journalist.name,
               media: journalist.media || null,
               email: journalist.email || null,
@@ -60,15 +61,15 @@ serve(async (req) => {
           });
 
           if (error) {
-            console.error(`❌ Failed to enqueue journalist ${journalist.id}:`, error);
-            errors.push({ journalist_id: journalist.id, error: error.message });
+            console.error(`❌ Failed to enqueue journalist ${journalistId}:`, error);
+            errors.push({ journalist_id: journalistId, error: error.message });
           } else {
             jobLogIds.push(jobLogId);
-            console.log(`✅ Queued journalist ${journalist.id} (job_log_id: ${jobLogId})`);
+            console.log(`✅ Queued journalist ${journalistId} (job_log_id: ${jobLogId})`);
           }
         } catch (err) {
-          console.error(`💥 Exception queueing journalist ${journalist.id}:`, err);
-          errors.push({ journalist_id: journalist.id, error: (err as Error).message });
+          console.error(`💥 Exception queueing journalist ${journalistId}:`, err);
+          errors.push({ journalist_id: journalistId, error: (err as Error).message });
         }
       }
 
