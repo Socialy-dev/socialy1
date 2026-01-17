@@ -1035,6 +1035,36 @@ const RelationsPresse = () => {
     }
   };
 
+  const handleResetStuckEnrichments = async () => {
+    const stuckJournalists = journalists.filter(
+      j => (j.enrichment_status === 'pending' || j.enrichment_status === 'processing')
+    );
+    
+    if (stuckJournalists.length === 0) {
+      toast({ title: "Aucun enrichissement bloqué" });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('journalists')
+      .update({ enrichment_status: null, enrichment_error: 'Réinitialisé manuellement' })
+      .in('id', stuckJournalists.map(j => j.id));
+
+    if (error) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } else {
+      setJournalists(journalists.map(j => 
+        stuckJournalists.find(s => s.id === j.id) 
+          ? { ...j, enrichment_status: null } 
+          : j
+      ));
+      toast({ 
+        title: "Enrichissements réinitialisés", 
+        description: `${stuckJournalists.length} journaliste(s) peuvent être ré-enrichis` 
+      });
+    }
+  };
+
   const toggleJournalist = (id: string) => {
     setJournalists(journalists.map((j) => (j.id === id ? { ...j, selected: !j.selected } : j)));
   };
@@ -1811,6 +1841,26 @@ const RelationsPresse = () => {
                       </Tooltip>
                     </TooltipProvider>
 
+                    {journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length > 0 && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleResetStuckEnrichments}
+                              className="gap-2 text-muted-foreground hover:text-destructive"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Réinitialiser
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-card border-border shadow-lg">
+                            Réinitialiser les enrichissements bloqués pour pouvoir les relancer
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     <label
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
