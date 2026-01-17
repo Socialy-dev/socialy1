@@ -180,6 +180,7 @@ export type Database = {
           assets_link: string | null
           created_at: string
           created_by: string
+          google_drive_url: string | null
           id: string
           name: string
           organization_id: string | null
@@ -192,6 +193,7 @@ export type Database = {
           assets_link?: string | null
           created_at?: string
           created_by: string
+          google_drive_url?: string | null
           id?: string
           name: string
           organization_id?: string | null
@@ -204,6 +206,7 @@ export type Database = {
           assets_link?: string | null
           created_at?: string
           created_by?: string
+          google_drive_url?: string | null
           id?: string
           name?: string
           organization_id?: string | null
