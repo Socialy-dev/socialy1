@@ -194,7 +194,7 @@ async function enrichJournalistWithApify(payload: any) {
     firstName: firstName,
     lastName: lastName,
     profileScraperMode: "Full + email search",
-    maxItems: 5
+    maxItems: 2
   };
 
   const runActorUrl = `${APIFY_API_BASE}/acts/${APIFY_ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiToken}`;
