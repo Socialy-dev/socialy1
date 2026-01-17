@@ -38,6 +38,7 @@ import {
   Link,
   Eye,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
@@ -180,6 +181,7 @@ const RelationsPresse = () => {
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isEnrichingJournalists, setIsEnrichingJournalists] = useState(false);
+  const [isUpdatingOrganizationArticles, setIsUpdatingOrganizationArticles] = useState(false);
 
   const [communiques, setCommuniques] = useState<Communique[]>([]);
   const [isLoadingCommuniques, setIsLoadingCommuniques] = useState(false);
@@ -582,6 +584,40 @@ const RelationsPresse = () => {
       fetchArticles();
       fetchHiddenCompetitorArticles();
     }
+  };
+
+  const handleUpdateOrganizationArticles = async () => {
+    if (!effectiveOrgId) {
+      toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
+      return;
+    }
+
+    setIsUpdatingOrganizationArticles(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-organization-articles", {
+        body: {
+          organization_id: effectiveOrgId,
+          organization_name: effectiveOrgName,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({ 
+        title: "Mise à jour terminée", 
+        description: `${data.inserted} nouveaux articles, ${data.updated} mis à jour` 
+      });
+      
+      fetchOrganizationArticles();
+    } catch (updateError) {
+      console.error("Update error:", updateError);
+      toast({ title: "Échec de la mise à jour", description: "Impossible de récupérer les articles. Veuillez réessayer.", variant: "destructive" });
+    }
+
+    setIsUpdatingOrganizationArticles(false);
   };
 
   const handleAddOrganizationArticle = async () => {
@@ -1161,6 +1197,16 @@ const RelationsPresse = () => {
                         Voir masqués
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUpdateOrganizationArticles}
+                      disabled={isUpdatingOrganizationArticles}
+                      className="gap-2"
+                    >
+                      <RefreshCw className={cn("w-4 h-4", isUpdatingOrganizationArticles && "animate-spin")} />
+                      {isUpdatingOrganizationArticles ? "Mise à jour..." : "Mettre à jour"}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
