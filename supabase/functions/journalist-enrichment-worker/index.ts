@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const BATCH_SIZE = 5; // Process max 5 messages per invocation
-const VISIBILITY_TIMEOUT = 300; // 5 minutes
+const BATCH_SIZE = 5;
+const VISIBILITY_TIMEOUT = 300;
+const APIFY_ACTOR_ID = "CP1SVZfEwWflrmWCX";
+const APIFY_API_BASE = "https://api.apify.com/v2";
 
 serve(async (req) => {
   try {
@@ -13,7 +15,6 @@ serve(async (req) => {
 
     console.log("🚀 Worker started - polling journalist_enrichment queue...");
 
-    // Read messages from the queue
     const { data: messages, error: readError } = await supabaseAdmin.rpc('pgmq_read', {
       queue_name: 'journalist_enrichment',
       vt: VISIBILITY_TIMEOUT,
@@ -32,7 +33,6 @@ serve(async (req) => {
 
     console.log(`📦 Processing ${messages.length} message(s)...`);
 
-    // Process each message
     let successCount = 0;
     let errorCount = 0;
 
@@ -43,43 +43,50 @@ serve(async (req) => {
       console.log(`🔄 Processing journalist: ${payload.journalist_id} (${payload.name})`);
 
       try {
-        // Update job status to processing
-        const { error: updateStatusError } = await supabaseAdmin
-          .from('job_logs')
+        await supabaseAdmin
+          .from('journalists')
           .update({
-            status: 'processing',
-            started_at: new Date().toISOString(),
+            enrichment_status: 'processing',
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', job_log_id);
+          .eq('id', payload.journalist_id)
+          .eq('organization_id', organization_id);
 
-        if (updateStatusError) {
-          console.error("⚠️ Failed to update job status:", updateStatusError);
+        if (job_log_id) {
+          await supabaseAdmin
+            .from('job_logs')
+            .update({
+              status: 'processing',
+              started_at: new Date().toISOString(),
+            })
+            .eq('id', job_log_id);
+
+          const { data: jobLog } = await supabaseAdmin
+            .from('job_logs')
+            .select('attempts')
+            .eq('id', job_log_id)
+            .single();
+
+          await supabaseAdmin
+            .from('job_logs')
+            .update({ attempts: (jobLog?.attempts || 0) + 1 })
+            .eq('id', job_log_id);
         }
 
-        // Increment attempts count
-        const { data: jobLog } = await supabaseAdmin
-          .from('job_logs')
-          .select('attempts')
-          .eq('id', job_log_id)
-          .single();
+        const enrichedData = await enrichJournalistWithApify(payload);
 
-        await supabaseAdmin
-          .from('job_logs')
-          .update({ attempts: (jobLog?.attempts || 0) + 1 })
-          .eq('id', job_log_id);
-
-        // ENRICHMENT LOGIC
-        const enrichedData = await enrichJournalist(payload);
-
-        // Update journalist in database
         const { error: updateError } = await supabaseAdmin
           .from('journalists')
           .update({
             linkedin: enrichedData.linkedin || payload.linkedin,
             email: enrichedData.email || payload.email,
-            job: enrichedData.job,
-            phone: enrichedData.phone,
+            job: enrichedData.job || payload.job,
+            phone: enrichedData.phone || payload.phone,
             notes: enrichedData.notes,
+            metadata: enrichedData.metadata,
+            enrichment_status: 'completed',
+            enriched_at: new Date().toISOString(),
+            enrichment_error: null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', payload.journalist_id)
@@ -89,17 +96,17 @@ serve(async (req) => {
           throw new Error(`Failed to update journalist: ${updateError.message}`);
         }
 
-        // Log success
-        await supabaseAdmin
-          .from('job_logs')
-          .update({
-            status: 'completed',
-            result: enrichedData,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', job_log_id);
+        if (job_log_id) {
+          await supabaseAdmin
+            .from('job_logs')
+            .update({
+              status: 'completed',
+              result: enrichedData,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', job_log_id);
+        }
 
-        // Archive message (remove from queue)
         await supabaseAdmin.rpc('pgmq_archive', {
           queue_name: 'journalist_enrichment',
           msg_id: msg_id
@@ -111,18 +118,27 @@ serve(async (req) => {
       } catch (error) {
         console.error(`❌ Failed to enrich journalist ${payload.journalist_id}:`, error);
 
-        // Log error
         await supabaseAdmin
-          .from('job_logs')
+          .from('journalists')
           .update({
-            status: 'failed',
-            error_message: (error as Error).message,
-            completed_at: new Date().toISOString(),
+            enrichment_status: 'failed',
+            enrichment_error: (error as Error).message,
+            updated_at: new Date().toISOString(),
           })
-          .eq('id', job_log_id);
+          .eq('id', payload.journalist_id)
+          .eq('organization_id', organization_id);
 
-        // Archive message (no automatic retry for now)
-        // TODO: Implement retry logic with max attempts
+        if (job_log_id) {
+          await supabaseAdmin
+            .from('job_logs')
+            .update({
+              status: 'failed',
+              error_message: (error as Error).message,
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', job_log_id);
+        }
+
         await supabaseAdmin.rpc('pgmq_archive', {
           queue_name: 'journalist_enrichment',
           msg_id: msg_id
@@ -155,124 +171,99 @@ serve(async (req) => {
   }
 });
 
-/**
- * Enrich journalist information using external APIs
- * TODO: Implement real enrichment logic with Perplexity/Apollo/Hunter APIs
- */
-async function enrichJournalist(payload: any) {
-  console.log(`🔍 Enriching journalist: ${payload.name} from ${payload.media}`);
+async function enrichJournalistWithApify(payload: any) {
+  console.log(`🔍 Enriching journalist via Apify: ${payload.name}`);
 
-  // Check if we have Perplexity API key
-  const perplexityApiKey = Deno.env.get("PERPLEXITY_API_KEY");
+  const apifyApiToken = Deno.env.get("APIFY_API_TOKEN");
 
-  if (!perplexityApiKey) {
-    console.warn("⚠️ PERPLEXITY_API_KEY not set - using mock enrichment");
-    return mockEnrichment(payload);
+  if (!apifyApiToken) {
+    console.warn("⚠️ APIFY_API_TOKEN not set - skipping enrichment");
+    throw new Error("APIFY_API_TOKEN not configured");
   }
 
-  try {
-    // Build enrichment prompt
-    const prompt = `Find professional information about ${payload.name}${payload.media ? ` who works at ${payload.media}` : ''}.
+  const nameParts = payload.name.trim().split(/\s+/);
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
 
-Please provide:
-1. LinkedIn profile URL
-2. Professional email address
-3. Phone number (if publicly available)
-4. Current job title
-5. Brief professional background
-
-Format the response as JSON with keys: linkedin, email, phone, job, background`;
-
-    // Call Perplexity API
-    const response = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${perplexityApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.1-sonar-small-128k-online",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-
-    // Parse response
-    const enrichedInfo = parseEnrichedData(content);
-
-    return {
-      linkedin: enrichedInfo.linkedin || null,
-      email: enrichedInfo.email || null,
-      phone: enrichedInfo.phone || null,
-      job: enrichedInfo.job || null,
-      notes: `Enriched via Perplexity on ${new Date().toISOString()}\n\n${enrichedInfo.background || ''}`,
-    };
-
-  } catch (error) {
-    console.error("❌ Enrichment API error:", error);
-
-    // Fallback to mock enrichment
-    return mockEnrichment(payload);
+  if (!firstName) {
+    throw new Error("Cannot extract first name from journalist name");
   }
-}
 
-/**
- * Parse enriched data from API response
- */
-function parseEnrichedData(text: string) {
-  try {
-    // Try to parse as JSON first
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return parsed;
-    }
+  console.log(`👤 Searching LinkedIn for: ${firstName} ${lastName}`);
 
-    // Otherwise, try to extract information with regex
-    const linkedinMatch = text.match(/linkedin[^\n]*(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9-]+)/i);
-    const emailMatch = text.match(/email[^\n]*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
-    const phoneMatch = text.match(/phone[^\n]*(\+?[\d\s()-]{10,})/i);
-    const jobMatch = text.match(/job title[^\n]*:?\s*([^\n]+)/i);
+  const actorInput = {
+    firstName: firstName,
+    lastName: lastName,
+    profileScraperMode: "Full + email search",
+    maxItems: 1
+  };
 
-    return {
-      linkedin: linkedinMatch ? `https://linkedin.com/in/${linkedinMatch[1]}` : null,
-      email: emailMatch ? emailMatch[1] : null,
-      phone: phoneMatch ? phoneMatch[1].trim() : null,
-      job: jobMatch ? jobMatch[1].trim() : null,
-      background: text,
-    };
+  const runActorUrl = `${APIFY_API_BASE}/acts/${APIFY_ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiToken}`;
 
-  } catch (error) {
-    console.error("Failed to parse enriched data:", error);
+  console.log(`🚀 Calling Apify actor...`);
+
+  const response = await fetch(runActorUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(actorInput),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`❌ Apify API error: ${response.status} - ${errorText}`);
+    throw new Error(`Apify API error: ${response.status} ${response.statusText}`);
+  }
+
+  const results = await response.json();
+
+  console.log(`📦 Apify returned ${results.length} result(s)`);
+
+  if (!results || results.length === 0) {
+    console.warn(`⚠️ No LinkedIn profile found for ${payload.name}`);
     return {
       linkedin: null,
       email: null,
       phone: null,
       job: null,
-      background: text,
+      notes: `No LinkedIn profile found via Apify on ${new Date().toISOString()}`,
+      metadata: { apify_search: { firstName, lastName, found: false } }
     };
   }
-}
 
-/**
- * Mock enrichment for testing without API key
- */
-function mockEnrichment(payload: any) {
-  console.log("🎭 Using mock enrichment");
+  const profile = results[0];
+
+  console.log(`✅ Found profile: ${profile.profileUrl || profile.linkedinUrl || 'N/A'}`);
+
+  const linkedinUrl = profile.profileUrl || profile.linkedinUrl || profile.url || null;
+  const email = profile.email || profile.emails?.[0] || null;
+  const phone = profile.phone || profile.phoneNumber || null;
+  const job = profile.headline || profile.title || profile.currentPosition?.title || null;
+  const company = profile.company || profile.currentPosition?.company || null;
+
+  const notesParts = [];
+  notesParts.push(`Enriched via Apify LinkedIn on ${new Date().toISOString()}`);
+  if (profile.fullName) notesParts.push(`Full name: ${profile.fullName}`);
+  if (company) notesParts.push(`Company: ${company}`);
+  if (profile.location) notesParts.push(`Location: ${profile.location}`);
+  if (profile.summary) notesParts.push(`Summary: ${profile.summary.substring(0, 200)}...`);
 
   return {
-    linkedin: payload.linkedin || null,
-    email: payload.email || null,
-    phone: null,
-    job: null,
-    notes: `Mock enrichment on ${new Date().toISOString()} - Configure PERPLEXITY_API_KEY for real enrichment`,
+    linkedin: linkedinUrl,
+    email: email,
+    phone: phone,
+    job: job,
+    notes: notesParts.join("\n"),
+    metadata: {
+      apify_profile: {
+        fullName: profile.fullName,
+        headline: profile.headline,
+        company: company,
+        location: profile.location,
+        connections: profile.connections,
+        raw: profile
+      }
+    }
   };
 }
