@@ -39,6 +39,7 @@ import {
   Eye,
   RotateCcw,
   RefreshCw,
+  Loader2,
 } from "lucide-react";
 import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
@@ -108,6 +109,7 @@ interface Journalist {
   notes: string | null;
   source_type: string | null;
   competitor_name: string | null;
+  enrichment_status: string | null;
   selected: boolean;
   isEditingNotes?: boolean;
 }
@@ -222,6 +224,45 @@ const RelationsPresse = () => {
     fetchJournalists();
     fetchCommuniques();
   }, [isOrgAdmin, effectiveOrgId, isViewingAsOtherOrg]);
+
+  useEffect(() => {
+    if (!effectiveOrgId) return;
+
+    const channel = supabase
+      .channel('journalists-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'journalists',
+          filter: `organization_id=eq.${effectiveOrgId}`
+        },
+        (payload) => {
+          const updatedJournalist = payload.new as any;
+          setJournalists(prev => 
+            prev.map(j => 
+              j.id === updatedJournalist.id 
+                ? { ...j, ...updatedJournalist, selected: j.selected } 
+                : j
+            )
+          );
+          
+          if (updatedJournalist.enrichment_status === 'completed' && 
+              (updatedJournalist.linkedin || updatedJournalist.email)) {
+            toast({
+              title: "Enrichissement réussi",
+              description: `${updatedJournalist.name} a été enrichi`,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [effectiveOrgId]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -926,12 +967,16 @@ const RelationsPresse = () => {
       return;
     }
 
-    const allJournalistsToEnrich = journalists.filter(j => !j.linkedin && !j.email);
+    const allJournalistsToEnrich = journalists.filter(
+      j => !j.linkedin && !j.email && 
+           j.enrichment_status !== 'pending' && 
+           j.enrichment_status !== 'processing'
+    );
     
     if (allJournalistsToEnrich.length === 0) {
       toast({ 
         title: "Aucun journaliste à enrichir", 
-        description: "Tous les journalistes ont déjà un profil LinkedIn ou email renseigné" 
+        description: "Tous les journalistes sont déjà enrichis ou en cours d'enrichissement" 
       });
       return;
     }
@@ -973,28 +1018,10 @@ const RelationsPresse = () => {
         return;
       }
 
-      const successCount = data?.successCount || 0;
-      const errorCount = data?.errorCount || 0;
-      const processed = data?.processed || journalistsToEnrich.length;
-
-      if (successCount > 0) {
-        toast({ 
-          title: "Enrichissement terminé", 
-          description: `${successCount} journaliste(s) enrichi(s) sur ${processed}${errorCount > 0 ? `, ${errorCount} erreur(s)` : ''}`
-        });
-        fetchJournalists();
-      } else if (errorCount > 0) {
-        toast({ 
-          title: "Échec de l'enrichissement", 
-          description: `Aucun profil trouvé pour les ${errorCount} journaliste(s) traité(s)`, 
-          variant: "destructive" 
-        });
-      } else {
-        toast({ 
-          title: "Enrichissement en cours", 
-          description: data?.message || `${journalistsToEnrich.length} journaliste(s) en cours de traitement`
-        });
-      }
+      toast({ 
+        title: "Enrichissement lancé", 
+        description: `${journalistsToEnrich.length} journaliste(s) en cours de traitement. Les résultats apparaîtront automatiquement.`
+      });
     } catch (err: any) {
       console.error("Enrichment error:", err);
       const errorMessage = err?.message || "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.";
@@ -1731,29 +1758,54 @@ const RelationsPresse = () => {
                             variant="outline"
                             size="sm"
                             onClick={handleEnrichJournalists}
-                            disabled={isEnrichingJournalists || journalists.filter(j => !j.linkedin && !j.email).length === 0}
+                            disabled={isEnrichingJournalists || (journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length === 0)}
                             className="gap-2"
                           >
-                            <Zap className="w-4 h-4" />
-                            {isEnrichingJournalists 
-                              ? "Enrichissement en cours..." 
-                              : (() => {
-                                  const count = journalists.filter(j => !j.linkedin && !j.email).length;
-                                  if (count > MAX_ENRICHMENT_BATCH) {
-                                    return `Enrichir ${MAX_ENRICHMENT_BATCH} sur ${count}`;
-                                  }
-                                  return `Enrichir (${count})`;
-                                })()
-                            }
+                            {(() => {
+                              const inProgress = journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length;
+                              const toEnrich = journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length;
+                              
+                              if (inProgress > 0) {
+                                return (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {`En cours (${inProgress})`}
+                                  </>
+                                );
+                              }
+                              
+                              if (toEnrich > MAX_ENRICHMENT_BATCH) {
+                                return (
+                                  <>
+                                    <Zap className="w-4 h-4" />
+                                    {`Enrichir ${MAX_ENRICHMENT_BATCH} sur ${toEnrich}`}
+                                  </>
+                                );
+                              }
+                              
+                              return (
+                                <>
+                                  <Zap className="w-4 h-4" />
+                                  {`Enrichir (${toEnrich})`}
+                                </>
+                              );
+                            })()}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent className="bg-card border-border shadow-lg">
                           {(() => {
-                            const count = journalists.filter(j => !j.linkedin && !j.email).length;
-                            if (count > MAX_ENRICHMENT_BATCH) {
-                              return `${count} journalistes à enrichir. Les ${MAX_ENRICHMENT_BATCH} premiers seront traités, puis relancez pour les suivants.`;
+                            const inProgress = journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length;
+                            const toEnrich = journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length;
+                            
+                            if (inProgress > 0) {
+                              return `${inProgress} journaliste(s) en cours d'enrichissement. Les résultats apparaîtront automatiquement.`;
                             }
-                            return `Rechercher LinkedIn et email pour ${count} journaliste(s)`;
+                            
+                            if (toEnrich > MAX_ENRICHMENT_BATCH) {
+                              return `${toEnrich} journalistes à enrichir. Les ${MAX_ENRICHMENT_BATCH} premiers seront traités, puis relancez pour les suivants.`;
+                            }
+                            
+                            return `Rechercher LinkedIn et email pour ${toEnrich} journaliste(s)`;
                           })()}
                         </TooltipContent>
                       </Tooltip>
@@ -1849,17 +1901,32 @@ const RelationsPresse = () => {
                             journalist.selected && "bg-primary/5",
                           )}
                         >
-                          <div
-                            className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0",
-                              journalist.selected ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
+                          <div className="relative">
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-300",
+                                journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing'
+                                  ? "bg-primary/20 text-primary animate-pulse"
+                                  : journalist.selected 
+                                    ? "bg-primary text-primary-foreground" 
+                                    : "bg-secondary text-foreground",
+                              )}
+                            >
+                              {journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing' ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                journalist.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .slice(0, 2)
+                              )}
+                            </div>
+                            {(journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing') && (
+                              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                                <Zap className="w-2.5 h-2.5 text-primary-foreground" />
+                              </div>
                             )}
-                          >
-                            {journalist.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")
-                              .slice(0, 2)}
                           </div>
 
                           <div className="flex items-center min-w-0">

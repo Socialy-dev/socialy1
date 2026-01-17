@@ -62,6 +62,11 @@ serve(async (req) => {
       for (const journalist of journalists) {
         const journalistId = journalist.journalist_id || journalist.id;
         try {
+          await supabase
+            .from('journalists')
+            .update({ enrichment_status: 'pending' })
+            .eq('id', journalistId);
+
           const { data: jobLogId, error } = await supabase.rpc('enqueue_job', {
             p_queue_name: 'journalist_enrichment',
             p_job_type: 'enrich_journalist',
@@ -77,6 +82,10 @@ serve(async (req) => {
 
           if (error) {
             console.error(`❌ Échec mise en queue ${journalistId}:`, error);
+            await supabase
+              .from('journalists')
+              .update({ enrichment_status: null, enrichment_error: error.message })
+              .eq('id', journalistId);
             errors.push({ journalist_id: journalistId, error: error.message });
           } else {
             jobLogIds.push(jobLogId);
@@ -84,6 +93,10 @@ serve(async (req) => {
           }
         } catch (err) {
           console.error(`💥 Exception pour ${journalistId}:`, err);
+          await supabase
+            .from('journalists')
+            .update({ enrichment_status: null, enrichment_error: (err as Error).message })
+            .eq('id', journalistId);
           errors.push({ journalist_id: journalistId, error: (err as Error).message });
         }
       }
