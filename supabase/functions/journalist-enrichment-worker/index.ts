@@ -82,7 +82,6 @@ serve(async (req) => {
             email: enrichedData.email || payload.email,
             job: enrichedData.job || payload.job,
             phone: enrichedData.phone || payload.phone,
-            notes: enrichedData.notes,
             metadata: enrichedData.metadata,
             enrichment_status: 'completed',
             enriched_at: new Date().toISOString(),
@@ -227,8 +226,7 @@ async function enrichJournalistWithApify(payload: any) {
       email: null,
       phone: null,
       job: null,
-      notes: `No LinkedIn profile found via Apify on ${new Date().toISOString()}`,
-      metadata: { apify_search: { firstName, lastName, found: false } }
+      metadata: { apify_search: { firstName, lastName, found: false, searched_at: new Date().toISOString() } }
     };
   }
 
@@ -238,57 +236,62 @@ async function enrichJournalistWithApify(payload: any) {
 
   const linkedinUrl = profile.profileUrl || profile.linkedinUrl || profile.url || null;
   
-  let email = null;
-  if (profile.email) {
-    if (typeof profile.email === 'object' && profile.email.email) {
-      email = profile.email.email;
-    } else if (typeof profile.email === 'string') {
-      email = profile.email;
-    }
-  } else if (profile.emails && Array.isArray(profile.emails) && profile.emails.length > 0) {
-    const firstEmail = profile.emails[0];
-    if (typeof firstEmail === 'object' && firstEmail.email) {
-      email = firstEmail.email;
-    } else if (typeof firstEmail === 'string') {
-      email = firstEmail;
+  let email: string | null = null;
+  const rawEmail = profile.email || (profile.emails && profile.emails[0]);
+  if (rawEmail) {
+    if (typeof rawEmail === 'string') {
+      email = rawEmail;
+    } else if (typeof rawEmail === 'object') {
+      if (rawEmail.email && typeof rawEmail.email === 'string') {
+        email = rawEmail.email;
+      } else if (rawEmail.value && typeof rawEmail.value === 'string') {
+        email = rawEmail.value;
+      }
     }
   }
   
-  let phone = null;
-  if (profile.phone) {
-    if (typeof profile.phone === 'object' && profile.phone.phone) {
-      phone = profile.phone.phone;
-    } else if (typeof profile.phone === 'string') {
-      phone = profile.phone;
+  let phone: string | null = null;
+  const rawPhone = profile.phone || profile.phoneNumber || (profile.phones && profile.phones[0]);
+  if (rawPhone) {
+    if (typeof rawPhone === 'string') {
+      phone = rawPhone;
+    } else if (typeof rawPhone === 'object') {
+      if (rawPhone.phone && typeof rawPhone.phone === 'string') {
+        phone = rawPhone.phone;
+      } else if (rawPhone.value && typeof rawPhone.value === 'string') {
+        phone = rawPhone.value;
+      } else if (rawPhone.number && typeof rawPhone.number === 'string') {
+        phone = rawPhone.number;
+      }
     }
-  } else if (profile.phoneNumber) {
-    phone = typeof profile.phoneNumber === 'string' ? profile.phoneNumber : null;
   }
   
   const job = profile.headline || profile.title || profile.currentPosition?.title || null;
   const company = profile.company || profile.currentPosition?.company || null;
-
-  const notesParts = [];
-  notesParts.push(`Enriched via Apify LinkedIn on ${new Date().toISOString()}`);
-  if (profile.fullName) notesParts.push(`Full name: ${profile.fullName}`);
-  if (company) notesParts.push(`Company: ${company}`);
-  if (profile.location) notesParts.push(`Location: ${profile.location}`);
-  if (profile.summary) notesParts.push(`Summary: ${profile.summary.substring(0, 200)}...`);
+  
+  let locationText: string | null = null;
+  if (profile.location) {
+    if (typeof profile.location === 'string') {
+      locationText = profile.location;
+    } else if (typeof profile.location === 'object') {
+      locationText = profile.location.linkedinText || profile.location.text || profile.location.city || null;
+    }
+  }
 
   return {
     linkedin: linkedinUrl,
     email: email,
     phone: phone,
     job: job,
-    notes: notesParts.join("\n"),
     metadata: {
-      apify_profile: {
-        fullName: profile.fullName,
-        headline: profile.headline,
+      apify_enrichment: {
+        enriched_at: new Date().toISOString(),
+        fullName: profile.fullName || null,
+        headline: profile.headline || null,
         company: company,
-        location: profile.location,
-        connections: profile.connections,
-        raw: profile
+        location: locationText,
+        connections: profile.connections || null,
+        summary: profile.about || profile.summary || null
       }
     }
   };
