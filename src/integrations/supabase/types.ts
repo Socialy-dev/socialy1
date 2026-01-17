@@ -1168,6 +1168,20 @@ export type Database = {
           source_id: string
         }[]
       }
+      pgmq_archive: {
+        Args: { p_msg_id: number; p_queue_name: string }
+        Returns: boolean
+      }
+      pgmq_read: {
+        Args: { p_qty: number; p_queue_name: string; p_vt: number }
+        Returns: {
+          enqueued_at: string
+          message: Json
+          msg_id: number
+          read_ct: number
+          vt: string
+        }[]
+      }
       pop_from_queue: {
         Args: { p_queue_name: string }
         Returns: {

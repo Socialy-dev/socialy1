@@ -16,9 +16,9 @@ serve(async (req) => {
     console.log("🚀 Worker started - polling journalist_enrichment queue...");
 
     const { data: messages, error: readError } = await supabaseAdmin.rpc('pgmq_read', {
-      queue_name: 'journalist_enrichment',
-      vt: VISIBILITY_TIMEOUT,
-      qty: BATCH_SIZE
+      p_queue_name: 'journalist_enrichment',
+      p_vt: VISIBILITY_TIMEOUT,
+      p_qty: BATCH_SIZE
     });
 
     if (readError) {
@@ -108,8 +108,8 @@ serve(async (req) => {
         }
 
         await supabaseAdmin.rpc('pgmq_archive', {
-          queue_name: 'journalist_enrichment',
-          msg_id: msg_id
+          p_queue_name: 'journalist_enrichment',
+          p_msg_id: msg_id
         });
 
         successCount++;
@@ -140,8 +140,8 @@ serve(async (req) => {
         }
 
         await supabaseAdmin.rpc('pgmq_archive', {
-          queue_name: 'journalist_enrichment',
-          msg_id: msg_id
+          p_queue_name: 'journalist_enrichment',
+          p_msg_id: msg_id
         });
 
         errorCount++;
