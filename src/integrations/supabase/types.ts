@@ -494,16 +494,76 @@ export type Database = {
           },
         ]
       }
+      job_queue: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          max_retries: number | null
+          organization_id: string | null
+          payload: Json
+          priority: number | null
+          processing_started_at: string | null
+          queue_name: string
+          retry_count: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          organization_id?: string | null
+          payload: Json
+          priority?: number | null
+          processing_started_at?: string | null
+          queue_name: string
+          retry_count?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          organization_id?: string | null
+          payload?: Json
+          priority?: number | null
+          processing_started_at?: string | null
+          queue_name?: string
+          retry_count?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_queue_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journalists: {
         Row: {
           competitor_name: string | null
           created_at: string
           email: string | null
+          enriched_at: string | null
+          enrichment_error: string | null
+          enrichment_status: string | null
           id: string
           job: string | null
           linkedin: string | null
           media: string | null
           media_specialty: string | null
+          metadata: Json | null
           name: string
           notes: string | null
           organization_id: string
@@ -516,11 +576,15 @@ export type Database = {
           competitor_name?: string | null
           created_at?: string
           email?: string | null
+          enriched_at?: string | null
+          enrichment_error?: string | null
+          enrichment_status?: string | null
           id?: string
           job?: string | null
           linkedin?: string | null
           media?: string | null
           media_specialty?: string | null
+          metadata?: Json | null
           name: string
           notes?: string | null
           organization_id: string
@@ -533,11 +597,15 @@ export type Database = {
           competitor_name?: string | null
           created_at?: string
           email?: string | null
+          enriched_at?: string | null
+          enrichment_error?: string | null
+          enrichment_status?: string | null
           id?: string
           job?: string | null
           linkedin?: string | null
           media?: string | null
           media_specialty?: string | null
+          metadata?: Json | null
           name?: string
           notes?: string | null
           organization_id?: string
@@ -1055,6 +1123,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      complete_job: {
+        Args: { p_job_id: string; p_result?: Json }
+        Returns: undefined
+      }
+      fail_job: {
+        Args: { p_error: string; p_job_id: string }
+        Returns: undefined
+      }
       get_user_org_role: {
         Args: { check_org_id: string; check_user_id: string }
         Returns: Database["public"]["Enums"]["org_role"]
@@ -1091,6 +1167,18 @@ export type Database = {
           similarity: number
           source_id: string
         }[]
+      }
+      pop_from_queue: {
+        Args: { p_queue_name: string }
+        Returns: {
+          id: string
+          organization_id: string
+          payload: Json
+        }[]
+      }
+      push_to_queue: {
+        Args: { p_org_id?: string; p_payload: Json; p_queue_name: string }
+        Returns: string
       }
       user_belongs_to_org: {
         Args: { check_org_id: string; check_user_id: string }
