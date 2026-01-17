@@ -8,6 +8,8 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
 ];
 
+const MAX_BATCH_SIZE = 25;
+
 const getCorsHeaders = (origin: string | null) => {
   const isAllowed = origin && (
     ALLOWED_ORIGINS.includes(origin) || 
@@ -37,9 +39,22 @@ serve(async (req) => {
     const body = await req.json();
     const { journalists, organization_id, journalist_id, name, media, email, linkedin } = body;
 
-    // Handle batch enrichment (multiple journalists)
     if (journalists && Array.isArray(journalists) && journalists.length > 0) {
-      console.log(`📦 Queueing ${journalists.length} journalists for enrichment`);
+      if (journalists.length > MAX_BATCH_SIZE) {
+        console.warn(`⚠️ Batch size ${journalists.length} exceeds limit of ${MAX_BATCH_SIZE}`);
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: `Limite dépassée : maximum ${MAX_BATCH_SIZE} journalistes par enrichissement. Vous en avez sélectionné ${journalists.length}.`,
+            code: "BATCH_LIMIT_EXCEEDED",
+            limit: MAX_BATCH_SIZE,
+            requested: journalists.length
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`📦 Mise en queue de ${journalists.length} journaliste(s) pour enrichissement`);
 
       const jobLogIds = [];
       const errors = [];
@@ -61,41 +76,104 @@ serve(async (req) => {
           });
 
           if (error) {
-            console.error(`❌ Failed to enqueue journalist ${journalistId}:`, error);
+            console.error(`❌ Échec mise en queue ${journalistId}:`, error);
             errors.push({ journalist_id: journalistId, error: error.message });
           } else {
             jobLogIds.push(jobLogId);
-            console.log(`✅ Queued journalist ${journalistId} (job_log_id: ${jobLogId})`);
+            console.log(`✅ Journaliste ${journalist.name} ajouté à la queue`);
           }
         } catch (err) {
-          console.error(`💥 Exception queueing journalist ${journalistId}:`, err);
+          console.error(`💥 Exception pour ${journalistId}:`, err);
           errors.push({ journalist_id: journalistId, error: (err as Error).message });
         }
       }
 
-      console.log(`✅ Batch complete: ${jobLogIds.length} queued, ${errors.length} errors`);
+      console.log(`✅ Queue remplie: ${jobLogIds.length} ajoutés, ${errors.length} erreurs`);
+
+      if (jobLogIds.length > 0) {
+        console.log("🚀 Démarrage du worker d'enrichissement...");
+        
+        try {
+          const workerResponse = await fetch(`${supabaseUrl}/functions/v1/journalist-enrichment-worker`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${supabaseKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ trigger: "batch_enqueue" }),
+          });
+
+          if (workerResponse.ok) {
+            const workerResult = await workerResponse.json();
+            console.log("✅ Worker terminé:", workerResult);
+
+            return new Response(
+              JSON.stringify({
+                success: true,
+                queued: jobLogIds.length,
+                total: journalists.length,
+                processed: workerResult.processed || 0,
+                successCount: workerResult.successCount || 0,
+                errorCount: workerResult.errorCount || 0,
+                message: workerResult.message || `${jobLogIds.length} journaliste(s) traité(s)`,
+                queueErrors: errors.length > 0 ? errors : undefined,
+              }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          } else {
+            const errorText = await workerResponse.text();
+            console.error("❌ Erreur worker:", errorText);
+            
+            return new Response(
+              JSON.stringify({
+                success: true,
+                queued: jobLogIds.length,
+                total: journalists.length,
+                workerError: "Le traitement a été mis en queue mais le worker a rencontré une erreur.",
+                message: `${jobLogIds.length} journaliste(s) mis en queue. Traitement en cours...`,
+                queueErrors: errors.length > 0 ? errors : undefined,
+              }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } catch (workerErr) {
+          console.error("💥 Exception appel worker:", workerErr);
+          
+          return new Response(
+            JSON.stringify({
+              success: true,
+              queued: jobLogIds.length,
+              total: journalists.length,
+              message: `${jobLogIds.length} journaliste(s) mis en queue. Le traitement démarrera automatiquement.`,
+              queueErrors: errors.length > 0 ? errors : undefined,
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
 
       return new Response(
         JSON.stringify({
-          success: true,
+          success: errors.length < journalists.length,
           queued: jobLogIds.length,
           total: journalists.length,
-          job_log_ids: jobLogIds,
           errors: errors.length > 0 ? errors : undefined,
+          message: jobLogIds.length > 0 
+            ? `${jobLogIds.length} journaliste(s) mis en queue`
+            : "Aucun journaliste n'a pu être mis en queue",
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: jobLogIds.length > 0 ? 200 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Handle single journalist enrichment
     if (!journalist_id || !name || !organization_id) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: journalist_id, name, organization_id or journalists array" }),
+        JSON.stringify({ error: "Champs requis manquants: journalist_id, name, organization_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("🔄 Queueing single journalist:", { journalist_id, name, media, organization_id });
+    console.log("🔄 Mise en queue journaliste unique:", { journalist_id, name, media, organization_id });
 
     try {
       const { data: jobLogId, error } = await supabase.rpc('enqueue_job', {
@@ -112,30 +190,40 @@ serve(async (req) => {
       });
 
       if (error) {
-        console.error("❌ Failed to enqueue job:", error);
+        console.error("❌ Échec mise en queue:", error);
         return new Response(
-          JSON.stringify({ error: "Failed to queue enrichment job", details: error.message }),
+          JSON.stringify({ error: "Impossible de mettre en queue l'enrichissement", details: error.message }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      console.log(`✅ Journalist queued successfully (job_log_id: ${jobLogId})`);
+      console.log(`✅ Journaliste mis en queue (job_log_id: ${jobLogId})`);
+      console.log("🚀 Démarrage du worker...");
+      
+      fetch(`${supabaseUrl}/functions/v1/journalist-enrichment-worker`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ trigger: "single_enqueue" }),
+      }).catch(err => console.error("Worker trigger error:", err));
 
       return new Response(
-        JSON.stringify({ success: true, job_log_id: jobLogId }),
+        JSON.stringify({ success: true, job_log_id: jobLogId, message: "Enrichissement en cours..." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (err) {
       console.error("💥 Exception:", err);
       return new Response(
-        JSON.stringify({ error: "Internal server error", details: (err as Error).message }),
+        JSON.stringify({ error: "Erreur interne du serveur", details: (err as Error).message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
     console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Erreur interne du serveur" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

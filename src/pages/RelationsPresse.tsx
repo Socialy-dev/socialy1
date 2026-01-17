@@ -918,23 +918,37 @@ const RelationsPresse = () => {
     }
   };
 
+  const MAX_ENRICHMENT_BATCH = 25;
+
   const handleEnrichJournalists = async () => {
     if (!effectiveOrgId) {
       toast({ title: "Erreur", description: "Organisation non trouvée", variant: "destructive" });
       return;
     }
 
-    const journalistsToEnrich = journalists.filter(j => !j.linkedin);
+    const journalistsToEnrich = journalists.filter(j => !j.linkedin && !j.email);
     
     if (journalistsToEnrich.length === 0) {
-      toast({ title: "Aucun journaliste à enrichir", description: "Tous les journalistes ont déjà un profil LinkedIn renseigné" });
+      toast({ 
+        title: "Aucun journaliste à enrichir", 
+        description: "Tous les journalistes ont déjà un profil LinkedIn ou email renseigné" 
+      });
+      return;
+    }
+
+    if (journalistsToEnrich.length > MAX_ENRICHMENT_BATCH) {
+      toast({ 
+        title: "Limite dépassée", 
+        description: `Maximum ${MAX_ENRICHMENT_BATCH} journalistes par enrichissement. Vous en avez ${journalistsToEnrich.length}. Veuillez réduire la sélection ou enrichir en plusieurs fois.`, 
+        variant: "destructive" 
+      });
       return;
     }
 
     setIsEnrichingJournalists(true);
 
     try {
-      const { error } = await supabase.functions.invoke("notify-new-journalist", {
+      const { data, error } = await supabase.functions.invoke("notify-new-journalist", {
         body: {
           journalists: journalistsToEnrich.map(j => ({
             journalist_id: j.id,
@@ -949,13 +963,45 @@ const RelationsPresse = () => {
 
       if (error) throw error;
 
-      toast({ 
-        title: "Enrichissement lancé", 
-        description: `${journalistsToEnrich.length} journaliste${journalistsToEnrich.length > 1 ? 's' : ''} envoyé${journalistsToEnrich.length > 1 ? 's' : ''} pour enrichissement` 
-      });
-    } catch (err) {
+      if (data?.code === "BATCH_LIMIT_EXCEEDED") {
+        toast({ 
+          title: "Limite dépassée", 
+          description: data.error, 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      const successCount = data?.successCount || 0;
+      const errorCount = data?.errorCount || 0;
+      const processed = data?.processed || journalistsToEnrich.length;
+
+      if (successCount > 0) {
+        toast({ 
+          title: "Enrichissement terminé", 
+          description: `${successCount} journaliste(s) enrichi(s) sur ${processed}${errorCount > 0 ? `, ${errorCount} erreur(s)` : ''}`
+        });
+        fetchJournalists();
+      } else if (errorCount > 0) {
+        toast({ 
+          title: "Échec de l'enrichissement", 
+          description: `Aucun profil trouvé pour les ${errorCount} journaliste(s) traité(s)`, 
+          variant: "destructive" 
+        });
+      } else {
+        toast({ 
+          title: "Enrichissement en cours", 
+          description: data?.message || `${journalistsToEnrich.length} journaliste(s) en cours de traitement`
+        });
+      }
+    } catch (err: any) {
       console.error("Enrichment error:", err);
-      toast({ title: "Échec de l'enrichissement", description: "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+      const errorMessage = err?.message || "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.";
+      toast({ 
+        title: "Échec de l'enrichissement", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setIsEnrichingJournalists(false);
     }
@@ -1677,16 +1723,34 @@ const RelationsPresse = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEnrichJournalists}
-                      disabled={isEnrichingJournalists || journalists.filter(j => !j.linkedin).length === 0}
-                      className="gap-2"
-                    >
-                      <Zap className="w-4 h-4" />
-                      {isEnrichingJournalists ? "Enrichissement..." : `Enrichir (${journalists.filter(j => !j.linkedin).length})`}
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleEnrichJournalists}
+                            disabled={isEnrichingJournalists || journalists.filter(j => !j.linkedin && !j.email).length === 0}
+                            className={cn(
+                              "gap-2",
+                              journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH && "border-destructive/50"
+                            )}
+                          >
+                            <Zap className="w-4 h-4" />
+                            {isEnrichingJournalists 
+                              ? "Enrichissement en cours..." 
+                              : `Enrichir (${journalists.filter(j => !j.linkedin && !j.email).length}${journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH ? ` / max ${MAX_ENRICHMENT_BATCH}` : ''})`
+                            }
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH 
+                            ? `Limite de ${MAX_ENRICHMENT_BATCH} journalistes par enrichissement dépassée`
+                            : `Rechercher LinkedIn et email pour ${journalists.filter(j => !j.linkedin && !j.email).length} journaliste(s)`
+                          }
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
                     <label
                       className={cn(
