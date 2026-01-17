@@ -233,27 +233,28 @@ const RelationsPresse = () => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'journalists',
-          filter: `organization_id=eq.${effectiveOrgId}`
         },
         (payload) => {
           const updatedJournalist = payload.new as any;
-          setJournalists(prev => 
-            prev.map(j => 
-              j.id === updatedJournalist.id 
-                ? { ...j, ...updatedJournalist, selected: j.selected } 
-                : j
-            )
-          );
-          
-          if (updatedJournalist.enrichment_status === 'completed' && 
-              (updatedJournalist.linkedin || updatedJournalist.email)) {
-            toast({
-              title: "Enrichissement réussi",
-              description: `${updatedJournalist.name} a été enrichi`,
-            });
+          if (updatedJournalist && updatedJournalist.organization_id === effectiveOrgId) {
+            setJournalists(prev => 
+              prev.map(j => 
+                j.id === updatedJournalist.id 
+                  ? { ...j, ...updatedJournalist, selected: j.selected } 
+                  : j
+              )
+            );
+            
+            if (updatedJournalist.enrichment_status === 'completed' && 
+                (updatedJournalist.linkedin || updatedJournalist.email)) {
+              toast({
+                title: "Enrichissement réussi",
+                description: `${updatedJournalist.name} a été enrichi`,
+              });
+            }
           }
         }
       )
@@ -263,6 +264,20 @@ const RelationsPresse = () => {
       supabase.removeChannel(channel);
     };
   }, [effectiveOrgId]);
+
+  useEffect(() => {
+    const hasEnrichmentsInProgress = journalists.some(
+      j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing'
+    );
+
+    if (!hasEnrichmentsInProgress || !effectiveOrgId) return;
+
+    const pollInterval = setInterval(() => {
+      fetchJournalists();
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [journalists.some(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing'), effectiveOrgId]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -1861,6 +1876,26 @@ const RelationsPresse = () => {
                         </Tooltip>
                       </TooltipProvider>
                     )}
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => fetchJournalists()}
+                            disabled={isLoadingJournalists}
+                            className="gap-2 text-muted-foreground hover:text-foreground"
+                          >
+                            <RefreshCw className={cn("w-4 h-4", isLoadingJournalists && "animate-spin")} />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-card border-border shadow-lg">
+                          Actualiser la liste des journalistes
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
                     <label
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all cursor-pointer",
