@@ -1241,6 +1241,7 @@ export type Database = {
         Args: { p_qty: number; p_queue_name: string; p_vt: number }
         Returns: {
           enqueued_at: string
+          headers: Json
           message: Json
           msg_id: number
           read_ct: number
