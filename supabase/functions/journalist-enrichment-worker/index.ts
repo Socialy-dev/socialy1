@@ -194,7 +194,7 @@ async function enrichJournalistWithApify(payload: any) {
     firstName: firstName,
     lastName: lastName,
     profileScraperMode: "Full + email search",
-    maxItems: 1
+    maxItems: 5
   };
 
   const runActorUrl = `${APIFY_API_BASE}/acts/${APIFY_ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiToken}`;
@@ -230,7 +230,47 @@ async function enrichJournalistWithApify(payload: any) {
     };
   }
 
-  const profile = results[0];
+  const relevantKeywords = [
+    'journalist', 'journaliste', 'reporter', 'editor', 'rédacteur', 'rédactrice',
+    'writer', 'copywriter', 'content', 'blogger', 'blogueur', 'bloggeur',
+    'freelance', 'author', 'auteur', 'columnist', 'chroniqueur', 'correspondent',
+    'press', 'presse', 'media', 'médias', 'news', 'editorial', 'éditorial',
+    'communication', 'pr ', 'public relations', 'relations publiques',
+    'influencer', 'influenceur', 'créateur', 'creator', 'storyteller',
+    'podcast', 'vidéaste', 'youtuber', 'social media', 'community manager'
+  ];
+
+  let bestProfile = null;
+  let bestScore = 0;
+
+  for (const profile of results) {
+    const headline = (profile.headline || profile.title || '').toLowerCase();
+    const about = (profile.about || profile.summary || '').toLowerCase();
+    const searchText = `${headline} ${about}`;
+    
+    let score = 0;
+    for (const keyword of relevantKeywords) {
+      if (searchText.includes(keyword)) {
+        score += headline.includes(keyword) ? 2 : 1;
+      }
+    }
+    
+    console.log(`📊 Profile "${profile.fullName || profile.firstName}" score: ${score} (headline: ${headline.substring(0, 50)}...)`);
+    
+    if (score > bestScore) {
+      bestScore = score;
+      bestProfile = profile;
+    }
+  }
+
+  if (!bestProfile) {
+    bestProfile = results[0];
+    console.log(`⚠️ No relevant profile found, using first result`);
+  } else {
+    console.log(`✅ Selected best profile with score ${bestScore}: ${bestProfile.fullName || bestProfile.firstName}`);
+  }
+
+  const profile = bestProfile;
 
   console.log(`✅ Found profile: ${profile.profileUrl || profile.linkedinUrl || 'N/A'}`);
 
