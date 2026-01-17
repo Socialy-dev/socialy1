@@ -35,46 +35,58 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const { journalists, organization_id, journalist_id, name, media, email } = body;
+    const { journalists, organization_id, journalist_id, name, media, email, linkedin } = body;
 
-    const webhookUrl = Deno.env.get("N8N_JOURNALIST_WEBHOOK_URL");
-    if (!webhookUrl) {
-      console.error("N8N_JOURNALIST_WEBHOOK_URL not configured");
-      return new Response(
-        JSON.stringify({ error: "Webhook not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Handle batch enrichment (multiple journalists)
     if (journalists && Array.isArray(journalists) && journalists.length > 0) {
-      console.log(`Sending ${journalists.length} journalists to n8n`);
+      console.log(`📦 Queueing ${journalists.length} journalists for enrichment`);
 
-      const webhookResponse = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          journalists,
-          organization_id,
-          batch: true,
-          created_at: new Date().toISOString(),
-        }),
-      });
+      const jobLogIds = [];
+      const errors = [];
 
-      if (!webhookResponse.ok) {
-        console.error("Webhook failed:", await webhookResponse.text());
-        return new Response(
-          JSON.stringify({ error: "Webhook delivery failed" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      for (const journalist of journalists) {
+        try {
+          const { data: jobLogId, error } = await supabase.rpc('enqueue_job', {
+            p_queue_name: 'journalist_enrichment',
+            p_job_type: 'enrich_journalist',
+            p_organization_id: organization_id || journalist.organization_id,
+            p_payload: {
+              journalist_id: journalist.id,
+              name: journalist.name,
+              media: journalist.media || null,
+              email: journalist.email || null,
+              linkedin: journalist.linkedin || null,
+            }
+          });
+
+          if (error) {
+            console.error(`❌ Failed to enqueue journalist ${journalist.id}:`, error);
+            errors.push({ journalist_id: journalist.id, error: error.message });
+          } else {
+            jobLogIds.push(jobLogId);
+            console.log(`✅ Queued journalist ${journalist.id} (job_log_id: ${jobLogId})`);
+          }
+        } catch (err) {
+          console.error(`💥 Exception queueing journalist ${journalist.id}:`, err);
+          errors.push({ journalist_id: journalist.id, error: err.message });
+        }
       }
 
-      console.log("Batch journalist notification sent successfully");
+      console.log(`✅ Batch complete: ${jobLogIds.length} queued, ${errors.length} errors`);
+
       return new Response(
-        JSON.stringify({ success: true, count: journalists.length }),
+        JSON.stringify({
+          success: true,
+          queued: jobLogIds.length,
+          total: journalists.length,
+          job_log_ids: jobLogIds,
+          errors: errors.length > 0 ? errors : undefined,
+        }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Handle single journalist enrichment
     if (!journalist_id || !name || !organization_id) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: journalist_id, name, organization_id or journalists array" }),
@@ -82,35 +94,43 @@ serve(async (req) => {
       );
     }
 
-    console.log("Sending journalist to n8n:", { journalist_id, name, media, organization_id });
+    console.log("🔄 Queueing single journalist:", { journalist_id, name, media, organization_id });
 
-    const webhookResponse = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        journalist_id,
-        name,
-        media: media || null,
-        email: email || null,
-        organization_id,
-        created_at: new Date().toISOString(),
-      }),
-    });
+    try {
+      const { data: jobLogId, error } = await supabase.rpc('enqueue_job', {
+        p_queue_name: 'journalist_enrichment',
+        p_job_type: 'enrich_journalist',
+        p_organization_id: organization_id,
+        p_payload: {
+          journalist_id,
+          name,
+          media: media || null,
+          email: email || null,
+          linkedin: linkedin || null,
+        }
+      });
 
-    if (!webhookResponse.ok) {
-      console.error("Webhook failed:", await webhookResponse.text());
+      if (error) {
+        console.error("❌ Failed to enqueue job:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to queue enrichment job", details: error.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`✅ Journalist queued successfully (job_log_id: ${jobLogId})`);
+
       return new Response(
-        JSON.stringify({ error: "Webhook delivery failed" }),
+        JSON.stringify({ success: true, job_log_id: jobLogId }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (err) {
+      console.error("💥 Exception:", err);
+      return new Response(
+        JSON.stringify({ error: "Internal server error", details: err.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("Journalist notification sent successfully");
-
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
