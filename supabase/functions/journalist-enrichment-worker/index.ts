@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const BATCH_SIZE = 5;
 const VISIBILITY_TIMEOUT = 300;
+const MAX_TOTAL_PROCESSING = 30;
 const APIFY_ACTOR_ID = "CP1SVZfEwWflrmWCX";
 const APIFY_API_BASE = "https://api.apify.com/v2";
 
@@ -57,189 +58,203 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    console.log("🚀 Worker démarré - lecture de la queue journalist_enrichment...");
+    console.log("🚀 Worker démarré - traitement complet de la queue journalist_enrichment...");
 
-    const { data: messages, error: readError } = await supabaseAdmin.rpc('pgmq_read', {
-      p_queue_name: 'journalist_enrichment',
-      p_vt: VISIBILITY_TIMEOUT,
-      p_qty: BATCH_SIZE
-    });
+    let totalProcessed = 0;
+    let totalSuccess = 0;
+    let totalErrors = 0;
+    const allResults: Array<{journalist_id: string, status: string, error?: string}> = [];
 
-    if (readError) {
-      console.error("❌ Erreur lecture queue:", readError);
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: formatErrorForUser("APIFY_API_ERROR", readError.message)
-      }), { status: 500 });
-    }
+    while (totalProcessed < MAX_TOTAL_PROCESSING) {
+      const { data: messages, error: readError } = await supabaseAdmin.rpc('pgmq_read', {
+        p_queue_name: 'journalist_enrichment',
+        p_vt: VISIBILITY_TIMEOUT,
+        p_qty: BATCH_SIZE
+      });
 
-    if (!messages || messages.length === 0) {
-      console.log("💤 Aucun message dans la queue");
-      return new Response(JSON.stringify({ 
-        success: true,
-        processed: 0,
-        message: "Aucune tâche d'enrichissement en attente."
-      }), { status: 200 });
-    }
-
-    console.log(`📦 Traitement de ${messages.length} message(s)...`);
-
-    let successCount = 0;
-    let errorCount = 0;
-    const results: Array<{journalist_id: string, status: string, error?: string}> = [];
-
-    for (const message of messages) {
-      const { msg_id, message: msgData } = message;
-      const { job_log_id, organization_id, payload } = msgData;
-
-      if (!payload?.journalist_id) {
-        console.error("❌ Message invalide - journalist_id manquant");
-        await supabaseAdmin.rpc('pgmq_archive', {
-          p_queue_name: 'journalist_enrichment',
-          p_msg_id: msg_id
-        });
-        errorCount++;
-        continue;
+      if (readError) {
+        console.error("❌ Erreur lecture queue:", readError);
+        if (totalProcessed === 0) {
+          return new Response(JSON.stringify({ 
+            success: false,
+            error: formatErrorForUser("APIFY_API_ERROR", readError.message)
+          }), { status: 500 });
+        }
+        break;
       }
 
-      console.log(`🔄 Enrichissement: ${payload.journalist_id} (${payload.name})`);
+      if (!messages || messages.length === 0) {
+        console.log("✅ Queue vide - traitement terminé");
+        break;
+      }
 
-      try {
-        await supabaseAdmin
-          .from('journalists')
-          .update({
-            enrichment_status: 'processing',
+      console.log(`📦 Batch ${Math.floor(totalProcessed / BATCH_SIZE) + 1}: ${messages.length} message(s)...`);
+
+      for (const message of messages) {
+        if (totalProcessed >= MAX_TOTAL_PROCESSING) {
+          console.log(`⚠️ Limite de ${MAX_TOTAL_PROCESSING} atteinte - arrêt du traitement`);
+          break;
+        }
+
+        const { msg_id, message: msgData } = message;
+        const { job_log_id, organization_id, payload } = msgData;
+
+        if (!payload?.journalist_id) {
+          console.error("❌ Message invalide - journalist_id manquant");
+          await supabaseAdmin.rpc('pgmq_archive', {
+            p_queue_name: 'journalist_enrichment',
+            p_msg_id: msg_id
+          });
+          totalErrors++;
+          totalProcessed++;
+          continue;
+        }
+
+        console.log(`🔄 [${totalProcessed + 1}/${MAX_TOTAL_PROCESSING}] Enrichissement: ${payload.name}`);
+
+        try {
+          await supabaseAdmin
+            .from('journalists')
+            .update({
+              enrichment_status: 'processing',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', payload.journalist_id)
+            .eq('organization_id', organization_id);
+
+          if (job_log_id) {
+            const { data: jobLog } = await supabaseAdmin
+              .from('job_logs')
+              .select('attempts')
+              .eq('id', job_log_id)
+              .single();
+
+            await supabaseAdmin
+              .from('job_logs')
+              .update({
+                status: 'processing',
+                started_at: new Date().toISOString(),
+                attempts: (jobLog?.attempts || 0) + 1
+              })
+              .eq('id', job_log_id);
+          }
+
+          const enrichedData = await enrichJournalistWithApify(payload);
+
+          const updatePayload: Record<string, any> = {
+            enrichment_status: enrichedData.found ? 'completed' : 'not_found',
+            enriched_at: new Date().toISOString(),
+            enrichment_error: enrichedData.found ? null : enrichedData.errorMessage,
             updated_at: new Date().toISOString(),
-          })
-          .eq('id', payload.journalist_id)
-          .eq('organization_id', organization_id);
+          };
 
-        if (job_log_id) {
-          const { data: jobLog } = await supabaseAdmin
-            .from('job_logs')
-            .select('attempts')
-            .eq('id', job_log_id)
-            .single();
+          if (enrichedData.linkedin) {
+            updatePayload.linkedin = enrichedData.linkedin;
+          }
+          if (enrichedData.email) {
+            updatePayload.email = enrichedData.email;
+          }
+          if (enrichedData.phone) {
+            updatePayload.phone = enrichedData.phone;
+          }
+          if (enrichedData.job) {
+            updatePayload.job = enrichedData.job;
+          }
+
+          const { error: updateError } = await supabaseAdmin
+            .from('journalists')
+            .update(updatePayload)
+            .eq('id', payload.journalist_id)
+            .eq('organization_id', organization_id);
+
+          if (updateError) {
+            throw new Error(formatErrorForUser("UPDATE_FAILED", updateError.message));
+          }
+
+          if (job_log_id) {
+            await supabaseAdmin
+              .from('job_logs')
+              .update({
+                status: enrichedData.found ? 'completed' : 'completed_no_result',
+                result: {
+                  found: enrichedData.found,
+                  linkedin: enrichedData.linkedin,
+                  email: enrichedData.email,
+                  job: enrichedData.job
+                },
+                completed_at: new Date().toISOString(),
+              })
+              .eq('id', job_log_id);
+          }
+
+          await supabaseAdmin.rpc('pgmq_archive', {
+            p_queue_name: 'journalist_enrichment',
+            p_msg_id: msg_id
+          });
+
+          totalSuccess++;
+          allResults.push({
+            journalist_id: payload.journalist_id,
+            status: enrichedData.found ? 'enriched' : 'not_found'
+          });
+          console.log(`✅ ${payload.name} traité avec succès`);
+
+        } catch (error) {
+          const errorMessage = (error as Error).message;
+          console.error(`❌ Échec ${payload.name}:`, errorMessage);
 
           await supabaseAdmin
-            .from('job_logs')
+            .from('journalists')
             .update({
-              status: 'processing',
-              started_at: new Date().toISOString(),
-              attempts: (jobLog?.attempts || 0) + 1
+              enrichment_status: 'failed',
+              enrichment_error: errorMessage,
+              updated_at: new Date().toISOString(),
             })
-            .eq('id', job_log_id);
+            .eq('id', payload.journalist_id)
+            .eq('organization_id', organization_id);
+
+          if (job_log_id) {
+            await supabaseAdmin
+              .from('job_logs')
+              .update({
+                status: 'failed',
+                error_message: errorMessage,
+                completed_at: new Date().toISOString(),
+              })
+              .eq('id', job_log_id);
+          }
+
+          await supabaseAdmin.rpc('pgmq_archive', {
+            p_queue_name: 'journalist_enrichment',
+            p_msg_id: msg_id
+          });
+
+          totalErrors++;
+          allResults.push({
+            journalist_id: payload.journalist_id,
+            status: 'failed',
+            error: errorMessage
+          });
         }
 
-        const enrichedData = await enrichJournalistWithApify(payload);
-
-        const updatePayload: Record<string, any> = {
-          enrichment_status: enrichedData.found ? 'completed' : 'not_found',
-          enriched_at: new Date().toISOString(),
-          enrichment_error: enrichedData.found ? null : enrichedData.errorMessage,
-          updated_at: new Date().toISOString(),
-        };
-
-        if (enrichedData.linkedin) {
-          updatePayload.linkedin = enrichedData.linkedin;
-        }
-        if (enrichedData.email) {
-          updatePayload.email = enrichedData.email;
-        }
-        if (enrichedData.phone) {
-          updatePayload.phone = enrichedData.phone;
-        }
-        if (enrichedData.job) {
-          updatePayload.job = enrichedData.job;
-        }
-
-        const { error: updateError } = await supabaseAdmin
-          .from('journalists')
-          .update(updatePayload)
-          .eq('id', payload.journalist_id)
-          .eq('organization_id', organization_id);
-
-        if (updateError) {
-          throw new Error(formatErrorForUser("UPDATE_FAILED", updateError.message));
-        }
-
-        if (job_log_id) {
-          await supabaseAdmin
-            .from('job_logs')
-            .update({
-              status: enrichedData.found ? 'completed' : 'completed_no_result',
-              result: {
-                found: enrichedData.found,
-                linkedin: enrichedData.linkedin,
-                email: enrichedData.email,
-                job: enrichedData.job
-              },
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', job_log_id);
-        }
-
-        await supabaseAdmin.rpc('pgmq_archive', {
-          p_queue_name: 'journalist_enrichment',
-          p_msg_id: msg_id
-        });
-
-        successCount++;
-        results.push({
-          journalist_id: payload.journalist_id,
-          status: enrichedData.found ? 'enriched' : 'not_found'
-        });
-        console.log(`✅ Journaliste ${payload.journalist_id} traité avec succès`);
-
-      } catch (error) {
-        const errorMessage = (error as Error).message;
-        console.error(`❌ Échec enrichissement ${payload.journalist_id}:`, errorMessage);
-
-        await supabaseAdmin
-          .from('journalists')
-          .update({
-            enrichment_status: 'failed',
-            enrichment_error: errorMessage,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', payload.journalist_id)
-          .eq('organization_id', organization_id);
-
-        if (job_log_id) {
-          await supabaseAdmin
-            .from('job_logs')
-            .update({
-              status: 'failed',
-              error_message: errorMessage,
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', job_log_id);
-        }
-
-        await supabaseAdmin.rpc('pgmq_archive', {
-          p_queue_name: 'journalist_enrichment',
-          p_msg_id: msg_id
-        });
-
-        errorCount++;
-        results.push({
-          journalist_id: payload.journalist_id,
-          status: 'failed',
-          error: errorMessage
-        });
+        totalProcessed++;
       }
     }
 
-    console.log(`✅ Batch terminé: ${successCount} succès, ${errorCount} erreurs`);
+    const summary = totalProcessed === 0 
+      ? "Aucune tâche d'enrichissement en attente."
+      : `${totalSuccess} journaliste(s) enrichi(s), ${totalErrors} erreur(s) sur ${totalProcessed} traité(s).`;
+
+    console.log(`🏁 Traitement terminé: ${summary}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        processed: messages.length,
-        successCount,
-        errorCount,
-        results,
-        message: `${successCount} journaliste(s) enrichi(s), ${errorCount} erreur(s).`
+        processed: totalProcessed,
+        successCount: totalSuccess,
+        errorCount: totalErrors,
+        results: allResults,
+        message: summary
       }),
       {
         status: 200,
@@ -367,8 +382,6 @@ function selectBestProfile(results: any[], firstName: string, lastName: string):
       }
     }
     
-    console.log(`📊 Score profil "${profile.fullName || profile.firstName || 'N/A'}": ${score}`);
-    
     if (score > bestScore) {
       bestScore = score;
       bestProfile = profile;
@@ -377,8 +390,6 @@ function selectBestProfile(results: any[], firstName: string, lastName: string):
 
   if (bestScore > 0) {
     console.log(`✅ Meilleur profil (score ${bestScore}): ${bestProfile.fullName || bestProfile.firstName}`);
-  } else {
-    console.log(`⚠️ Aucun profil pertinent, utilisation du premier résultat`);
   }
 
   return bestProfile;
@@ -399,11 +410,7 @@ function parseApifyProfile(profile: any, firstName: string, lastName: string): E
   const profileFirstName = extractString(profile.firstName) || firstName;
   const profileLastName = extractString(profile.lastName) || lastName;
 
-  console.log(`📋 Données extraites:`);
-  console.log(`   - LinkedIn: ${linkedinUrl || 'non trouvé'}`);
-  console.log(`   - Email: ${email || 'non trouvé'}`);
-  console.log(`   - Téléphone: ${phone || 'non trouvé'}`);
-  console.log(`   - Poste: ${job || 'non trouvé'}`);
+  console.log(`📋 Données extraites: LinkedIn=${linkedinUrl ? 'oui' : 'non'}, Email=${email ? 'oui' : 'non'}, Job=${job ? 'oui' : 'non'}`);
 
   return {
     linkedin: linkedinUrl,
