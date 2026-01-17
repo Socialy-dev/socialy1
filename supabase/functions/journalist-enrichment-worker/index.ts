@@ -237,8 +237,34 @@ async function enrichJournalistWithApify(payload: any) {
   console.log(`✅ Found profile: ${profile.profileUrl || profile.linkedinUrl || 'N/A'}`);
 
   const linkedinUrl = profile.profileUrl || profile.linkedinUrl || profile.url || null;
-  const email = profile.email || profile.emails?.[0] || null;
-  const phone = profile.phone || profile.phoneNumber || null;
+  
+  let email = null;
+  if (profile.email) {
+    if (typeof profile.email === 'object' && profile.email.email) {
+      email = profile.email.email;
+    } else if (typeof profile.email === 'string') {
+      email = profile.email;
+    }
+  } else if (profile.emails && Array.isArray(profile.emails) && profile.emails.length > 0) {
+    const firstEmail = profile.emails[0];
+    if (typeof firstEmail === 'object' && firstEmail.email) {
+      email = firstEmail.email;
+    } else if (typeof firstEmail === 'string') {
+      email = firstEmail;
+    }
+  }
+  
+  let phone = null;
+  if (profile.phone) {
+    if (typeof profile.phone === 'object' && profile.phone.phone) {
+      phone = profile.phone.phone;
+    } else if (typeof profile.phone === 'string') {
+      phone = profile.phone;
+    }
+  } else if (profile.phoneNumber) {
+    phone = typeof profile.phoneNumber === 'string' ? profile.phoneNumber : null;
+  }
+  
   const job = profile.headline || profile.title || profile.currentPosition?.title || null;
   const company = profile.company || profile.currentPosition?.company || null;
 
