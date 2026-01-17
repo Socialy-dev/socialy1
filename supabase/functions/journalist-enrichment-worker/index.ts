@@ -6,6 +6,50 @@ const VISIBILITY_TIMEOUT = 300;
 const APIFY_ACTOR_ID = "CP1SVZfEwWflrmWCX";
 const APIFY_API_BASE = "https://api.apify.com/v2";
 
+interface EnrichmentResult {
+  linkedin: string | null;
+  email: string | null;
+  phone: string | null;
+  job: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  found: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+}
+
+const ERROR_CODES = {
+  APIFY_TOKEN_MISSING: {
+    code: "APIFY_CONFIG_001",
+    message: "Configuration Apify manquante. Contactez l'administrateur système.",
+  },
+  APIFY_API_ERROR: {
+    code: "APIFY_API_001", 
+    message: "Erreur de communication avec le service d'enrichissement.",
+  },
+  NO_PROFILE_FOUND: {
+    code: "ENRICH_001",
+    message: "Aucun profil LinkedIn correspondant trouvé.",
+  },
+  INVALID_NAME: {
+    code: "ENRICH_002",
+    message: "Nom du journaliste invalide ou incomplet.",
+  },
+  PARSE_ERROR: {
+    code: "PARSE_001",
+    message: "Erreur lors du traitement des données récupérées.",
+  },
+  UPDATE_FAILED: {
+    code: "DB_001",
+    message: "Échec de la mise à jour en base de données.",
+  },
+} as const;
+
+function formatErrorForUser(errorCode: keyof typeof ERROR_CODES, details?: string): string {
+  const error = ERROR_CODES[errorCode];
+  return details ? `[${error.code}] ${error.message} (${details})` : `[${error.code}] ${error.message}`;
+}
+
 serve(async (req) => {
   try {
     const supabaseAdmin = createClient(
@@ -13,7 +57,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    console.log("🚀 Worker started - polling journalist_enrichment queue...");
+    console.log("🚀 Worker démarré - lecture de la queue journalist_enrichment...");
 
     const { data: messages, error: readError } = await supabaseAdmin.rpc('pgmq_read', {
       p_queue_name: 'journalist_enrichment',
@@ -22,25 +66,43 @@ serve(async (req) => {
     });
 
     if (readError) {
-      console.error("❌ Error reading queue:", readError);
-      return new Response(JSON.stringify({ error: readError.message }), { status: 500 });
+      console.error("❌ Erreur lecture queue:", readError);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: formatErrorForUser("APIFY_API_ERROR", readError.message)
+      }), { status: 500 });
     }
 
     if (!messages || messages.length === 0) {
-      console.log("💤 No messages in queue");
-      return new Response(JSON.stringify({ processed: 0 }), { status: 200 });
+      console.log("💤 Aucun message dans la queue");
+      return new Response(JSON.stringify({ 
+        success: true,
+        processed: 0,
+        message: "Aucune tâche d'enrichissement en attente."
+      }), { status: 200 });
     }
 
-    console.log(`📦 Processing ${messages.length} message(s)...`);
+    console.log(`📦 Traitement de ${messages.length} message(s)...`);
 
     let successCount = 0;
     let errorCount = 0;
+    const results: Array<{journalist_id: string, status: string, error?: string}> = [];
 
     for (const message of messages) {
       const { msg_id, message: msgData } = message;
       const { job_log_id, organization_id, payload } = msgData;
 
-      console.log(`🔄 Processing journalist: ${payload.journalist_id} (${payload.name})`);
+      if (!payload?.journalist_id) {
+        console.error("❌ Message invalide - journalist_id manquant");
+        await supabaseAdmin.rpc('pgmq_archive', {
+          p_queue_name: 'journalist_enrichment',
+          p_msg_id: msg_id
+        });
+        errorCount++;
+        continue;
+      }
+
+      console.log(`🔄 Enrichissement: ${payload.journalist_id} (${payload.name})`);
 
       try {
         await supabaseAdmin
@@ -53,14 +115,6 @@ serve(async (req) => {
           .eq('organization_id', organization_id);
 
         if (job_log_id) {
-          await supabaseAdmin
-            .from('job_logs')
-            .update({
-              status: 'processing',
-              started_at: new Date().toISOString(),
-            })
-            .eq('id', job_log_id);
-
           const { data: jobLog } = await supabaseAdmin
             .from('job_logs')
             .select('attempts')
@@ -69,38 +123,57 @@ serve(async (req) => {
 
           await supabaseAdmin
             .from('job_logs')
-            .update({ attempts: (jobLog?.attempts || 0) + 1 })
+            .update({
+              status: 'processing',
+              started_at: new Date().toISOString(),
+              attempts: (jobLog?.attempts || 0) + 1
+            })
             .eq('id', job_log_id);
         }
 
         const enrichedData = await enrichJournalistWithApify(payload);
 
+        const updatePayload: Record<string, any> = {
+          enrichment_status: enrichedData.found ? 'completed' : 'not_found',
+          enriched_at: new Date().toISOString(),
+          enrichment_error: enrichedData.found ? null : enrichedData.errorMessage,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (enrichedData.linkedin) {
+          updatePayload.linkedin = enrichedData.linkedin;
+        }
+        if (enrichedData.email) {
+          updatePayload.email = enrichedData.email;
+        }
+        if (enrichedData.phone) {
+          updatePayload.phone = enrichedData.phone;
+        }
+        if (enrichedData.job) {
+          updatePayload.job = enrichedData.job;
+        }
+
         const { error: updateError } = await supabaseAdmin
           .from('journalists')
-          .update({
-            linkedin: enrichedData.linkedin || payload.linkedin,
-            email: enrichedData.email || payload.email,
-            job: enrichedData.job || payload.job,
-            phone: enrichedData.phone || payload.phone,
-            metadata: enrichedData.metadata,
-            enrichment_status: 'completed',
-            enriched_at: new Date().toISOString(),
-            enrichment_error: null,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updatePayload)
           .eq('id', payload.journalist_id)
           .eq('organization_id', organization_id);
 
         if (updateError) {
-          throw new Error(`Failed to update journalist: ${updateError.message}`);
+          throw new Error(formatErrorForUser("UPDATE_FAILED", updateError.message));
         }
 
         if (job_log_id) {
           await supabaseAdmin
             .from('job_logs')
             .update({
-              status: 'completed',
-              result: enrichedData,
+              status: enrichedData.found ? 'completed' : 'completed_no_result',
+              result: {
+                found: enrichedData.found,
+                linkedin: enrichedData.linkedin,
+                email: enrichedData.email,
+                job: enrichedData.job
+              },
               completed_at: new Date().toISOString(),
             })
             .eq('id', job_log_id);
@@ -112,16 +185,21 @@ serve(async (req) => {
         });
 
         successCount++;
-        console.log(`✅ Successfully enriched journalist ${payload.journalist_id}`);
+        results.push({
+          journalist_id: payload.journalist_id,
+          status: enrichedData.found ? 'enriched' : 'not_found'
+        });
+        console.log(`✅ Journaliste ${payload.journalist_id} traité avec succès`);
 
       } catch (error) {
-        console.error(`❌ Failed to enrich journalist ${payload.journalist_id}:`, error);
+        const errorMessage = (error as Error).message;
+        console.error(`❌ Échec enrichissement ${payload.journalist_id}:`, errorMessage);
 
         await supabaseAdmin
           .from('journalists')
           .update({
             enrichment_status: 'failed',
-            enrichment_error: (error as Error).message,
+            enrichment_error: errorMessage,
             updated_at: new Date().toISOString(),
           })
           .eq('id', payload.journalist_id)
@@ -132,7 +210,7 @@ serve(async (req) => {
             .from('job_logs')
             .update({
               status: 'failed',
-              error_message: (error as Error).message,
+              error_message: errorMessage,
               completed_at: new Date().toISOString(),
             })
             .eq('id', job_log_id);
@@ -144,16 +222,24 @@ serve(async (req) => {
         });
 
         errorCount++;
+        results.push({
+          journalist_id: payload.journalist_id,
+          status: 'failed',
+          error: errorMessage
+        });
       }
     }
 
-    console.log(`✅ Batch complete: ${successCount} success, ${errorCount} errors`);
+    console.log(`✅ Batch terminé: ${successCount} succès, ${errorCount} erreurs`);
 
     return new Response(
       JSON.stringify({
+        success: true,
         processed: messages.length,
-        success: successCount,
-        errors: errorCount,
+        successCount,
+        errorCount,
+        results,
+        message: `${successCount} journaliste(s) enrichi(s), ${errorCount} erreur(s).`
       }),
       {
         status: 200,
@@ -162,33 +248,37 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("💥 Worker error:", error);
+    console.error("💥 Erreur worker:", error);
     return new Response(
-      JSON.stringify({ error: (error as Error).message }),
+      JSON.stringify({ 
+        success: false,
+        error: formatErrorForUser("APIFY_API_ERROR", (error as Error).message)
+      }),
       { status: 500 }
     );
   }
 });
 
-async function enrichJournalistWithApify(payload: any) {
-  console.log(`🔍 Enriching journalist via Apify: ${payload.name}`);
+async function enrichJournalistWithApify(payload: any): Promise<EnrichmentResult> {
+  console.log(`🔍 Recherche Apify pour: ${payload.name}`);
 
   const apifyApiToken = Deno.env.get("APIFY_API_TOKEN");
 
   if (!apifyApiToken) {
-    console.warn("⚠️ APIFY_API_TOKEN not set - skipping enrichment");
-    throw new Error("APIFY_API_TOKEN not configured");
+    console.error("⚠️ APIFY_API_TOKEN non configuré");
+    throw new Error(formatErrorForUser("APIFY_TOKEN_MISSING"));
   }
 
-  const nameParts = payload.name.trim().split(/\s+/);
-  const firstName = nameParts[0] || "";
+  const nameParts = (payload.name || "").trim().split(/\s+/).filter(Boolean);
+  
+  if (nameParts.length === 0) {
+    throw new Error(formatErrorForUser("INVALID_NAME", payload.name));
+  }
+
+  const firstName = nameParts[0];
   const lastName = nameParts.slice(1).join(" ") || "";
 
-  if (!firstName) {
-    throw new Error("Cannot extract first name from journalist name");
-  }
-
-  console.log(`👤 Searching LinkedIn for: ${firstName} ${lastName}`);
+  console.log(`👤 Recherche LinkedIn: prénom="${firstName}" nom="${lastName}"`);
 
   const actorInput = {
     firstName: firstName,
@@ -199,37 +289,59 @@ async function enrichJournalistWithApify(payload: any) {
 
   const runActorUrl = `${APIFY_API_BASE}/acts/${APIFY_ACTOR_ID}/run-sync-get-dataset-items?token=${apifyApiToken}`;
 
-  console.log(`🚀 Calling Apify actor...`);
+  console.log(`🚀 Appel API Apify...`);
 
-  const response = await fetch(runActorUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(actorInput),
-  });
+  let response: Response;
+  try {
+    response = await fetch(runActorUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(actorInput),
+    });
+  } catch (fetchError) {
+    console.error("❌ Erreur réseau Apify:", fetchError);
+    throw new Error(formatErrorForUser("APIFY_API_ERROR", "Erreur de connexion"));
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`❌ Apify API error: ${response.status} - ${errorText}`);
-    throw new Error(`Apify API error: ${response.status} ${response.statusText}`);
+    console.error(`❌ Erreur API Apify: ${response.status} - ${errorText}`);
+    throw new Error(formatErrorForUser("APIFY_API_ERROR", `HTTP ${response.status}`));
   }
 
-  const results = await response.json();
+  let results: any[];
+  try {
+    results = await response.json();
+  } catch (parseError) {
+    console.error("❌ Erreur parsing réponse Apify:", parseError);
+    throw new Error(formatErrorForUser("PARSE_ERROR", "Réponse JSON invalide"));
+  }
 
-  console.log(`📦 Apify returned ${results.length} result(s)`);
+  console.log(`📦 Apify a retourné ${results?.length || 0} résultat(s)`);
 
   if (!results || results.length === 0) {
-    console.warn(`⚠️ No LinkedIn profile found for ${payload.name}`);
+    console.warn(`⚠️ Aucun profil trouvé pour ${payload.name}`);
     return {
       linkedin: null,
       email: null,
       phone: null,
       job: null,
-      metadata: { apify_search: { firstName, lastName, found: false, searched_at: new Date().toISOString() } }
+      firstName,
+      lastName,
+      found: false,
+      errorCode: ERROR_CODES.NO_PROFILE_FOUND.code,
+      errorMessage: ERROR_CODES.NO_PROFILE_FOUND.message
     };
   }
 
+  const profile = selectBestProfile(results, firstName, lastName);
+  
+  console.log(`✅ Profil sélectionné: ${profile.fullName || profile.firstName || 'N/A'}`);
+
+  return parseApifyProfile(profile, firstName, lastName);
+}
+
+function selectBestProfile(results: any[], firstName: string, lastName: string): any {
   const relevantKeywords = [
     'journalist', 'journaliste', 'reporter', 'editor', 'rédacteur', 'rédactrice',
     'writer', 'copywriter', 'content', 'blogger', 'blogueur', 'bloggeur',
@@ -240,7 +352,7 @@ async function enrichJournalistWithApify(payload: any) {
     'podcast', 'vidéaste', 'youtuber', 'social media', 'community manager'
   ];
 
-  let bestProfile = null;
+  let bestProfile = results[0];
   let bestScore = 0;
 
   for (const profile of results) {
@@ -255,7 +367,7 @@ async function enrichJournalistWithApify(payload: any) {
       }
     }
     
-    console.log(`📊 Profile "${profile.fullName || profile.firstName}" score: ${score} (headline: ${headline.substring(0, 50)}...)`);
+    console.log(`📊 Score profil "${profile.fullName || profile.firstName || 'N/A'}": ${score}`);
     
     if (score > bestScore) {
       bestScore = score;
@@ -263,76 +375,104 @@ async function enrichJournalistWithApify(payload: any) {
     }
   }
 
-  if (!bestProfile) {
-    bestProfile = results[0];
-    console.log(`⚠️ No relevant profile found, using first result`);
+  if (bestScore > 0) {
+    console.log(`✅ Meilleur profil (score ${bestScore}): ${bestProfile.fullName || bestProfile.firstName}`);
   } else {
-    console.log(`✅ Selected best profile with score ${bestScore}: ${bestProfile.fullName || bestProfile.firstName}`);
+    console.log(`⚠️ Aucun profil pertinent, utilisation du premier résultat`);
   }
 
-  const profile = bestProfile;
+  return bestProfile;
+}
 
-  console.log(`✅ Found profile: ${profile.profileUrl || profile.linkedinUrl || 'N/A'}`);
+function parseApifyProfile(profile: any, firstName: string, lastName: string): EnrichmentResult {
+  const linkedinUrl = extractString(profile.linkedinUrl) 
+    || extractString(profile.profileUrl) 
+    || extractString(profile.url) 
+    || null;
 
-  const linkedinUrl = profile.profileUrl || profile.linkedinUrl || profile.url || null;
-  
-  let email: string | null = null;
-  const rawEmail = profile.email || (profile.emails && profile.emails[0]);
-  if (rawEmail) {
-    if (typeof rawEmail === 'string') {
-      email = rawEmail;
-    } else if (typeof rawEmail === 'object') {
-      if (rawEmail.email && typeof rawEmail.email === 'string') {
-        email = rawEmail.email;
-      } else if (rawEmail.value && typeof rawEmail.value === 'string') {
-        email = rawEmail.value;
-      }
-    }
-  }
-  
-  let phone: string | null = null;
-  const rawPhone = profile.phone || profile.phoneNumber || (profile.phones && profile.phones[0]);
-  if (rawPhone) {
-    if (typeof rawPhone === 'string') {
-      phone = rawPhone;
-    } else if (typeof rawPhone === 'object') {
-      if (rawPhone.phone && typeof rawPhone.phone === 'string') {
-        phone = rawPhone.phone;
-      } else if (rawPhone.value && typeof rawPhone.value === 'string') {
-        phone = rawPhone.value;
-      } else if (rawPhone.number && typeof rawPhone.number === 'string') {
-        phone = rawPhone.number;
-      }
-    }
-  }
-  
-  const job = profile.headline || profile.title || profile.currentPosition?.title || null;
-  const company = profile.company || profile.currentPosition?.company || null;
-  
-  let locationText: string | null = null;
-  if (profile.location) {
-    if (typeof profile.location === 'string') {
-      locationText = profile.location;
-    } else if (typeof profile.location === 'object') {
-      locationText = profile.location.linkedinText || profile.location.text || profile.location.city || null;
-    }
-  }
+  const email = extractEmail(profile);
+  const phone = extractPhone(profile);
+  const job = extractString(profile.headline) 
+    || extractString(profile.title) 
+    || null;
+
+  const profileFirstName = extractString(profile.firstName) || firstName;
+  const profileLastName = extractString(profile.lastName) || lastName;
+
+  console.log(`📋 Données extraites:`);
+  console.log(`   - LinkedIn: ${linkedinUrl || 'non trouvé'}`);
+  console.log(`   - Email: ${email || 'non trouvé'}`);
+  console.log(`   - Téléphone: ${phone || 'non trouvé'}`);
+  console.log(`   - Poste: ${job || 'non trouvé'}`);
 
   return {
     linkedin: linkedinUrl,
-    email: email,
-    phone: phone,
-    job: job,
-    metadata: {
-      apify_enrichment: {
-        enriched_at: new Date().toISOString(),
-        fullName: profile.fullName || null,
-        headline: profile.headline || null,
-        company: company,
-        location: locationText,
-        connections: profile.connections || null,
-        summary: profile.about || profile.summary || null
+    email,
+    phone,
+    job,
+    firstName: profileFirstName,
+    lastName: profileLastName,
+    found: true
+  };
+}
+
+function extractString(value: any): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value.trim() || null;
+  if (typeof value === 'object' && value.text) return extractString(value.text);
+  return null;
+}
+
+function extractEmail(profile: any): string | null {
+  const sources = [
+    profile.email,
+    profile.emails?.[0],
+    profile.emails?.[0]?.email,
+    profile.emails?.[0]?.value,
+  ];
+
+  for (const source of sources) {
+    if (!source) continue;
+    
+    if (typeof source === 'string' && source.includes('@')) {
+      return source.trim();
+    }
+    
+    if (typeof source === 'object') {
+      const email = source.email || source.value || source.address;
+      if (typeof email === 'string' && email.includes('@')) {
+        return email.trim();
       }
     }
-  };
+  }
+
+  return null;
+}
+
+function extractPhone(profile: any): string | null {
+  const sources = [
+    profile.phone,
+    profile.phoneNumber,
+    profile.phones?.[0],
+    profile.phones?.[0]?.phone,
+    profile.phones?.[0]?.number,
+    profile.phones?.[0]?.value,
+  ];
+
+  for (const source of sources) {
+    if (!source) continue;
+    
+    if (typeof source === 'string' && source.length >= 6) {
+      return source.trim();
+    }
+    
+    if (typeof source === 'object') {
+      const phone = source.phone || source.number || source.value;
+      if (typeof phone === 'string' && phone.length >= 6) {
+        return phone.trim();
+      }
+    }
+  }
+
+  return null;
 }
