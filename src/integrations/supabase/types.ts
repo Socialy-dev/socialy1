@@ -494,6 +494,62 @@ export type Database = {
           },
         ]
       }
+      job_logs: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          job_type: string
+          organization_id: string | null
+          payload: Json
+          queue_name: string
+          result: Json | null
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type: string
+          organization_id?: string | null
+          payload?: Json
+          queue_name: string
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type?: string
+          organization_id?: string | null
+          payload?: Json
+          queue_name?: string
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_queue: {
         Row: {
           completed_at: string | null
@@ -1126,6 +1182,15 @@ export type Database = {
       complete_job: {
         Args: { p_job_id: string; p_result?: Json }
         Returns: undefined
+      }
+      enqueue_job: {
+        Args: {
+          p_job_type: string
+          p_organization_id: string
+          p_payload: Json
+          p_queue_name: string
+        }
+        Returns: string
       }
       fail_job: {
         Args: { p_error: string; p_job_id: string }
