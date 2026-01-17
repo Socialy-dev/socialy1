@@ -68,7 +68,7 @@ serve(async (req) => {
           }
         } catch (err) {
           console.error(`💥 Exception queueing journalist ${journalist.id}:`, err);
-          errors.push({ journalist_id: journalist.id, error: err.message });
+          errors.push({ journalist_id: journalist.id, error: (err as Error).message });
         }
       }
 
@@ -127,7 +127,7 @@ serve(async (req) => {
     } catch (err) {
       console.error("💥 Exception:", err);
       return new Response(
-        JSON.stringify({ error: "Internal server error", details: err.message }),
+        JSON.stringify({ error: "Internal server error", details: (err as Error).message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

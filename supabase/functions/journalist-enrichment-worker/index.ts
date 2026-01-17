@@ -116,7 +116,7 @@ serve(async (req) => {
           .from('job_logs')
           .update({
             status: 'failed',
-            error_message: error.message,
+            error_message: (error as Error).message,
             completed_at: new Date().toISOString(),
           })
           .eq('id', job_log_id);
@@ -149,7 +149,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("💥 Worker error:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500 }
     );
   }
