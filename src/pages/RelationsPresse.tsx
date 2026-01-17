@@ -926,9 +926,9 @@ const RelationsPresse = () => {
       return;
     }
 
-    const journalistsToEnrich = journalists.filter(j => !j.linkedin && !j.email);
+    const allJournalistsToEnrich = journalists.filter(j => !j.linkedin && !j.email);
     
-    if (journalistsToEnrich.length === 0) {
+    if (allJournalistsToEnrich.length === 0) {
       toast({ 
         title: "Aucun journaliste à enrichir", 
         description: "Tous les journalistes ont déjà un profil LinkedIn ou email renseigné" 
@@ -936,13 +936,14 @@ const RelationsPresse = () => {
       return;
     }
 
-    if (journalistsToEnrich.length > MAX_ENRICHMENT_BATCH) {
+    const journalistsToEnrich = allJournalistsToEnrich.slice(0, MAX_ENRICHMENT_BATCH);
+    const remaining = allJournalistsToEnrich.length - journalistsToEnrich.length;
+
+    if (remaining > 0) {
       toast({ 
-        title: "Limite dépassée", 
-        description: `Maximum ${MAX_ENRICHMENT_BATCH} journalistes par enrichissement. Vous en avez ${journalistsToEnrich.length}. Veuillez réduire la sélection ou enrichir en plusieurs fois.`, 
-        variant: "destructive" 
+        title: "Enrichissement partiel", 
+        description: `Les ${MAX_ENRICHMENT_BATCH} premiers journalistes seront enrichis. ${remaining} restant(s) à traiter ensuite.`
       });
-      return;
     }
 
     setIsEnrichingJournalists(true);
@@ -1731,23 +1732,29 @@ const RelationsPresse = () => {
                             size="sm"
                             onClick={handleEnrichJournalists}
                             disabled={isEnrichingJournalists || journalists.filter(j => !j.linkedin && !j.email).length === 0}
-                            className={cn(
-                              "gap-2",
-                              journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH && "border-destructive/50"
-                            )}
+                            className="gap-2"
                           >
                             <Zap className="w-4 h-4" />
                             {isEnrichingJournalists 
                               ? "Enrichissement en cours..." 
-                              : `Enrichir (${journalists.filter(j => !j.linkedin && !j.email).length}${journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH ? ` / max ${MAX_ENRICHMENT_BATCH}` : ''})`
+                              : (() => {
+                                  const count = journalists.filter(j => !j.linkedin && !j.email).length;
+                                  if (count > MAX_ENRICHMENT_BATCH) {
+                                    return `Enrichir ${MAX_ENRICHMENT_BATCH} sur ${count}`;
+                                  }
+                                  return `Enrichir (${count})`;
+                                })()
                             }
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          {journalists.filter(j => !j.linkedin && !j.email).length > MAX_ENRICHMENT_BATCH 
-                            ? `Limite de ${MAX_ENRICHMENT_BATCH} journalistes par enrichissement dépassée`
-                            : `Rechercher LinkedIn et email pour ${journalists.filter(j => !j.linkedin && !j.email).length} journaliste(s)`
-                          }
+                        <TooltipContent className="bg-card border-border shadow-lg">
+                          {(() => {
+                            const count = journalists.filter(j => !j.linkedin && !j.email).length;
+                            if (count > MAX_ENRICHMENT_BATCH) {
+                              return `${count} journalistes à enrichir. Les ${MAX_ENRICHMENT_BATCH} premiers seront traités, puis relancez pour les suivants.`;
+                            }
+                            return `Rechercher LinkedIn et email pour ${count} journaliste(s)`;
+                          })()}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
