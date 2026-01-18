@@ -7,6 +7,7 @@ import { Calendar, ChevronDown } from "lucide-react";
 import { SocialMediaTabs, TabType } from "@/components/social-media/SocialMediaTabs";
 import { OrganicView } from "@/components/social-media/OrganicView";
 import { CompetitorsView } from "@/components/social-media/CompetitorsView";
+import { ClientsView } from "@/components/social-media/ClientsView";
 import { SuggestionsView } from "@/components/social-media/SuggestionsView";
 import { Platform } from "@/components/social-media/PlatformDropdown";
 
@@ -18,7 +19,7 @@ const SocialMedia = () => {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "concurrents" || tab === "suggestions" || tab === "organique") {
+    if (tab === "concurrents" || tab === "clients" || tab === "suggestions" || tab === "organique") {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -75,6 +76,13 @@ const SocialMedia = () => {
 
             {activeTab === "concurrents" && (
               <CompetitorsView 
+                selectedPlatform={selectedPlatform} 
+                onPlatformChange={setSelectedPlatform} 
+              />
+            )}
+
+            {activeTab === "clients" && (
+              <ClientsView 
                 selectedPlatform={selectedPlatform} 
                 onPlatformChange={setSelectedPlatform} 
               />
