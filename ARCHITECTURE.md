@@ -1158,4 +1158,4 @@ SELECT pg_reload_conf();
 
 ---
 
-**✅ Document généré automatiquement le 2026-01-18**
+**✅ Document généré le 2026-01-18**
