@@ -391,224 +391,323 @@ const GrowthMarketing = () => {
             </div>
 
             {activeMainTab === "linkedin" && linkedinSubTab === "generation" && (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-6">
-                  <div className="bg-card rounded-2xl border border-border p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-foreground/5 flex items-center justify-center">
-                          <Linkedin className="w-5 h-5 text-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="text-base font-semibold text-foreground">LinkedIn Analytics</h3>
-                          <p className="text-xs text-muted-foreground">30 derniers jours</p>
-                        </div>
+              <div className="space-y-8">
+                {/* Hero Section with Gradient */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-500/10 via-blue-500/10 to-pink-500/10 p-8 backdrop-blur-sm border border-violet-500/20">
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-blue-500/5 to-pink-500/5 animate-pulse" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                        <Sparkles className="w-8 h-8 text-white" />
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/10 text-success text-sm font-medium">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        {linkedinStats.growth}
+                      <div>
+                        <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-blue-600 bg-clip-text text-transparent">
+                          Génération de contenu
+                        </h2>
+                        <p className="text-muted-foreground mt-1">Créez du contenu engageant avec l'IA en quelques secondes</p>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="bg-secondary/40 rounded-xl p-4">
-                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                          <FileEdit className="w-3.5 h-3.5" />
-                          Posts
-                        </div>
-                        <p className="text-xl font-bold text-foreground">{linkedinStats.posts}</p>
-                      </div>
-                      <div className="bg-secondary/40 rounded-xl p-4">
-                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                          <Eye className="w-3.5 h-3.5" />
-                          Vues
-                        </div>
-                        <p className="text-xl font-bold text-foreground">{linkedinStats.views}</p>
-                      </div>
-                      <div className="bg-secondary/40 rounded-xl p-4">
-                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                          <BarChart3 className="w-3.5 h-3.5" />
-                          Engagement
-                        </div>
-                        <p className="text-xl font-bold text-foreground">{linkedinStats.engagement}</p>
-                      </div>
-                      <div className="bg-secondary/40 rounded-xl p-4">
-                        <div className="flex items-center gap-1.5 text-muted-foreground text-xs mb-1">
-                          <Users className="w-3.5 h-3.5" />
-                          Followers
-                        </div>
-                        <p className="text-xl font-bold text-foreground">{linkedinStats.followers.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-card rounded-2xl border border-border p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-semibold text-foreground">Posts récents</h3>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setPostFilter("all")}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
-                            postFilter === "all"
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-transparent text-muted-foreground border-border hover:border-foreground/30"
-                          )}
-                        >
-                          Tous
-                        </button>
-                        <button
-                          onClick={() => setPostFilter("linkedin")}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
-                            postFilter === "linkedin"
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-transparent text-muted-foreground border-border hover:border-foreground/30"
-                          )}
-                        >
-                          LinkedIn
-                        </button>
-                        <button
-                          onClick={() => setPostFilter("generated")}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
-                            postFilter === "generated"
-                              ? "bg-foreground text-background border-foreground"
-                              : "bg-transparent text-muted-foreground border-border hover:border-foreground/30"
-                          )}
-                        >
-                          Générés
-                        </button>
-                        <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors ml-2">
-                          Voir tout <ArrowUpRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      {filteredPosts.map((post) => (
-                        <div
-                          key={post.id}
-                          className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl hover:bg-secondary/50 transition-colors cursor-pointer"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate pr-4">{post.title}</p>
-                            <div className="flex items-center gap-4 mt-2">
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <ThumbsUp className="w-3 h-3" /> {post.likes}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <MessageCircle className="w-3 h-3" /> {post.comments}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Share2 className="w-3 h-3" /> {post.shares}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="w-3 h-3" /> {post.date}
-                            </span>
-                            {post.source === "generated" && (
-                              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                                <Sparkles className="w-3 h-3" /> IA
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="lg:col-span-2">
-                  <div className="bg-card rounded-2xl border border-border p-6 sticky top-8">
-                    <div className="mb-6">
-                      <h3 className="text-base font-semibold text-foreground">Créer du contenu</h3>
-                      <p className="text-xs text-muted-foreground">Générez du contenu avec l'IA</p>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Analytics & Posts */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Analytics Card with Glassmorphism */}
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 to-blue-500 rounded-3xl opacity-20 group-hover:opacity-30 blur transition duration-500" />
+                      <div className="relative bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 p-8 shadow-xl">
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet-500/20 flex items-center justify-center border border-blue-500/30">
+                              <Linkedin className="w-7 h-7 text-blue-500" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-foreground">LinkedIn Analytics</h3>
+                              <p className="text-sm text-muted-foreground">Performances des 30 derniers jours</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                            <TrendingUp className="w-4 h-4 text-green-500" />
+                            <span className="text-green-500 font-semibold">{linkedinStats.growth}</span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {/* Posts Stat */}
+                          <div className="relative group/stat">
+                            <div className="absolute -inset-0.5 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl opacity-0 group-hover/stat:opacity-20 blur transition duration-300" />
+                            <div className="relative bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-2xl p-5 border border-violet-500/20 hover:border-violet-500/40 transition-all duration-300 hover:scale-105">
+                              <div className="flex items-center gap-2 text-violet-500 text-sm mb-2">
+                                <FileEdit className="w-4 h-4" />
+                                <span className="font-medium">Posts</span>
+                              </div>
+                              <p className="text-3xl font-bold text-foreground">{linkedinStats.posts}</p>
+                              <div className="mt-2 w-full h-1 bg-violet-500/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-violet-500 to-purple-500 w-3/4 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Views Stat */}
+                          <div className="relative group/stat">
+                            <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl opacity-0 group-hover/stat:opacity-20 blur transition duration-300" />
+                            <div className="relative bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl p-5 border border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:scale-105">
+                              <div className="flex items-center gap-2 text-blue-500 text-sm mb-2">
+                                <Eye className="w-4 h-4" />
+                                <span className="font-medium">Vues</span>
+                              </div>
+                              <p className="text-3xl font-bold text-foreground">{linkedinStats.views}</p>
+                              <div className="mt-2 w-full h-1 bg-blue-500/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 w-4/5 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Engagement Stat */}
+                          <div className="relative group/stat">
+                            <div className="absolute -inset-0.5 bg-gradient-to-br from-pink-500 to-rose-500 rounded-2xl opacity-0 group-hover/stat:opacity-20 blur transition duration-300" />
+                            <div className="relative bg-gradient-to-br from-pink-500/10 to-rose-500/10 rounded-2xl p-5 border border-pink-500/20 hover:border-pink-500/40 transition-all duration-300 hover:scale-105">
+                              <div className="flex items-center gap-2 text-pink-500 text-sm mb-2">
+                                <BarChart3 className="w-4 h-4" />
+                                <span className="font-medium">Engagement</span>
+                              </div>
+                              <p className="text-3xl font-bold text-foreground">{linkedinStats.engagement}</p>
+                              <div className="mt-2 w-full h-1 bg-pink-500/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-pink-500 to-rose-500 w-1/2 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Followers Stat */}
+                          <div className="relative group/stat">
+                            <div className="absolute -inset-0.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl opacity-0 group-hover/stat:opacity-20 blur transition duration-300" />
+                            <div className="relative bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-2xl p-5 border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 hover:scale-105">
+                              <div className="flex items-center gap-2 text-amber-500 text-sm mb-2">
+                                <Users className="w-4 h-4" />
+                                <span className="font-medium">Followers</span>
+                              </div>
+                              <p className="text-3xl font-bold text-foreground">{linkedinStats.followers.toLocaleString()}</p>
+                              <div className="mt-2 w-full h-1 bg-amber-500/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 w-2/3 rounded-full" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    {viewMode === "menu" ? (
-                      <button
-                        onClick={handleStartCreation}
-                        className="w-full flex items-center justify-between p-4 bg-secondary/30 rounded-xl hover:bg-secondary/50 transition-all duration-200 group"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-xl bg-foreground/5 flex items-center justify-center">
-                            <creationContent.icon className="w-5 h-5 text-foreground" />
-                          </div>
-                          <div className="text-left">
-                            <p className="font-medium text-foreground">{creationContent.title}</p>
-                            <p className="text-xs text-muted-foreground">{creationContent.description}</p>
+                    {/* Recent Posts Card */}
+                    <div className="relative group">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-violet-500 rounded-3xl opacity-10 group-hover:opacity-20 blur transition duration-500" />
+                      <div className="relative bg-card/80 backdrop-blur-xl rounded-3xl border border-border/50 p-8 shadow-xl">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-xl font-bold text-foreground">Posts récents</h3>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setPostFilter("all")}
+                              className={cn(
+                                "px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300",
+                                postFilter === "all"
+                                  ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white shadow-lg shadow-violet-500/30"
+                                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
+                              )}
+                            >
+                              Tous
+                            </button>
+                            <button
+                              onClick={() => setPostFilter("linkedin")}
+                              className={cn(
+                                "px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300",
+                                postFilter === "linkedin"
+                                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
+                                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
+                              )}
+                            >
+                              LinkedIn
+                            </button>
+                            <button
+                              onClick={() => setPostFilter("generated")}
+                              className={cn(
+                                "px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300",
+                                postFilter === "generated"
+                                  ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30"
+                                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
+                              )}
+                            >
+                              Générés
+                            </button>
+                            <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors ml-2 px-3 py-2 rounded-full hover:bg-secondary/50">
+                              Voir tout <ArrowUpRight className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 transition-all" />
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          onClick={handleBackToMenu}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-                        >
-                          ← Retour
-                        </button>
 
-                        <div className="space-y-5">
-                          <div>
-                            <label className="block text-sm font-medium text-foreground mb-2">
-                              Sujet du post
-                            </label>
-                            <textarea
-                              value={postSubject}
-                              onChange={(e) => setPostSubject(e.target.value)}
-                              placeholder="Décrivez le sujet de votre post..."
-                              className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none text-sm"
-                              rows={3}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-foreground mb-2">
-                              Objectif
-                            </label>
-                            <input
-                              type="text"
-                              value={postObjective}
-                              onChange={(e) => setPostObjective(e.target.value)}
-                              placeholder="Ex: générer des leads, éduquer, inspirer..."
-                              className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-foreground mb-2">
-                              Ton du message
-                            </label>
-                            <input
-                              type="text"
-                              value={postTone}
-                              onChange={(e) => setPostTone(e.target.value)}
-                              placeholder="Ex: professionnel, inspirant, décontracté..."
-                              className="w-full px-4 py-3 bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                            />
-                          </div>
-
-                          <button
-                            onClick={handleGeneratePost}
-                            disabled={isGenerating || !postSubject.trim()}
-                            className={cn(
-                              "w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 text-sm",
-                              isGenerating || !postSubject.trim()
-                                ? "bg-secondary text-muted-foreground cursor-not-allowed"
-                                : "bg-foreground text-background hover:bg-foreground/90"
-                            )}
-                          >
-                            {isGenerating && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {isGenerating ? "Génération en cours..." : "Générer le post"}
-                          </button>
+                        <div className="space-y-3">
+                          {filteredPosts.map((post, idx) => (
+                            <div
+                              key={post.id}
+                              className="relative group/post overflow-hidden"
+                            >
+                              <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/20 via-blue-500/20 to-pink-500/20 rounded-2xl opacity-0 group-hover/post:opacity-100 blur transition duration-300" />
+                              <div className="relative flex items-center justify-between p-5 bg-gradient-to-br from-secondary/40 to-secondary/20 backdrop-blur-sm rounded-2xl hover:from-secondary/60 hover:to-secondary/30 transition-all duration-300 cursor-pointer border border-border/30 hover:border-border/60">
+                                <div className="flex-1 min-w-0 flex items-center gap-4">
+                                  <div className={cn(
+                                    "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0",
+                                    idx === 0 && "bg-gradient-to-br from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30",
+                                    idx === 1 && "bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30",
+                                    idx === 2 && "bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30"
+                                  )}>
+                                    {idx + 1}
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold text-foreground line-clamp-1 pr-4">{post.title}</p>
+                                    <div className="flex items-center gap-4 mt-2">
+                                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <ThumbsUp className="w-3.5 h-3.5" /> {post.likes}
+                                      </span>
+                                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <MessageCircle className="w-3.5 h-3.5" /> {post.comments}
+                                      </span>
+                                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <Share2 className="w-3.5 h-3.5" /> {post.shares}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/50 px-3 py-1.5 rounded-full">
+                                    <Clock className="w-3.5 h-3.5" /> {post.date}
+                                  </span>
+                                  {post.source === "generated" && (
+                                    <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30 text-violet-600 text-xs font-semibold">
+                                      <Sparkles className="w-3.5 h-3.5" /> IA
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </>
-                    )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column - Creation Form */}
+                  <div className="lg:col-span-1">
+                    <div className="sticky top-8">
+                      <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-violet-500 to-blue-500 rounded-3xl opacity-20 group-hover:opacity-30 blur-lg transition duration-500" />
+                        <div className="relative bg-card/90 backdrop-blur-xl rounded-3xl border border-border/50 p-7 shadow-2xl">
+                          <div className="mb-7">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-violet-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                                <Sparkles className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-bold text-foreground">Créer du contenu</h3>
+                                <p className="text-xs text-muted-foreground">Powered by AI</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {viewMode === "menu" ? (
+                            <button
+                              onClick={handleStartCreation}
+                              className="w-full group/btn relative overflow-hidden"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-blue-500 to-pink-500 opacity-0 group-hover/btn:opacity-10 transition duration-300" />
+                              <div className="relative flex items-center justify-between p-5 bg-gradient-to-br from-secondary/40 to-secondary/20 rounded-2xl border border-border/50 hover:border-violet-500/30 transition-all duration-300">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-foreground/10 to-foreground/5 flex items-center justify-center group-hover/btn:from-violet-500/20 group-hover/btn:to-blue-500/20 transition-all duration-300">
+                                    <creationContent.icon className="w-6 h-6 text-foreground group-hover/btn:text-violet-500 transition-colors duration-300" />
+                                  </div>
+                                  <div className="text-left">
+                                    <p className="font-semibold text-foreground">{creationContent.title}</p>
+                                    <p className="text-xs text-muted-foreground">{creationContent.description}</p>
+                                  </div>
+                                </div>
+                                <ChevronRight className="w-6 h-6 text-muted-foreground group-hover/btn:text-violet-500 group-hover/btn:translate-x-1 transition-all duration-300" />
+                              </div>
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={handleBackToMenu}
+                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 px-3 py-2 rounded-full hover:bg-secondary/50"
+                              >
+                                ← Retour
+                              </button>
+
+                              <div className="space-y-5">
+                                <div>
+                                  <label className="block text-sm font-semibold text-foreground mb-2.5">
+                                    Sujet du post
+                                  </label>
+                                  <textarea
+                                    value={postSubject}
+                                    onChange={(e) => setPostSubject(e.target.value)}
+                                    placeholder="Décrivez le sujet de votre post..."
+                                    className="w-full px-4 py-3.5 bg-gradient-to-br from-secondary/40 to-secondary/20 border border-border/50 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 resize-none text-sm backdrop-blur-sm transition-all duration-300"
+                                    rows={3}
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-semibold text-foreground mb-2.5">
+                                    Objectif
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={postObjective}
+                                    onChange={(e) => setPostObjective(e.target.value)}
+                                    placeholder="Ex: générer des leads, éduquer..."
+                                    className="w-full px-4 py-3.5 bg-gradient-to-br from-secondary/40 to-secondary/20 border border-border/50 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm backdrop-blur-sm transition-all duration-300"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-semibold text-foreground mb-2.5">
+                                    Ton du message
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={postTone}
+                                    onChange={(e) => setPostTone(e.target.value)}
+                                    placeholder="Ex: professionnel, inspirant..."
+                                    className="w-full px-4 py-3.5 bg-gradient-to-br from-secondary/40 to-secondary/20 border border-border/50 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/50 text-sm backdrop-blur-sm transition-all duration-300"
+                                  />
+                                </div>
+
+                                <button
+                                  onClick={handleGeneratePost}
+                                  disabled={isGenerating || !postSubject.trim()}
+                                  className={cn(
+                                    "relative w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-semibold transition-all duration-300 text-sm overflow-hidden group/gen",
+                                    isGenerating || !postSubject.trim()
+                                      ? "bg-secondary/50 text-muted-foreground cursor-not-allowed"
+                                      : "bg-gradient-to-r from-violet-500 via-blue-500 to-pink-500 text-white shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-[1.02]"
+                                  )}
+                                >
+                                  {!isGenerating && !(!postSubject.trim()) && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-violet-500 to-blue-500 opacity-0 group-hover/gen:opacity-100 transition-opacity duration-500" />
+                                  )}
+                                  <span className="relative z-10 flex items-center gap-2">
+                                    {isGenerating && <Loader2 className="w-5 h-5 animate-spin" />}
+                                    {isGenerating ? "Génération en cours..." : (
+                                      <>
+                                        <Sparkles className="w-5 h-5" />
+                                        Générer le post
+                                      </>
+                                    )}
+                                  </span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
