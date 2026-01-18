@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, BarChart3, UsersRound, FileText } from "lucide-react";
 import { CompetitorFilter } from "./CompetitorFilter";
 import { CompetitorCard } from "./CompetitorCard";
 import { PlatformDropdown, Platform } from "./PlatformDropdown";
@@ -110,7 +110,7 @@ export const CompetitorsView = ({ selectedPlatform, onPlatformChange }: Competit
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <span className="text-white text-lg">📊</span>
+              <BarChart3 className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">
@@ -122,7 +122,7 @@ export const CompetitorsView = ({ selectedPlatform, onPlatformChange }: Competit
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-              <span className="text-white text-lg">👥</span>
+              <UsersRound className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">
@@ -134,7 +134,7 @@ export const CompetitorsView = ({ selectedPlatform, onPlatformChange }: Competit
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-              <span className="text-white text-lg">📝</span>
+              <FileText className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">

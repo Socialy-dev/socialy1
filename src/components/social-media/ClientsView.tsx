@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Briefcase, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
+import { Plus, Briefcase, TrendingUp, TrendingDown, ExternalLink, Globe, BarChart3, UsersRound, FileText } from "lucide-react";
 import { PlatformDropdown, Platform } from "./PlatformDropdown";
 
 interface Client {
@@ -110,8 +110,8 @@ const ClientCard = ({ client }: ClientCardProps) => {
       <div className="p-4">
         {client.website && (
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-4 h-4 rounded bg-muted flex items-center justify-center">
-              <span className="text-[10px]">🌐</span>
+          <div className="w-4 h-4 rounded bg-muted flex items-center justify-center">
+              <Globe className="w-2.5 h-2.5 text-muted-foreground" />
             </div>
             <a 
               href={client.website.startsWith("http") ? client.website : `https://${client.website}`}
@@ -288,7 +288,7 @@ export const ClientsView = ({ selectedPlatform, onPlatformChange }: ClientsViewP
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <span className="text-white text-lg">📊</span>
+              <BarChart3 className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">
@@ -300,7 +300,7 @@ export const ClientsView = ({ selectedPlatform, onPlatformChange }: ClientsViewP
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white text-lg">👥</span>
+              <UsersRound className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">
@@ -312,7 +312,7 @@ export const ClientsView = ({ selectedPlatform, onPlatformChange }: ClientsViewP
         <div className="p-5 rounded-2xl bg-card border border-border/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-              <span className="text-white text-lg">📝</span>
+              <FileText className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">
