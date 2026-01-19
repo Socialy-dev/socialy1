@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Lightbulb, Sparkles, Users, Target, Filter } from "lucide-react";
+import { Lightbulb, Sparkles, Users, Target, Filter, Zap, TrendingUp } from "lucide-react";
 import { SuggestionCard } from "./SuggestionCard";
 
 type CategoryFilter = "all" | "content" | "timing" | "engagement" | "strategy" | "clients";
@@ -142,7 +142,7 @@ export const SuggestionsView = () => {
         <div className="p-5 rounded-2xl bg-gradient-to-br from-danger/10 to-orange-500/10 border border-danger/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-danger to-orange-500 flex items-center justify-center">
-              <span className="text-white text-lg">🔥</span>
+              <Zap className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">{mockSuggestions.filter(s => s.priority === "high").length}</p>
@@ -162,7 +162,7 @@ export const SuggestionsView = () => {
         <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-600/10 border border-emerald-500/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <span className="text-white text-lg">📈</span>
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
           </div>
           <p className="text-2xl font-bold text-foreground">+38%</p>
