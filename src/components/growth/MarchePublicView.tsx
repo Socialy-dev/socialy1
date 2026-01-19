@@ -306,9 +306,9 @@ export const MarchePublicView = () => {
     
     const status = getSelectionStatus(m.id);
     if (viewMode === "selected") {
-      return matchesSearch && matchesSource && status === "selected";
+      return matchesSearch && status === "selected";
     } else if (viewMode === "dismissed") {
-      return matchesSearch && matchesSource && status === "dismissed";
+      return matchesSearch && status === "dismissed";
     } else {
       return matchesSearch && matchesSource && status !== "dismissed";
     }
