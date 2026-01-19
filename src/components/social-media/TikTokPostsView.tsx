@@ -21,9 +21,21 @@ import {
   Sparkles,
   Pin,
   Megaphone,
-  X
+  Star,
+  RefreshCw,
+  Search
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+
+interface TikTokFavorite {
+  id: string;
+  tiktok_post_id: string;
+  status: string;
+}
 
 interface TikTokPost {
   id: string;
@@ -63,10 +75,30 @@ interface TikTokPost {
 }
 
 export const TikTokPostsView = () => {
-  const { effectiveOrgId } = useAuth();
+  const { effectiveOrgId, user } = useAuth();
   const [posts, setPosts] = useState<TikTokPost[]>([]);
+  const [favorites, setFavorites] = useState<TikTokFavorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"all" | "favorites">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchFavorites = async () => {
+    if (!effectiveOrgId || !user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("user_tiktok_favorites" as any)
+        .select("id, tiktok_post_id, status")
+        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId);
+
+      if (error) throw error;
+      setFavorites((data || []) as unknown as TikTokFavorite[]);
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+    }
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -88,7 +120,63 @@ export const TikTokPostsView = () => {
     };
 
     fetchPosts();
-  }, [effectiveOrgId]);
+    fetchFavorites();
+  }, [effectiveOrgId, user?.id]);
+
+  const toggleFavorite = async (postId: string) => {
+    if (!effectiveOrgId || !user?.id) return;
+
+    const existingFavorite = favorites.find(f => f.tiktok_post_id === postId);
+    
+    try {
+      if (existingFavorite) {
+        const { error } = await supabase
+          .from("user_tiktok_favorites" as any)
+          .delete()
+          .eq("id", existingFavorite.id);
+        
+        if (error) throw error;
+        setFavorites(prev => prev.filter(f => f.id !== existingFavorite.id));
+        toast.success("Retiré des favoris");
+      } else {
+        const { data, error } = await supabase
+          .from("user_tiktok_favorites" as any)
+          .insert({
+            user_id: user.id,
+            organization_id: effectiveOrgId,
+            tiktok_post_id: postId,
+            status: "favorite"
+          } as any)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        setFavorites(prev => [...prev, data as unknown as TikTokFavorite]);
+        toast.success("Ajouté aux favoris");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Erreur lors de la modification");
+    }
+  };
+
+  const isFavorite = (postId: string): boolean => {
+    return favorites.some(f => f.tiktok_post_id === postId);
+  };
+
+  const favoritesCount = favorites.length;
+
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = !searchQuery || 
+      post.caption?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.author_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.hashtags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (viewMode === "favorites") {
+      return matchesSearch && isFavorite(post.id);
+    }
+    return matchesSearch;
+  });
 
   const formatNumber = (num: number | null) => {
     if (num === null || num === undefined) return "0";
@@ -220,16 +308,75 @@ export const TikTokPostsView = () => {
         </div>
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher une vidéo..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-card border-border"
+          />
+        </div>
+        
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={viewMode === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("all")}
+            className="rounded-full"
+          >
+            Toutes ({posts.length})
+          </Button>
+          <Button
+            variant={viewMode === "favorites" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("favorites")}
+            className={cn(
+              "rounded-full gap-1",
+              viewMode === "favorites" && "bg-amber-500 hover:bg-amber-600"
+            )}
+          >
+            <Star className="w-3 h-3" />
+            Favoris ({favoritesCount})
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { fetchFavorites(); }}
+            className="rounded-full"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-foreground">{posts.length} vidéos</h2>
+        <h2 className="text-lg font-bold text-foreground">{filteredPosts.length} vidéos</h2>
         <div className="text-sm text-muted-foreground">
           Taux d'engagement moyen: <span className="font-semibold text-foreground">{stats.avgEngagement}%</span>
         </div>
       </div>
 
+      {filteredPosts.length === 0 ? (
+        <div className="text-center py-16 bg-secondary/20 rounded-2xl">
+          <Video className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+          <p className="text-muted-foreground font-medium">
+            {viewMode === "favorites" 
+              ? "Aucune vidéo en favoris" 
+              : "Aucune vidéo trouvée"}
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-1">
+            {viewMode === "favorites" 
+              ? "Cliquez sur l'étoile pour ajouter des vidéos en favoris" 
+              : "Les vidéos apparaîtront ici une fois synchronisées"}
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {posts.map((post) => {
+        {filteredPosts.map((post) => {
           const isExpanded = expandedPost === post.id;
+          const postIsFavorite = isFavorite(post.id);
 
           return (
             <div
@@ -282,6 +429,17 @@ export const TikTokPostsView = () => {
                 </div>
 
                 <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(post.id); }}
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200",
+                      postIsFavorite
+                        ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                        : "bg-black/50 backdrop-blur-sm text-white/70 hover:bg-amber-500/80 hover:text-white"
+                    )}
+                  >
+                    <Star className={cn("w-4 h-4", postIsFavorite && "fill-current")} />
+                  </button>
                   {post.video_duration && (
                     <div className="px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm text-white text-xs font-medium flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -472,6 +630,7 @@ export const TikTokPostsView = () => {
           );
         })}
       </div>
+      )}
     </div>
   );
 };

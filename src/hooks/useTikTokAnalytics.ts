@@ -55,6 +55,13 @@ export interface ContentTypeStats {
   postCount: number;
 }
 
+export interface PublishingDataPoint {
+  weekStart: Date;
+  weekLabel: string;
+  postCount: number;
+  avgEngagement: number;
+}
+
 export const useTikTokAnalytics = () => {
   const { effectiveOrgId } = useAuth();
   const [posts, setPosts] = useState<TikTokPost[]>([]);
@@ -223,6 +230,22 @@ export const useTikTokAnalytics = () => {
     return followersData[followersData.length - 1].followers - followersData[0].followers;
   }, [followersData]);
 
+  const periodDays = useMemo(() => {
+    switch (period) {
+      case "7d": return 7;
+      case "30d": return 30;
+      case "3m": return 90;
+      case "6m": return 180;
+      case "1y": return 365;
+      case "custom":
+        if (customDateRange) {
+          return Math.ceil((customDateRange.end.getTime() - customDateRange.start.getTime()) / (1000 * 60 * 60 * 24));
+        }
+        return 30;
+      default: return 30;
+    }
+  }, [period, customDateRange]);
+
   return {
     loading,
     period,
@@ -234,6 +257,7 @@ export const useTikTokAnalytics = () => {
     hashtagPerformance,
     followersData,
     contentTypeStats,
-    followersDelta
+    followersDelta,
+    periodDays
   };
 };

@@ -4,8 +4,9 @@ import { EngagementScatterChart } from "./analytics/EngagementScatterChart";
 import { HashtagBarChart } from "./analytics/HashtagBarChart";
 import { FollowersAreaChart } from "./analytics/FollowersAreaChart";
 import { ContentTypeBarChart } from "./analytics/ContentTypeBarChart";
+import { PublishingRegularityChart } from "./analytics/PublishingRegularityChart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart3, TrendingUp, Users, Hash, Layers } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Hash, Layers, CalendarDays } from "lucide-react";
 
 export const TikTokAnalyticsView = () => {
   const {
@@ -19,7 +20,8 @@ export const TikTokAnalyticsView = () => {
     hashtagPerformance,
     followersData,
     contentTypeStats,
-    followersDelta
+    followersDelta,
+    periodDays
   } = useTikTokAnalytics();
 
   if (loading) {
@@ -122,6 +124,20 @@ export const TikTokAnalyticsView = () => {
         <div className="p-6 rounded-2xl bg-card border border-border/50">
           <ContentTypeBarChart data={contentTypeStats} />
         </div>
+      </div>
+
+      <div className="p-6 rounded-2xl bg-card border border-border/50">
+        <PublishingRegularityChart 
+          posts={filteredPosts.map(p => ({
+            posted_at: p.posted_at,
+            created_at: p.created_at,
+            views_count: p.views_count,
+            likes_count: p.likes_count,
+            comments_count: p.comments_count,
+            shares_count: p.shares_count
+          }))} 
+          periodDays={periodDays} 
+        />
       </div>
     </div>
   );
