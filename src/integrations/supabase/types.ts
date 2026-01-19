@@ -1194,6 +1194,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_marche_selections: {
+        Row: {
+          created_at: string
+          id: string
+          marche_public_id: string
+          organization_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marche_public_id: string
+          organization_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marche_public_id?: string
+          organization_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_marche_selections_marche_public_id_fkey"
+            columns: ["marche_public_id"]
+            isOneToOne: false
+            referencedRelation: "organization_marche_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_marche_selections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_permissions: {
         Row: {
           created_at: string
