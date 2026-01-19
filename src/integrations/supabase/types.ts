@@ -1062,6 +1062,125 @@ export type Database = {
           },
         ]
       }
+      organization_social_media_organique_tiktok: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_total_likes: number | null
+          author_total_videos: number | null
+          caption: string | null
+          collect_count: number | null
+          comments_count: number | null
+          created_at: string
+          effects_used: Json | null
+          followers_at_time: number | null
+          hashtags: string[] | null
+          id: string
+          is_ad: boolean | null
+          is_pinned: boolean | null
+          is_slideshow: boolean | null
+          is_sponsored: boolean | null
+          likes_count: number | null
+          location_created: string | null
+          music_author: string | null
+          music_id: string | null
+          music_name: string | null
+          organization_id: string
+          post_id: string
+          posted_at: string | null
+          scraped_at: string | null
+          shares_count: number | null
+          text_language: string | null
+          tiktok_url: string
+          updated_at: string
+          video_cover_url: string | null
+          video_duration: number | null
+          video_height: number | null
+          video_width: number | null
+          views_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_total_likes?: number | null
+          author_total_videos?: number | null
+          caption?: string | null
+          collect_count?: number | null
+          comments_count?: number | null
+          created_at?: string
+          effects_used?: Json | null
+          followers_at_time?: number | null
+          hashtags?: string[] | null
+          id?: string
+          is_ad?: boolean | null
+          is_pinned?: boolean | null
+          is_slideshow?: boolean | null
+          is_sponsored?: boolean | null
+          likes_count?: number | null
+          location_created?: string | null
+          music_author?: string | null
+          music_id?: string | null
+          music_name?: string | null
+          organization_id: string
+          post_id: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          text_language?: string | null
+          tiktok_url: string
+          updated_at?: string
+          video_cover_url?: string | null
+          video_duration?: number | null
+          video_height?: number | null
+          video_width?: number | null
+          views_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_total_likes?: number | null
+          author_total_videos?: number | null
+          caption?: string | null
+          collect_count?: number | null
+          comments_count?: number | null
+          created_at?: string
+          effects_used?: Json | null
+          followers_at_time?: number | null
+          hashtags?: string[] | null
+          id?: string
+          is_ad?: boolean | null
+          is_pinned?: boolean | null
+          is_slideshow?: boolean | null
+          is_sponsored?: boolean | null
+          likes_count?: number | null
+          location_created?: string | null
+          music_author?: string | null
+          music_id?: string | null
+          music_name?: string | null
+          organization_id?: string
+          post_id?: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          text_language?: string | null
+          tiktok_url?: string
+          updated_at?: string
+          video_cover_url?: string | null
+          video_duration?: number | null
+          video_height?: number | null
+          video_width?: number | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_tiktok_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string
