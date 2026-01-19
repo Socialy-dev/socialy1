@@ -993,6 +993,7 @@ export type Database = {
           key_messages: string | null
           linkedin_url: string | null
           organization_id: string
+          organization_name: string | null
           target_audience: string | null
           tiktok_url: string | null
           tone_of_voice: string | null
@@ -1017,6 +1018,7 @@ export type Database = {
           key_messages?: string | null
           linkedin_url?: string | null
           organization_id: string
+          organization_name?: string | null
           target_audience?: string | null
           tiktok_url?: string | null
           tone_of_voice?: string | null
@@ -1041,6 +1043,7 @@ export type Database = {
           key_messages?: string | null
           linkedin_url?: string | null
           organization_id?: string
+          organization_name?: string | null
           target_audience?: string | null
           tiktok_url?: string | null
           tone_of_voice?: string | null
