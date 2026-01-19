@@ -8,8 +8,15 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { Layers, Video, ImageIcon, Eye, TrendingUp, FileStack } from "lucide-react";
-import { ContentTypeStats } from "@/hooks/useTikTokAnalytics";
+import { Layers, Video, ImageIcon, Eye, TrendingUp, FileStack, Film } from "lucide-react";
+
+interface ContentTypeStats {
+  type: string;
+  label: string;
+  avgViews: number;
+  avgEngagementRate: number;
+  postCount: number;
+}
 
 interface ContentTypeBarChartProps {
   data: ContentTypeStats[];
@@ -104,10 +111,12 @@ export const ContentTypeBarChart = ({ data }: ContentTypeBarChartProps) => {
             className="p-4 rounded-xl bg-muted/30 border border-border/50"
           >
             <div className="flex items-center gap-2 mb-3">
-              {item.type === "video" ? (
-                <Video className="w-5 h-5 text-pink-500" />
-              ) : (
+              {item.type === "video" || item.type === "reel" ? (
+                <Film className="w-5 h-5 text-pink-500" />
+              ) : item.type === "carousel" ? (
                 <ImageIcon className="w-5 h-5 text-violet-500" />
+              ) : (
+                <ImageIcon className="w-5 h-5 text-orange-500" />
               )}
               <span className="font-semibold text-foreground">{item.label}</span>
               <span className="ml-auto text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">

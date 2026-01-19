@@ -22,6 +22,8 @@ import { FacebookPostsView } from "./FacebookPostsView";
 import { FacebookAnalyticsView } from "./FacebookAnalyticsView";
 import { LinkedInPostsView } from "./LinkedInPostsView";
 import { LinkedInAnalyticsView } from "./LinkedInAnalyticsView";
+import { InstagramPostsView } from "./InstagramPostsView";
+import { InstagramAnalyticsView } from "./InstagramAnalyticsView";
 import { AllPlatformsView } from "./AllPlatformsView";
 
 interface Post {
@@ -138,17 +140,21 @@ export const OrganicView = ({ selectedPlatform, onPlatformChange }: OrganicViewP
     );
   }
 
-  if (selectedPlatform === "tiktok" || selectedPlatform === "facebook" || selectedPlatform === "linkedin") {
+  if (selectedPlatform === "tiktok" || selectedPlatform === "facebook" || selectedPlatform === "linkedin" || selectedPlatform === "instagram") {
     const PostsView = selectedPlatform === "tiktok" 
       ? TikTokPostsView 
       : selectedPlatform === "facebook" 
         ? FacebookPostsView 
-        : LinkedInPostsView;
+        : selectedPlatform === "instagram"
+          ? InstagramPostsView
+          : LinkedInPostsView;
     const AnalyticsView = selectedPlatform === "tiktok" 
       ? TikTokAnalyticsView 
       : selectedPlatform === "facebook" 
         ? FacebookAnalyticsView 
-        : LinkedInAnalyticsView;
+        : selectedPlatform === "instagram"
+          ? InstagramAnalyticsView
+          : LinkedInAnalyticsView;
 
     return (
       <div className="space-y-6">
