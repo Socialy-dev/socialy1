@@ -38,6 +38,7 @@ interface ClientInfo {
   twitter_url: string | null;
   youtube_url: string | null;
   facebook_url: string | null;
+  tiktok_url: string | null;
   website_url: string | null;
   company_name: string | null;
   company_description: string | null;
@@ -67,6 +68,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
     twitter_url: "",
     youtube_url: "",
     facebook_url: "",
+    tiktok_url: "",
     website_url: "",
     company_name: "",
     company_description: "",
@@ -125,6 +127,7 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
         twitter_url: formData.twitter_url || null,
         youtube_url: formData.youtube_url || null,
         facebook_url: formData.facebook_url || null,
+        tiktok_url: formData.tiktok_url || null,
         website_url: formData.website_url || null,
         company_name: formData.company_name || null,
         company_description: formData.company_description || null,
@@ -247,6 +250,14 @@ export const ResourcesPanel = ({ onBack }: ResourcesPanelProps) => {
               value={formData.facebook_url || ""}
               onChange={(v) => updateField("facebook_url", v)}
               label="Facebook"
+            />
+            <SocialInput
+              icon={<svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>}
+              iconBg="bg-black"
+              placeholder="https://tiktok.com/@..."
+              value={formData.tiktok_url || ""}
+              onChange={(v) => updateField("tiktok_url", v)}
+              label="TikTok"
             />
             <SocialInput
               icon={<Globe className="w-5 h-5" />}
