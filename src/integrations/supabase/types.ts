@@ -1145,6 +1145,107 @@ export type Database = {
           },
         ]
       }
+      organization_social_media_organique_instagram: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          company_name: string | null
+          content_type: string | null
+          created_at: string
+          dimensions_height: number | null
+          dimensions_width: number | null
+          followers_count: number | null
+          following_count: number | null
+          hashtags: string[] | null
+          id: string
+          images: string[] | null
+          is_video: boolean | null
+          latest_comments: Json | null
+          likes_count: number | null
+          logo_url: string | null
+          mentions: string[] | null
+          organization_id: string
+          post_id: string | null
+          post_url: string
+          posted_at: string | null
+          posts_count: number | null
+          profile_picture_url: string | null
+          updated_at: string
+          video_duration: string | null
+          video_play_count: number | null
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          company_name?: string | null
+          content_type?: string | null
+          created_at?: string
+          dimensions_height?: number | null
+          dimensions_width?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          hashtags?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_video?: boolean | null
+          latest_comments?: Json | null
+          likes_count?: number | null
+          logo_url?: string | null
+          mentions?: string[] | null
+          organization_id: string
+          post_id?: string | null
+          post_url: string
+          posted_at?: string | null
+          posts_count?: number | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          video_duration?: string | null
+          video_play_count?: number | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          company_name?: string | null
+          content_type?: string | null
+          created_at?: string
+          dimensions_height?: number | null
+          dimensions_width?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          hashtags?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_video?: boolean | null
+          latest_comments?: Json | null
+          likes_count?: number | null
+          logo_url?: string | null
+          mentions?: string[] | null
+          organization_id?: string
+          post_id?: string | null
+          post_url?: string
+          posted_at?: string | null
+          posts_count?: number | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          video_duration?: string | null
+          video_play_count?: number | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_instag_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_social_media_organique_linkedin: {
         Row: {
           author_company_url: string | null
