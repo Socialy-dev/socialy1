@@ -1062,6 +1062,86 @@ export type Database = {
           },
         ]
       }
+      organization_social_media_organique_facebook: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          created_at: string
+          facebook_url: string
+          has_collaborators: boolean | null
+          id: string
+          image_url: string | null
+          likes_count: number | null
+          organization_id: string
+          page_id: string | null
+          page_name: string | null
+          page_profile_pic: string | null
+          page_profile_url: string | null
+          post_id: string
+          post_type: string | null
+          posted_at: string | null
+          scraped_at: string | null
+          shares_count: number | null
+          updated_at: string
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string
+          facebook_url: string
+          has_collaborators?: boolean | null
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          organization_id: string
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_pic?: string | null
+          page_profile_url?: string | null
+          post_id: string
+          post_type?: string | null
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string
+          facebook_url?: string
+          has_collaborators?: boolean | null
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          organization_id?: string
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_pic?: string | null
+          page_profile_url?: string | null
+          post_id?: string
+          post_type?: string | null
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_facebo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_social_media_organique_tiktok: {
         Row: {
           author_id: string | null
