@@ -1160,7 +1160,7 @@ export type Database = {
           id: string
           images: string[] | null
           is_video: boolean | null
-          latest_comments: Json | null
+          latest_comments: string | null
           likes_count: number | null
           logo_url: string | null
           mentions: string[] | null
@@ -1190,7 +1190,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_video?: boolean | null
-          latest_comments?: Json | null
+          latest_comments?: string | null
           likes_count?: number | null
           logo_url?: string | null
           mentions?: string[] | null
@@ -1220,7 +1220,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_video?: boolean | null
-          latest_comments?: Json | null
+          latest_comments?: string | null
           likes_count?: number | null
           logo_url?: string | null
           mentions?: string[] | null

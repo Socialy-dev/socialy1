@@ -63,6 +63,22 @@ interface LinkedInPost {
   posted_at: string | null;
 }
 
+interface InstagramPost {
+  id: string;
+  post_id: string | null;
+  post_url: string;
+  caption: string | null;
+  likes_count: number | null;
+  comments_count: number | null;
+  views_count: number | null;
+  video_play_count: number | null;
+  images: string[] | null;
+  profile_picture_url: string | null;
+  company_name: string | null;
+  content_type: string | null;
+  posted_at: string | null;
+}
+
 interface PlatformStats {
   platform: Platform;
   totalPosts: number;
@@ -84,11 +100,13 @@ export const AllPlatformsView = () => {
   const [tiktokPosts, setTiktokPosts] = useState<TikTokPost[]>([]);
   const [facebookPosts, setFacebookPosts] = useState<FacebookPost[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
+  const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   const tiktokScrollRef = useRef<HTMLDivElement>(null);
   const facebookScrollRef = useRef<HTMLDivElement>(null);
   const linkedinScrollRef = useRef<HTMLDivElement>(null);
+  const instagramScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchAllPosts = async () => {
@@ -96,7 +114,7 @@ export const AllPlatformsView = () => {
 
       setLoading(true);
 
-      const [tiktokRes, facebookRes, linkedinRes] = await Promise.all([
+      const [tiktokRes, facebookRes, linkedinRes, instagramRes] = await Promise.all([
         supabase
           .from("organization_social_media_organique_tiktok")
           .select("id, post_id, tiktok_url, caption, likes_count, shares_count, views_count, comments_count, video_cover_url, author_name, posted_at")
@@ -114,12 +132,19 @@ export const AllPlatformsView = () => {
           .select("id, post_id, post_url, caption, total_reactions, comments_count, reposts_count, media_thumbnail, media_url, author_name, author_logo_url, posted_at")
           .eq("organization_id", effectiveOrgId)
           .order("posted_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("organization_social_media_organique_instagram")
+          .select("id, post_id, post_url, caption, likes_count, comments_count, views_count, video_play_count, images, profile_picture_url, company_name, content_type, posted_at")
+          .eq("organization_id", effectiveOrgId)
+          .order("posted_at", { ascending: false })
           .limit(20)
       ]);
 
       if (tiktokRes.data) setTiktokPosts(tiktokRes.data);
       if (facebookRes.data) setFacebookPosts(facebookRes.data as unknown as FacebookPost[]);
       if (linkedinRes.data) setLinkedinPosts(linkedinRes.data as unknown as LinkedInPost[]);
+      if (instagramRes.data) setInstagramPosts(instagramRes.data as unknown as InstagramPost[]);
 
       setLoading(false);
     };
@@ -166,9 +191,22 @@ export const AllPlatformsView = () => {
     };
   };
 
+  const calculateInstagramStats = (): Omit<PlatformStats, 'platform'> => {
+    const totalPosts = instagramPosts.length;
+    const totalViews = instagramPosts.reduce((sum, p) => sum + (p.views_count || p.video_play_count || 0), 0);
+    const totalLikes = instagramPosts.reduce((sum, p) => sum + (p.likes_count || 0), 0);
+    const totalComments = instagramPosts.reduce((sum, p) => sum + (p.comments_count || 0), 0);
+    const engagementRate = totalViews > 0 
+      ? (((totalLikes + totalComments) / totalViews) * 100).toFixed(2)
+      : "0.00";
+
+    return { totalPosts, totalViews, totalLikes, totalComments, totalShares: 0, engagementRate };
+  };
+
   const tiktokStats = calculateStats(tiktokPosts);
   const facebookStats = calculateStats(facebookPosts);
   const linkedinStats = calculateLinkedInStats();
+  const instagramStats = calculateInstagramStats();
 
   const scroll = (ref: React.RefObject<HTMLDivElement>, direction: "left" | "right") => {
     if (ref.current) {
@@ -186,6 +224,12 @@ export const AllPlatformsView = () => {
     </svg>
   );
 
+  const InstagramIcon = () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+    </svg>
+  );
+
   const platformCards = [
     {
       platform: "linkedin" as Platform,
@@ -193,6 +237,13 @@ export const AllPlatformsView = () => {
       icon: LinkedInIcon,
       gradient: "from-[#0A66C2] to-[#004182]",
       stats: linkedinStats
+    },
+    {
+      platform: "instagram" as Platform,
+      label: "Instagram",
+      icon: InstagramIcon,
+      gradient: "from-purple-600 via-pink-500 to-orange-400",
+      stats: instagramStats
     },
     {
       platform: "tiktok" as Platform,
@@ -207,13 +258,6 @@ export const AllPlatformsView = () => {
       icon: Facebook,
       gradient: "from-blue-500 to-blue-700",
       stats: facebookStats
-    },
-    {
-      platform: "instagram" as Platform,
-      label: "Instagram",
-      icon: () => <div className="w-5 h-5 rounded bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400" />,
-      gradient: "from-purple-500 via-pink-500 to-orange-400",
-      stats: { totalPosts: 0, totalViews: 0, totalLikes: 0, totalComments: 0, totalShares: 0, engagementRate: "0.00" }
     }
   ];
 
