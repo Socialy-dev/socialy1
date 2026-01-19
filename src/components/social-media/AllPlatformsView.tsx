@@ -48,6 +48,21 @@ interface FacebookPost {
   post_type: string | null;
 }
 
+interface LinkedInPost {
+  id: string;
+  post_id: string;
+  post_url: string;
+  caption: string | null;
+  total_reactions: number | null;
+  comments_count: number | null;
+  reposts_count: number | null;
+  media_thumbnail: string | null;
+  media_url: string | null;
+  author_name: string | null;
+  author_logo_url: string | null;
+  posted_at: string | null;
+}
+
 interface PlatformStats {
   platform: Platform;
   totalPosts: number;
@@ -68,10 +83,12 @@ export const AllPlatformsView = () => {
   const { effectiveOrgId } = useAuth();
   const [tiktokPosts, setTiktokPosts] = useState<TikTokPost[]>([]);
   const [facebookPosts, setFacebookPosts] = useState<FacebookPost[]>([]);
+  const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   const tiktokScrollRef = useRef<HTMLDivElement>(null);
   const facebookScrollRef = useRef<HTMLDivElement>(null);
+  const linkedinScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchAllPosts = async () => {
@@ -79,7 +96,7 @@ export const AllPlatformsView = () => {
 
       setLoading(true);
 
-      const [tiktokRes, facebookRes] = await Promise.all([
+      const [tiktokRes, facebookRes, linkedinRes] = await Promise.all([
         supabase
           .from("organization_social_media_organique_tiktok")
           .select("id, post_id, tiktok_url, caption, likes_count, shares_count, views_count, comments_count, video_cover_url, author_name, posted_at")
@@ -91,11 +108,18 @@ export const AllPlatformsView = () => {
           .select("id, post_id, post_url, caption, likes_count, shares_count, views_count, comments_count, image_url, video_url, page_name, posted_at, post_type")
           .eq("organization_id", effectiveOrgId)
           .order("posted_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("organization_social_media_organique_linkedin")
+          .select("id, post_id, post_url, caption, total_reactions, comments_count, reposts_count, media_thumbnail, media_url, author_name, author_logo_url, posted_at")
+          .eq("organization_id", effectiveOrgId)
+          .order("posted_at", { ascending: false })
           .limit(20)
       ]);
 
       if (tiktokRes.data) setTiktokPosts(tiktokRes.data);
       if (facebookRes.data) setFacebookPosts(facebookRes.data as unknown as FacebookPost[]);
+      if (linkedinRes.data) setLinkedinPosts(linkedinRes.data as unknown as LinkedInPost[]);
 
       setLoading(false);
     };
