@@ -888,6 +888,62 @@ export type Database = {
           },
         ]
       }
+      organization_marche_public: {
+        Row: {
+          acheteur: string | null
+          created_at: string
+          date_publication: string | null
+          deadline: string | null
+          dedup_key: string | null
+          external_id: string | null
+          id: string
+          montant: number | null
+          organization_id: string
+          source: string | null
+          titre: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          acheteur?: string | null
+          created_at?: string
+          date_publication?: string | null
+          deadline?: string | null
+          dedup_key?: string | null
+          external_id?: string | null
+          id?: string
+          montant?: number | null
+          organization_id: string
+          source?: string | null
+          titre?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          acheteur?: string | null
+          created_at?: string
+          date_publication?: string | null
+          deadline?: string | null
+          dedup_key?: string | null
+          external_id?: string | null
+          id?: string
+          montant?: number | null
+          organization_id?: string
+          source?: string | null
+          titre?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_marche_public_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
