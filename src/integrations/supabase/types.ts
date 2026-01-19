@@ -1076,7 +1076,7 @@ export type Database = {
           page_name: string | null
           page_profile_pic: string | null
           page_profile_url: string | null
-          page_url: string
+          page_url: string | null
           post_id: string
           post_type: string | null
           post_url: string
@@ -1100,7 +1100,7 @@ export type Database = {
           page_name?: string | null
           page_profile_pic?: string | null
           page_profile_url?: string | null
-          page_url: string
+          page_url?: string | null
           post_id: string
           post_type?: string | null
           post_url: string
@@ -1124,7 +1124,7 @@ export type Database = {
           page_name?: string | null
           page_profile_pic?: string | null
           page_profile_url?: string | null
-          page_url?: string
+          page_url?: string | null
           post_id?: string
           post_type?: string | null
           post_url?: string
