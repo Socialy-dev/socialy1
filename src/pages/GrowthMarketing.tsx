@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { OrganizationLinkedInPosts } from "@/components/growth/OrganizationLinkedInPosts";
+import { MarchePublicView } from "@/components/growth/MarchePublicView";
 import { cn } from "@/lib/utils";
 import {
   Linkedin,
@@ -999,24 +1000,7 @@ const GrowthMarketing = () => {
             )}
 
             {activeMainTab === "marche-public" && (
-              <div className="bg-card rounded-2xl border border-border p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Briefcase className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Marché Public</h3>
-                    <p className="text-sm text-muted-foreground">Gérez vos appels d'offres et opportunités</p>
-                  </div>
-                </div>
-                <div className="text-center py-12 bg-secondary/20 rounded-2xl">
-                  <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <p className="text-muted-foreground font-medium">Fonctionnalité à venir</p>
-                  <p className="text-sm text-muted-foreground/70 mt-1">
-                    La gestion des marchés publics sera bientôt disponible
-                  </p>
-                </div>
-              </div>
+              <MarchePublicView />
             )}
           </div>
         </main>
