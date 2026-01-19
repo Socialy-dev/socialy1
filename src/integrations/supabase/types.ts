@@ -1194,6 +1194,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_marche_last_visit: {
+        Row: {
+          created_at: string
+          id: string
+          last_visit_at: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_visit_at?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_visit_at?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_marche_last_visit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_marche_selections: {
         Row: {
           created_at: string
