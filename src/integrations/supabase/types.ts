@@ -902,7 +902,7 @@ export type Database = {
           source: string | null
           titre: string | null
           updated_at: string
-          url: string
+          url: string | null
         }
         Insert: {
           acheteur?: string | null
@@ -917,7 +917,7 @@ export type Database = {
           source?: string | null
           titre?: string | null
           updated_at?: string
-          url: string
+          url?: string | null
         }
         Update: {
           acheteur?: string | null
@@ -932,7 +932,7 @@ export type Database = {
           source?: string | null
           titre?: string | null
           updated_at?: string
-          url?: string
+          url?: string | null
         }
         Relationships: [
           {
