@@ -115,8 +115,11 @@ const GrowthMarketing = () => {
     } else if (tabFromUrl === "classement") {
       setLinkedinSubTab("classement");
       setActiveMainTab("linkedin");
+    } else if (tabFromUrl === "marche-public") {
+      setActiveMainTab("marche-public");
     } else if (!tabFromUrl) {
       setLinkedinSubTab("generation");
+      setActiveMainTab("linkedin");
     }
   }, [tabFromUrl]);
 

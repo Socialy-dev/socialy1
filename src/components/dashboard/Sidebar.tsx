@@ -27,6 +27,7 @@ interface SubMenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  separator?: boolean;
 }
 
 interface MenuItem {
@@ -57,6 +58,7 @@ const menuItems: MenuItem[] = [
       { icon: MessageSquare, label: "Génération", path: "/growth-marketing" },
       { icon: Share2, label: "Engagement", path: "/growth-marketing?tab=engagement" },
       { icon: Trophy, label: "Classement", path: "/growth-marketing?tab=classement" },
+      { icon: Globe, label: "Marché Public", path: "/growth-marketing?tab=marche-public", separator: true },
     ]
   },
   { icon: Handshake, label: "Biz Dev", path: "/biz-dev" },
@@ -214,23 +216,27 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                     {item.subItems?.map((subItem, subIndex) => {
                       const isSubActive = isSubItemActive(subItem.path);
                       return (
-                        <button
-                          key={subIndex}
-                          onClick={() => navigate(subItem.path)}
-                          className={cn(
-                            "w-full flex items-center gap-3 py-2.5 px-3 rounded-xl",
-                            "transition-all duration-200 ease-out text-sm",
-                            isSubActive
-                              ? "bg-white/10 text-white"
-                              : "text-white/40 hover:bg-white/5 hover:text-white/70"
+                        <div key={subIndex}>
+                          {subItem.separator && (
+                            <div className="my-2 h-px bg-white/10" />
                           )}
-                        >
-                          <subItem.icon className="w-4 h-4" />
-                          <span className="flex-1 text-left">{subItem.label}</span>
-                          {isSubActive && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
-                          )}
-                        </button>
+                          <button
+                            onClick={() => navigate(subItem.path)}
+                            className={cn(
+                              "w-full flex items-center gap-3 py-2.5 px-3 rounded-xl",
+                              "transition-all duration-200 ease-out text-sm",
+                              isSubActive
+                                ? "bg-white/10 text-white"
+                                : "text-white/40 hover:bg-white/5 hover:text-white/70"
+                            )}
+                          >
+                            <subItem.icon className="w-4 h-4" />
+                            <span className="flex-1 text-left">{subItem.label}</span>
+                            {isSubActive && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
+                            )}
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
