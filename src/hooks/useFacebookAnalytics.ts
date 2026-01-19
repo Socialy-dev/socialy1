@@ -52,7 +52,7 @@ export const useFacebookAnalytics = () => {
   const { effectiveOrgId } = useAuth();
   const [posts, setPosts] = useState<FacebookPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<TimePeriod>("30d");
+  const [period, setPeriod] = useState<TimePeriod>("1y");
   const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null);
 
   useEffect(() => {
