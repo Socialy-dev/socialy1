@@ -1067,7 +1067,6 @@ export type Database = {
           caption: string | null
           comments_count: number | null
           created_at: string
-          facebook_url: string
           has_collaborators: boolean | null
           id: string
           image_url: string | null
@@ -1077,8 +1076,10 @@ export type Database = {
           page_name: string | null
           page_profile_pic: string | null
           page_profile_url: string | null
+          page_url: string
           post_id: string
           post_type: string | null
+          post_url: string
           posted_at: string | null
           scraped_at: string | null
           shares_count: number | null
@@ -1090,7 +1091,6 @@ export type Database = {
           caption?: string | null
           comments_count?: number | null
           created_at?: string
-          facebook_url: string
           has_collaborators?: boolean | null
           id?: string
           image_url?: string | null
@@ -1100,8 +1100,10 @@ export type Database = {
           page_name?: string | null
           page_profile_pic?: string | null
           page_profile_url?: string | null
+          page_url: string
           post_id: string
           post_type?: string | null
+          post_url: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
@@ -1113,7 +1115,6 @@ export type Database = {
           caption?: string | null
           comments_count?: number | null
           created_at?: string
-          facebook_url?: string
           has_collaborators?: boolean | null
           id?: string
           image_url?: string | null
@@ -1123,8 +1124,10 @@ export type Database = {
           page_name?: string | null
           page_profile_pic?: string | null
           page_profile_url?: string | null
+          page_url?: string
           post_id?: string
           post_type?: string | null
+          post_url?: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
