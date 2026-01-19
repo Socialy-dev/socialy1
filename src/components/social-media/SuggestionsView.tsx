@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Lightbulb, Sparkles, Users, Target, Filter, Zap, TrendingUp } from "lucide-react";
+import { Lightbulb, Users, Zap, TrendingUp } from "lucide-react";
 import { SuggestionCard } from "./SuggestionCard";
 
 type CategoryFilter = "all" | "content" | "timing" | "engagement" | "strategy" | "clients";
@@ -86,11 +86,11 @@ const mockSuggestions = [
 ];
 
 const categoryFilters = [
-  { id: "all" as CategoryFilter, label: "Toutes", icon: Filter },
-  { id: "content" as CategoryFilter, label: "Contenu", icon: Sparkles },
-  { id: "clients" as CategoryFilter, label: "Clients", icon: Users },
-  { id: "strategy" as CategoryFilter, label: "Stratégie", icon: Target },
-  { id: "engagement" as CategoryFilter, label: "Engagement", icon: Lightbulb }
+  { id: "all" as CategoryFilter, label: "Toutes" },
+  { id: "content" as CategoryFilter, label: "Contenu" },
+  { id: "clients" as CategoryFilter, label: "Clients" },
+  { id: "strategy" as CategoryFilter, label: "Stratégie" },
+  { id: "engagement" as CategoryFilter, label: "Engagement" }
 ];
 
 export const SuggestionsView = () => {
@@ -107,7 +107,6 @@ export const SuggestionsView = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2 p-1.5 bg-secondary/30 rounded-2xl border border-border/30 w-fit">
         {categoryFilters.map((filter) => {
-          const Icon = filter.icon;
           const isActive = categoryFilter === filter.id;
 
           return (
@@ -121,7 +120,6 @@ export const SuggestionsView = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
-              <Icon className="w-4 h-4" />
               {filter.label}
             </button>
           );
