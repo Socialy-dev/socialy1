@@ -1145,6 +1145,131 @@ export type Database = {
           },
         ]
       }
+      organization_social_media_organique_linkedin: {
+        Row: {
+          author_company_url: string | null
+          author_followers: number | null
+          author_logo_url: string | null
+          author_name: string | null
+          caption: string | null
+          celebrate_count: number | null
+          comments_count: number | null
+          company_source_url: string | null
+          created_at: string
+          document_page_count: number | null
+          document_title: string | null
+          document_url: string | null
+          full_urn: string | null
+          id: string
+          insight_count: number | null
+          is_edited: boolean | null
+          language: string | null
+          likes_count: number | null
+          love_count: number | null
+          media_thumbnail: string | null
+          media_title: string | null
+          media_type: string | null
+          media_url: string | null
+          organization_id: string
+          post_id: string
+          post_type: string | null
+          post_url: string
+          posted_at: string | null
+          posted_relative: string | null
+          reposts_count: number | null
+          scraped_at: string | null
+          support_count: number | null
+          timestamp: number | null
+          total_reactions: number | null
+          updated_at: string
+          video_duration: string | null
+        }
+        Insert: {
+          author_company_url?: string | null
+          author_followers?: number | null
+          author_logo_url?: string | null
+          author_name?: string | null
+          caption?: string | null
+          celebrate_count?: number | null
+          comments_count?: number | null
+          company_source_url?: string | null
+          created_at?: string
+          document_page_count?: number | null
+          document_title?: string | null
+          document_url?: string | null
+          full_urn?: string | null
+          id?: string
+          insight_count?: number | null
+          is_edited?: boolean | null
+          language?: string | null
+          likes_count?: number | null
+          love_count?: number | null
+          media_thumbnail?: string | null
+          media_title?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          organization_id: string
+          post_id: string
+          post_type?: string | null
+          post_url: string
+          posted_at?: string | null
+          posted_relative?: string | null
+          reposts_count?: number | null
+          scraped_at?: string | null
+          support_count?: number | null
+          timestamp?: number | null
+          total_reactions?: number | null
+          updated_at?: string
+          video_duration?: string | null
+        }
+        Update: {
+          author_company_url?: string | null
+          author_followers?: number | null
+          author_logo_url?: string | null
+          author_name?: string | null
+          caption?: string | null
+          celebrate_count?: number | null
+          comments_count?: number | null
+          company_source_url?: string | null
+          created_at?: string
+          document_page_count?: number | null
+          document_title?: string | null
+          document_url?: string | null
+          full_urn?: string | null
+          id?: string
+          insight_count?: number | null
+          is_edited?: boolean | null
+          language?: string | null
+          likes_count?: number | null
+          love_count?: number | null
+          media_thumbnail?: string | null
+          media_title?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          organization_id?: string
+          post_id?: string
+          post_type?: string | null
+          post_url?: string
+          posted_at?: string | null
+          posted_relative?: string | null
+          reposts_count?: number | null
+          scraped_at?: string | null
+          support_count?: number | null
+          timestamp?: number | null
+          total_reactions?: number | null
+          updated_at?: string
+          video_duration?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_linked_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_social_media_organique_tiktok: {
         Row: {
           author_id: string | null
