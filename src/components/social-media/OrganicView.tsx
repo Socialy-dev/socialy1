@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   TrendingUp,
@@ -11,10 +12,12 @@ import {
   ThumbsUp,
   Repeat2,
   ChevronRight,
-  Globe
+  Globe,
+  LayoutGrid
 } from "lucide-react";
 import { PlatformDropdown, Platform, platformsConfig } from "./PlatformDropdown";
 import { TikTokPostsView } from "./TikTokPostsView";
+import { TikTokAnalyticsView } from "./TikTokAnalyticsView";
 
 interface Post {
   id: string;
@@ -117,13 +120,45 @@ interface OrganicViewProps {
 }
 
 export const OrganicView = ({ selectedPlatform, onPlatformChange }: OrganicViewProps) => {
+  const [showAnalytics, setShowAnalytics] = useState(false);
+
   if (selectedPlatform === "tiktok") {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+          <div className="flex items-center gap-3">
+            <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+
+            <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
+              <button
+                onClick={() => setShowAnalytics(false)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  !showAnalytics
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Publications
+              </button>
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                  showAnalytics
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Analyse & Graphiques
+              </button>
+            </div>
+          </div>
         </div>
-        <TikTokPostsView />
+
+        {showAnalytics ? <TikTokAnalyticsView /> : <TikTokPostsView />}
       </div>
     );
   }
