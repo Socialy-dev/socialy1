@@ -18,6 +18,9 @@ import {
 import { PlatformDropdown, Platform, platformsConfig } from "./PlatformDropdown";
 import { TikTokPostsView } from "./TikTokPostsView";
 import { TikTokAnalyticsView } from "./TikTokAnalyticsView";
+import { FacebookPostsView } from "./FacebookPostsView";
+import { FacebookAnalyticsView } from "./FacebookAnalyticsView";
+import { AllPlatformsView } from "./AllPlatformsView";
 
 interface Post {
   id: string;
@@ -122,7 +125,21 @@ interface OrganicViewProps {
 export const OrganicView = ({ selectedPlatform, onPlatformChange }: OrganicViewProps) => {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
-  if (selectedPlatform === "tiktok") {
+  if (selectedPlatform === "global") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+        </div>
+        <AllPlatformsView />
+      </div>
+    );
+  }
+
+  if (selectedPlatform === "tiktok" || selectedPlatform === "facebook") {
+    const PostsView = selectedPlatform === "tiktok" ? TikTokPostsView : FacebookPostsView;
+    const AnalyticsView = selectedPlatform === "tiktok" ? TikTokAnalyticsView : FacebookAnalyticsView;
+
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -158,17 +175,15 @@ export const OrganicView = ({ selectedPlatform, onPlatformChange }: OrganicViewP
           </div>
         </div>
 
-        {showAnalytics ? <TikTokAnalyticsView /> : <TikTokPostsView />}
+        {showAnalytics ? <AnalyticsView /> : <PostsView />}
       </div>
     );
   }
 
-  const filteredPosts = selectedPlatform === "global"
-    ? mockPosts
-    : mockPosts.filter(post => post.platform === selectedPlatform);
+  const filteredPosts = mockPosts.filter(post => post.platform === selectedPlatform);
 
   const calculateKPIs = () => {
-    const posts = selectedPlatform === "global" ? mockPosts : filteredPosts;
+    const posts = filteredPosts;
 
     const totalLikes = posts.reduce((sum, post) => sum + post.likes, 0);
     const totalComments = posts.reduce((sum, post) => sum + post.comments, 0);
