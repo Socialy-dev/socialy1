@@ -99,6 +99,48 @@ export const MarchePublicView = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"all" | "selected" | "dismissed">("all");
+  const [lastVisitAt, setLastVisitAt] = useState<Date | null>(null);
+  const [newMarchesCount, setNewMarchesCount] = useState(0);
+
+  const fetchLastVisit = async () => {
+    if (!effectiveOrgId || !user?.id) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from("user_marche_last_visit" as any)
+        .select("last_visit_at")
+        .eq("user_id", user.id)
+        .eq("organization_id", effectiveOrgId)
+        .maybeSingle();
+
+      if (error) throw error;
+      const record = data as unknown as { last_visit_at: string } | null;
+      return record?.last_visit_at ? new Date(record.last_visit_at) : null;
+    } catch (error) {
+      console.error("Error fetching last visit:", error);
+      return null;
+    }
+  };
+
+  const updateLastVisit = async () => {
+    if (!effectiveOrgId || !user?.id) return;
+    
+    try {
+      const { error } = await supabase
+        .from("user_marche_last_visit" as any)
+        .upsert({
+          user_id: user.id,
+          organization_id: effectiveOrgId,
+          last_visit_at: new Date().toISOString()
+        } as any, {
+          onConflict: "user_id,organization_id"
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error updating last visit:", error);
+    }
+  };
 
   const fetchMarches = async () => {
     if (!effectiveOrgId) return;
@@ -138,9 +180,26 @@ export const MarchePublicView = () => {
   };
 
   useEffect(() => {
-    fetchMarches();
-    fetchSelections();
+    const initializeData = async () => {
+      const lastVisit = await fetchLastVisit();
+      setLastVisitAt(lastVisit);
+      
+      await Promise.all([fetchMarches(), fetchSelections()]);
+      
+      await updateLastVisit();
+    };
+    
+    initializeData();
   }, [effectiveOrgId, user?.id]);
+
+  useEffect(() => {
+    if (marches.length > 0 && lastVisitAt) {
+      const newCount = marches.filter(m => new Date(m.created_at) > lastVisitAt).length;
+      setNewMarchesCount(newCount);
+    } else if (marches.length > 0 && !lastVisitAt) {
+      setNewMarchesCount(marches.length);
+    }
+  }, [marches, lastVisitAt]);
 
   const toggleSelection = async (marcheId: string) => {
     if (!effectiveOrgId || !user?.id) return;
@@ -285,11 +344,12 @@ export const MarchePublicView = () => {
         <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 rounded-2xl p-5 border border-emerald-500/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-              <Euro className="w-5 h-5 text-emerald-600" />
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
-            <span className="text-sm text-muted-foreground">Valeur totale</span>
+            <span className="text-sm text-muted-foreground">Nouveaux</span>
           </div>
-          <p className="text-3xl font-bold text-foreground">{formatMontant(stats.totalMontant)}</p>
+          <p className="text-3xl font-bold text-foreground">{newMarchesCount}</p>
+          <p className="text-xs text-muted-foreground mt-1">depuis votre dernière visite</p>
         </div>
 
         <div 
