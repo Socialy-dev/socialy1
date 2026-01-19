@@ -14,10 +14,11 @@ import {
   Globe
 } from "lucide-react";
 import { PlatformDropdown, Platform, platformsConfig } from "./PlatformDropdown";
+import { TikTokPostsView } from "./TikTokPostsView";
 
 interface Post {
   id: string;
-  platform: Exclude<Platform, "global">;
+  platform: Exclude<Platform, "global" | "tiktok">;
   content: string;
   author: string;
   author_avatar: string;
@@ -116,6 +117,17 @@ interface OrganicViewProps {
 }
 
 export const OrganicView = ({ selectedPlatform, onPlatformChange }: OrganicViewProps) => {
+  if (selectedPlatform === "tiktok") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+        </div>
+        <TikTokPostsView />
+      </div>
+    );
+  }
+
   const filteredPosts = selectedPlatform === "global"
     ? mockPosts
     : mockPosts.filter(post => post.platform === selectedPlatform);
