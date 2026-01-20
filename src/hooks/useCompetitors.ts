@@ -98,6 +98,34 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
     }
   };
 
+  const updateCompetitor = async (id: string, competitor: NewCompetitor): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from("competitor_agencies")
+        .update({
+          name: competitor.name,
+          logo_url: competitor.logo_url || null,
+          website: competitor.website || null,
+          linkedin: competitor.linkedin || null,
+          tiktok_url: competitor.tiktok_url || null,
+          instagram_url: competitor.instagram_url || null,
+          facebook_url: competitor.facebook_url || null,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Concurrent mis à jour");
+      await fetchCompetitors();
+      return true;
+    } catch (error: unknown) {
+      console.error("Error updating competitor:", error);
+      const message = error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+      toast.error(message);
+      return false;
+    }
+  };
+
   const deleteCompetitor = async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
@@ -125,6 +153,7 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
     competitors,
     loading,
     addCompetitor,
+    updateCompetitor,
     deleteCompetitor,
     refetch: fetchCompetitors,
   };

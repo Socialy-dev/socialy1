@@ -12,8 +12,9 @@ import {
   Trash2,
   ExternalLink,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
-import { useCompetitors, NewCompetitor } from "@/hooks/useCompetitors";
+import { useCompetitors, NewCompetitor, Competitor } from "@/hooks/useCompetitors";
 
 const LinkedInIcon = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -48,8 +49,9 @@ export const ManageCompetitorsModal = ({
   open,
   onOpenChange,
 }: ManageCompetitorsModalProps) => {
-  const { competitors, loading, addCompetitor, deleteCompetitor } = useCompetitors("organic_social_media");
+  const { competitors, loading, addCompetitor, updateCompetitor, deleteCompetitor } = useCompetitors("organic_social_media");
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<NewCompetitor>({
     name: "",
@@ -74,6 +76,22 @@ export const ManageCompetitorsModal = ({
       category: "organic_social_media",
     });
     setShowForm(false);
+    setEditingId(null);
+  };
+
+  const handleEdit = (competitor: Competitor) => {
+    setFormData({
+      name: competitor.name,
+      logo_url: competitor.logo_url || "",
+      website: competitor.website || "",
+      linkedin: competitor.linkedin || "",
+      tiktok_url: competitor.tiktok_url || "",
+      instagram_url: competitor.instagram_url || "",
+      facebook_url: competitor.facebook_url || "",
+      category: "organic_social_media",
+    });
+    setEditingId(competitor.id);
+    setShowForm(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,7 +99,12 @@ export const ManageCompetitorsModal = ({
     if (!formData.name.trim()) return;
 
     setSaving(true);
-    const success = await addCompetitor(formData);
+    let success: boolean;
+    if (editingId) {
+      success = await updateCompetitor(editingId, formData);
+    } else {
+      success = await addCompetitor(formData);
+    }
     if (success) {
       resetForm();
     }
@@ -142,7 +165,7 @@ export const ManageCompetitorsModal = ({
                 <div className="relative p-6 rounded-3xl bg-card border border-border shadow-xl">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-foreground">
-                      Nouveau concurrent
+                      {editingId ? "Modifier le concurrent" : "Nouveau concurrent"}
                     </h3>
                     <Button
                       variant="ghost"
@@ -319,7 +342,7 @@ export const ManageCompetitorsModal = ({
                         disabled={saving || !formData.name.trim()}
                         className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                       >
-                        {saving ? "Enregistrement..." : "Enregistrer le concurrent"}
+                        {saving ? "Enregistrement..." : editingId ? "Mettre à jour" : "Enregistrer le concurrent"}
                       </Button>
                     </div>
                   </form>
@@ -379,12 +402,20 @@ export const ManageCompetitorsModal = ({
                           />
                         ) : null}
                         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                        <button
-                          onClick={() => handleDelete(competitor.id)}
-                          className="absolute top-3 right-3 p-2 rounded-xl bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all duration-200"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                          <button
+                            onClick={() => handleEdit(competitor)}
+                            className="p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(competitor.id)}
+                            className="p-2 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="p-5 -mt-8 relative">
