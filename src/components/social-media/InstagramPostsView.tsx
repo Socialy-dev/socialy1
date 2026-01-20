@@ -126,9 +126,23 @@ export const InstagramPostsView = () => {
   };
 
   const getPostImage = (post: InstagramPost): string | null => {
-    if (post.images && Array.isArray(post.images) && post.images.length > 0) {
-      return post.images[0];
+    if (post.images) {
+      let imagesArray: string[] = [];
+      if (typeof post.images === 'string') {
+        try {
+          imagesArray = JSON.parse(post.images);
+        } catch {
+          imagesArray = [post.images];
+        }
+      } else if (Array.isArray(post.images)) {
+        imagesArray = post.images;
+      }
+      if (imagesArray.length > 0) {
+        return imagesArray[0];
+      }
     }
+    if (post.profile_picture_url) return post.profile_picture_url;
+    if (post.logo_url) return post.logo_url;
     return null;
   };
 
