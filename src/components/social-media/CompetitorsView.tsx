@@ -1,269 +1,392 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Users, BarChart3, UsersRound, FileText, Building2, Globe, ExternalLink } from "lucide-react";
+import { Plus, LayoutGrid, BarChart3, Users, TrendingUp, CalendarDays, Hash, Film, Minus, TrendingDown } from "lucide-react";
 import { CompetitorFilter } from "./CompetitorFilter";
 import { PlatformDropdown, Platform } from "./PlatformDropdown";
 import { ManageCompetitorsModal } from "./ManageCompetitorsModal";
 import { useCompetitors } from "@/hooks/useCompetitors";
-
-const LinkedInIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-  </svg>
-);
-
-const TikTokIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
-  </svg>
-);
-
-const InstagramIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-  </svg>
-);
-
-const FacebookIcon = () => (
-  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-  </svg>
-);
+import { CompetitorTikTokPostsView } from "./CompetitorTikTokPostsView";
+import { CompetitorFacebookPostsView } from "./CompetitorFacebookPostsView";
+import { CompetitorLinkedInPostsView } from "./CompetitorLinkedInPostsView";
+import { CompetitorInstagramPostsView } from "./CompetitorInstagramPostsView";
+import { AllPlatformsCompetitorView } from "./AllPlatformsCompetitorView";
+import { useCompetitorTikTokAnalytics } from "@/hooks/useCompetitorTikTokAnalytics";
+import { useCompetitorFacebookAnalytics } from "@/hooks/useCompetitorFacebookAnalytics";
+import { useCompetitorLinkedInAnalytics } from "@/hooks/useCompetitorLinkedInAnalytics";
+import { useCompetitorInstagramAnalytics } from "@/hooks/useCompetitorInstagramAnalytics";
+import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Cell, BarChart, Bar, AreaChart, Area, CartesianGrid, ReferenceDot } from "recharts";
+import { format, eachWeekOfInterval, subDays, parseISO, isWithinInterval } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface CompetitorsViewProps {
   selectedPlatform: Platform;
   onPlatformChange: (platform: Platform) => void;
 }
 
-export const CompetitorsView = ({ selectedPlatform, onPlatformChange }: CompetitorsViewProps) => {
-  const [selectedCompetitor, setSelectedCompetitor] = useState<string>("all");
-  const [modalOpen, setModalOpen] = useState(false);
-  const { competitors, loading } = useCompetitors();
+const getColorByEngagement = (rate: number): string => {
+  if (rate >= 5) return "hsl(142, 71%, 45%)";
+  if (rate >= 3) return "hsl(252, 85%, 60%)";
+  if (rate >= 1) return "hsl(38, 92%, 50%)";
+  return "hsl(0, 84%, 60%)";
+};
 
-  const filteredCompetitors = selectedCompetitor === "all"
-    ? competitors
-    : competitors.filter(c => c.id === selectedCompetitor);
+const GenericEngagementChart = ({ data }: { data: Array<{ id: string; date: Date; engagementRate: number; likes: number; comments: number; caption: string }> }) => {
+  const chartData = data.map((point) => ({
+    ...point,
+    x: point.date.getTime(),
+    y: point.engagementRate,
+    z: Math.max(point.likes + point.comments, 100)
+  }));
 
-  const platformFilteredCompetitors = selectedPlatform === "global"
-    ? filteredCompetitors
-    : filteredCompetitors.filter(c => {
-        if (selectedPlatform === "linkedin") return !!c.linkedin;
-        if (selectedPlatform === "tiktok") return !!c.tiktok_url;
-        if (selectedPlatform === "instagram") return !!c.instagram_url;
-        if (selectedPlatform === "facebook") return !!c.facebook_url;
-        return true;
-      });
+  const avgEngagement = data.length > 0 
+    ? Math.round((data.reduce((sum, d) => sum + d.engagementRate, 0) / data.length) * 100) / 100 
+    : 0;
 
-  const getPlatformCount = (competitor: typeof competitors[0]) => {
-    let count = 0;
-    if (competitor.linkedin) count++;
-    if (competitor.tiktok_url) count++;
-    if (competitor.instagram_url) count++;
-    if (competitor.facebook_url) count++;
-    return count;
-  };
+  if (data.length === 0) {
+    return <div className="h-[250px] flex items-center justify-center text-muted-foreground">Aucune donnée disponible</div>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <TrendingUp className="w-4 h-4" />
+        Moyenne: <span className="font-semibold text-foreground">{avgEngagement}%</span>
+      </div>
+      <div className="h-[220px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 10, right: 10, bottom: 20, left: 0 }}>
+            <XAxis dataKey="x" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v) => format(new Date(v), "dd/MM", { locale: fr })} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} tickLine={false} />
+            <YAxis dataKey="y" type="number" domain={[0, "auto"]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} tickLine={false} />
+            <ZAxis dataKey="z" type="number" range={[40, 300]} />
+            <Tooltip content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const d = payload[0].payload;
+              return (
+                <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">{format(new Date(d.date), "dd MMMM yyyy", { locale: fr })}</p>
+                  <p className="font-bold text-foreground">{d.engagementRate}% engagement</p>
+                </div>
+              );
+            }} />
+            <Scatter data={chartData}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={getColorByEngagement(entry.engagementRate)} fillOpacity={0.8} />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const GenericHashtagChart = ({ data }: { data: Array<{ hashtag: string; usageCount: number; avgEngagementRate: number }> }) => {
+  if (data.length === 0) {
+    return <div className="h-[250px] flex items-center justify-center text-muted-foreground">Aucun hashtag trouvé</div>;
+  }
+  return (
+    <div className="h-[250px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data.slice(0, 8)} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+          <XAxis type="number" tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
+          <YAxis type="category" dataKey="hashtag" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={60} tickFormatter={(v) => `#${v.slice(0,8)}`} />
+          <Tooltip content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const d = payload[0].payload;
+            return (
+              <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-sm">
+                <p className="font-bold text-foreground">#{d.hashtag}</p>
+                <p className="text-muted-foreground">Engagement: {d.avgEngagementRate}%</p>
+                <p className="text-muted-foreground">Utilisé {d.usageCount}x</p>
+              </div>
+            );
+          }} />
+          <Bar dataKey="avgEngagementRate" fill="hsl(252, 85%, 60%)" radius={[0, 4, 4, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const GenericContentTypeChart = ({ data }: { data: Array<{ type: string; label: string; postCount: number; avgEngagementRate: number }> }) => {
+  if (data.length === 0) {
+    return <div className="h-[250px] flex items-center justify-center text-muted-foreground">Aucun type de contenu</div>;
+  }
+  return (
+    <div className="h-[250px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} />
+          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} />
+          <Tooltip content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const d = payload[0].payload;
+            return (
+              <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-sm">
+                <p className="font-bold text-foreground">{d.label}</p>
+                <p className="text-muted-foreground">{d.postCount} posts</p>
+                <p className="text-muted-foreground">Engagement: {d.avgEngagementRate}%</p>
+              </div>
+            );
+          }} />
+          <Bar dataKey="postCount" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const GenericRegularityChart = ({ posts, periodDays }: { posts: Array<{ posted_at: string | null; created_at: string }>; periodDays: number }) => {
+  const now = new Date();
+  const startDate = subDays(now, periodDays);
+  const weeks = eachWeekOfInterval({ start: startDate, end: now }, { weekStartsOn: 1 });
+
+  const chartData = weeks.map((weekStart) => {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekPosts = posts.filter((post) => {
+      const postDate = post.posted_at ? parseISO(post.posted_at) : parseISO(post.created_at);
+      return isWithinInterval(postDate, { start: weekStart, end: weekEnd });
+    });
+    return {
+      weekLabel: format(weekStart, "d MMM", { locale: fr }),
+      postCount: weekPosts.length
+    };
+  });
+
+  const totalPosts = chartData.reduce((sum, d) => sum + d.postCount, 0);
+  const avgPerWeek = chartData.length > 0 ? (totalPosts / chartData.length).toFixed(1) : "0";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+          <CalendarDays className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h3 className="text-base font-semibold text-foreground">Régularité des publications</h3>
+          <p className="text-xs text-muted-foreground">Moyenne: {avgPerWeek} posts/semaine</p>
+        </div>
+      </div>
+      <div className="h-[180px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+            <XAxis dataKey="weekLabel" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={{ stroke: "hsl(var(--border))" }} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <Tooltip content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const d = payload[0].payload;
+              return (
+                <div className="bg-card border border-border rounded-lg p-3 shadow-xl text-sm">
+                  <p className="text-foreground">Semaine du {d.weekLabel}</p>
+                  <p className="text-muted-foreground">{d.postCount} publications</p>
+                </div>
+              );
+            }} />
+            <Bar dataKey="postCount" radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={index} fill={entry.postCount >= 3 ? "hsl(142, 76%, 36%)" : entry.postCount >= 2 ? "hsl(173, 80%, 40%)" : entry.postCount >= 1 ? "hsl(199, 89%, 48%)" : "hsl(var(--muted))"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const CompetitorTikTokAnalyticsView = ({ competitorId }: { competitorId?: string }) => {
+  const analytics = useCompetitorTikTokAnalytics(competitorId);
+  const periods = [{ value: "7d", label: "7j" }, { value: "30d", label: "30j" }, { value: "3m", label: "3m" }, { value: "6m", label: "6m" }, { value: "1y", label: "1an" }];
+
+  if (analytics.loading) return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
-          <CompetitorFilter
-            competitors={competitors.map(c => ({ id: c.id, name: c.name, logo: c.logo_url || undefined }))}
-            value={selectedCompetitor}
-            onChange={setSelectedCompetitor}
-          />
-          <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
-        </div>
-
-        <button 
-          onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 text-sm font-medium shadow-lg shadow-primary/25"
-        >
-          <Plus className="w-4 h-4" />
-          Ajouter un concurrent
-        </button>
+      <div className="flex items-center gap-2">
+        {periods.map((p) => (
+          <button key={p.value} onClick={() => analytics.setPeriod(p.value as any)} className={cn("px-3 py-1.5 text-sm font-medium rounded-lg transition-colors", analytics.period === p.value ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:text-foreground")}>{p.label}</button>
+        ))}
       </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-card border border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{platformFilteredCompetitors.length}</p>
-          <p className="text-sm text-muted-foreground">Concurrents suivis</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Engagement par post</h3>
+          <GenericEngagementChart data={analytics.engagementData.map(d => ({ ...d, views: d.views || 0 }))} />
         </div>
-
-        <div className="p-5 rounded-2xl bg-card border border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-foreground">--</p>
-          <p className="text-sm text-muted-foreground">Engagement moyen</p>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Top Hashtags</h3>
+          <GenericHashtagChart data={analytics.hashtagPerformance} />
         </div>
-
-        <div className="p-5 rounded-2xl bg-card border border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-              <UsersRound className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-foreground">--</p>
-          <p className="text-sm text-muted-foreground">Followers total</p>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Types de contenu</h3>
+          <GenericContentTypeChart data={analytics.contentTypeStats} />
         </div>
-
-        <div className="p-5 rounded-2xl bg-card border border-border/50">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-foreground">--</p>
-          <p className="text-sm text-muted-foreground">Posts analysés</p>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <GenericRegularityChart posts={analytics.filteredPosts.map(p => ({ posted_at: p.posted_at, created_at: p.created_at }))} periodDays={analytics.periodDays} />
         </div>
       </div>
+    </div>
+  );
+};
 
-      <div>
-        <h2 className="text-lg font-bold text-foreground mb-4">Vos concurrents</h2>
-        
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : platformFilteredCompetitors.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {platformFilteredCompetitors.map((competitor) => (
-              <div
-                key={competitor.id}
-                className={cn(
-                  "group relative rounded-3xl overflow-hidden",
-                  "bg-card border border-border/50",
-                  "hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
-                  "transition-all duration-300"
-                )}
-              >
-                <div className="relative h-20 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
-                  {competitor.logo_url ? (
-                    <img
-                      src={competitor.logo_url}
-                      alt={competitor.name}
-                      className="absolute inset-0 w-full h-full object-cover opacity-30"
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                </div>
+const CompetitorFacebookAnalyticsView = ({ competitorId }: { competitorId?: string }) => {
+  const analytics = useCompetitorFacebookAnalytics(competitorId);
+  const periods = [{ value: "7d", label: "7j" }, { value: "30d", label: "30j" }, { value: "3m", label: "3m" }, { value: "6m", label: "6m" }, { value: "1y", label: "1an" }];
 
-                <div className="p-5 -mt-6 relative">
-                  <div className="w-12 h-12 rounded-xl bg-card border border-border/50 flex items-center justify-center mb-3 shadow-lg">
-                    {competitor.logo_url ? (
-                      <img
-                        src={competitor.logo_url}
-                        alt={competitor.name}
-                        className="w-8 h-8 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <Building2 className="w-5 h-5 text-muted-foreground" />
-                    )}
-                  </div>
+  if (analytics.loading) return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
-                  <h3 className="text-base font-bold text-foreground mb-1 line-clamp-1">
-                    {competitor.name}
-                  </h3>
-
-                  {competitor.website && (
-                    <a
-                      href={
-                        competitor.website.startsWith("http")
-                          ? competitor.website
-                          : `https://${competitor.website}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-3"
-                    >
-                      <Globe className="w-3 h-3" />
-                      <span className="line-clamp-1">
-                        {competitor.website.replace(/^https?:\/\//, "")}
-                      </span>
-                      <ExternalLink className="w-3 h-3 opacity-50" />
-                    </a>
-                  )}
-
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {competitor.linkedin && (
-                      <a
-                        href={competitor.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2]/20 transition-colors"
-                      >
-                        <LinkedInIcon />
-                      </a>
-                    )}
-                    {competitor.instagram_url && (
-                      <a
-                        href={competitor.instagram_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg bg-[#E4405F]/10 text-[#E4405F] hover:bg-[#E4405F]/20 transition-colors"
-                      >
-                        <InstagramIcon />
-                      </a>
-                    )}
-                    {competitor.tiktok_url && (
-                      <a
-                        href={competitor.tiktok_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg bg-foreground/10 text-foreground hover:bg-foreground/20 transition-colors"
-                      >
-                        <TikTokIcon />
-                      </a>
-                    )}
-                    {competitor.facebook_url && (
-                      <a
-                        href={competitor.facebook_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 rounded-lg bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 transition-colors"
-                      >
-                        <FacebookIcon />
-                      </a>
-                    )}
-                    {getPlatformCount(competitor) === 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        Aucun réseau
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border">
-            <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-base font-medium text-muted-foreground mb-2">
-              Aucun concurrent trouvé
-            </p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Ajoutez des concurrents pour analyser leur performance
-            </p>
-            <button 
-              onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-sm font-medium mx-auto"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter un concurrent
-            </button>
-          </div>
-        )}
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        {periods.map((p) => (
+          <button key={p.value} onClick={() => analytics.setPeriod(p.value as any)} className={cn("px-3 py-1.5 text-sm font-medium rounded-lg transition-colors", analytics.period === p.value ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:text-foreground")}>{p.label}</button>
+        ))}
       </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Engagement par post</h3>
+          <GenericEngagementChart data={analytics.engagementData} />
+        </div>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Types de contenu</h3>
+          <GenericContentTypeChart data={analytics.contentTypeStats} />
+        </div>
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border/50">
+          <GenericRegularityChart posts={analytics.filteredPosts.map(p => ({ posted_at: p.posted_at, created_at: p.created_at }))} periodDays={analytics.periodDays} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
-      <ManageCompetitorsModal open={modalOpen} onOpenChange={setModalOpen} />
+const CompetitorLinkedInAnalyticsView = ({ competitorId }: { competitorId?: string }) => {
+  const analytics = useCompetitorLinkedInAnalytics(competitorId);
+  const periods = [{ value: "7d", label: "7j" }, { value: "30d", label: "30j" }, { value: "3m", label: "3m" }, { value: "6m", label: "6m" }, { value: "1y", label: "1an" }];
+
+  if (analytics.loading) return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        {periods.map((p) => (
+          <button key={p.value} onClick={() => analytics.setPeriod(p.value as any)} className={cn("px-3 py-1.5 text-sm font-medium rounded-lg transition-colors", analytics.period === p.value ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:text-foreground")}>{p.label}</button>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Engagement par post</h3>
+          <GenericEngagementChart data={analytics.engagementData.map(d => ({ id: d.id, date: d.date, engagementRate: d.engagementRate, likes: d.likes, comments: d.comments, caption: d.caption }))} />
+        </div>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Types de contenu</h3>
+          <GenericContentTypeChart data={analytics.contentTypeStats.map(d => ({ type: d.type, label: d.label, postCount: d.postCount, avgEngagementRate: d.avgEngagementRate }))} />
+        </div>
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-card border border-border/50">
+          <GenericRegularityChart posts={analytics.filteredPosts.map(p => ({ posted_at: p.posted_at, created_at: p.created_at }))} periodDays={analytics.periodDays} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CompetitorInstagramAnalyticsView = ({ competitorId }: { competitorId?: string }) => {
+  const analytics = useCompetitorInstagramAnalytics(competitorId);
+  const periods = [{ value: "7d", label: "7j" }, { value: "30d", label: "30j" }, { value: "3m", label: "3m" }, { value: "6m", label: "6m" }, { value: "1y", label: "1an" }];
+
+  if (analytics.loading) return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        {periods.map((p) => (
+          <button key={p.value} onClick={() => analytics.setPeriod(p.value as any)} className={cn("px-3 py-1.5 text-sm font-medium rounded-lg transition-colors", analytics.period === p.value ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:text-foreground")}>{p.label}</button>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Engagement par post</h3>
+          <GenericEngagementChart data={analytics.engagementData.map(d => ({ id: d.id, date: d.date, engagementRate: d.engagementRate, likes: d.likes, comments: d.comments, caption: d.caption }))} />
+        </div>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Top Hashtags</h3>
+          <GenericHashtagChart data={analytics.hashtagPerformance} />
+        </div>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <h3 className="text-base font-semibold text-foreground mb-4">Types de contenu</h3>
+          <GenericContentTypeChart data={analytics.contentTypeStats} />
+        </div>
+        <div className="p-6 rounded-2xl bg-card border border-border/50">
+          <GenericRegularityChart posts={analytics.filteredPosts.map(p => ({ posted_at: p.posted_at, created_at: p.created_at }))} periodDays={analytics.periodDays} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const CompetitorsView = ({ selectedPlatform, onPlatformChange }: CompetitorsViewProps) => {
+  const [selectedCompetitor, setSelectedCompetitor] = useState<string>("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const { competitors, loading } = useCompetitors();
+
+  if (selectedPlatform === "global") {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <CompetitorFilter competitors={competitors.map(c => ({ id: c.id, name: c.name, logo: c.logo_url || undefined }))} value={selectedCompetitor} onChange={setSelectedCompetitor} />
+            <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+          </div>
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 text-sm font-medium shadow-lg shadow-primary/25">
+            <Plus className="w-4 h-4" />
+            Ajouter un concurrent
+          </button>
+        </div>
+        <AllPlatformsCompetitorView selectedCompetitorId={selectedCompetitor === "all" ? undefined : selectedCompetitor} />
+        <ManageCompetitorsModal open={modalOpen} onOpenChange={setModalOpen} />
+      </div>
+    );
+  }
+
+  if (selectedPlatform === "tiktok" || selectedPlatform === "facebook" || selectedPlatform === "linkedin" || selectedPlatform === "instagram") {
+    const PostsViewComponent = selectedPlatform === "tiktok" ? CompetitorTikTokPostsView : selectedPlatform === "facebook" ? CompetitorFacebookPostsView : selectedPlatform === "instagram" ? CompetitorInstagramPostsView : CompetitorLinkedInPostsView;
+    const AnalyticsViewComponent = selectedPlatform === "tiktok" ? CompetitorTikTokAnalyticsView : selectedPlatform === "facebook" ? CompetitorFacebookAnalyticsView : selectedPlatform === "instagram" ? CompetitorInstagramAnalyticsView : CompetitorLinkedInAnalyticsView;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <CompetitorFilter competitors={competitors.map(c => ({ id: c.id, name: c.name, logo: c.logo_url || undefined }))} value={selectedCompetitor} onChange={setSelectedCompetitor} />
+            <PlatformDropdown value={selectedPlatform} onChange={onPlatformChange} />
+            <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
+              <button onClick={() => setShowAnalytics(false)} className={cn("flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200", !showAnalytics ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                <LayoutGrid className="w-4 h-4" />
+                Publications
+              </button>
+              <button onClick={() => setShowAnalytics(true)} className={cn("flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200", showAnalytics ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                <BarChart3 className="w-4 h-4" />
+                Analyse
+              </button>
+            </div>
+          </div>
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 text-sm font-medium shadow-lg shadow-primary/25">
+            <Plus className="w-4 h-4" />
+            Ajouter un concurrent
+          </button>
+        </div>
+        {showAnalytics ? <AnalyticsViewComponent competitorId={selectedCompetitor === "all" ? undefined : selectedCompetitor} /> : <PostsViewComponent selectedCompetitorId={selectedCompetitor === "all" ? undefined : selectedCompetitor} />}
+        <ManageCompetitorsModal open={modalOpen} onOpenChange={setModalOpen} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center py-16 rounded-2xl bg-card border border-dashed border-border">
+      <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+      <p className="text-base font-medium text-muted-foreground mb-2">Sélectionnez une plateforme</p>
+      <p className="text-sm text-muted-foreground">Choisissez une plateforme pour voir les publications des concurrents</p>
     </div>
   );
 };
