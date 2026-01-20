@@ -1,0 +1,6 @@
+ALTER TABLE public.competitor_agencies RENAME TO organization_competitor;
+
+ALTER INDEX IF EXISTS competitor_agencies_pkey RENAME TO organization_competitor_pkey;
+
+ALTER TABLE public.organization_competitor 
+  RENAME CONSTRAINT competitor_agencies_organization_id_fkey TO organization_competitor_organization_id_fkey;

@@ -45,7 +45,7 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
 
     try {
       let query = supabase
-        .from("competitor_agencies")
+        .from("organization_competitor")
         .select("*")
         .eq("organization_id", effectiveOrgId)
         .order("created_at", { ascending: false });
@@ -73,7 +73,7 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
     }
 
     try {
-      const { error } = await supabase.from("competitor_agencies").insert({
+      const { error } = await supabase.from("organization_competitor").insert({
         organization_id: effectiveOrgId,
         name: competitor.name,
         logo_url: competitor.logo_url || null,
@@ -101,7 +101,7 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
   const updateCompetitor = async (id: string, competitor: NewCompetitor): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .from("competitor_agencies")
+        .from("organization_competitor")
         .update({
           name: competitor.name,
           logo_url: competitor.logo_url || null,
@@ -129,7 +129,7 @@ export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
   const deleteCompetitor = async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .from("competitor_agencies")
+        .from("organization_competitor")
         .delete()
         .eq("id", id);
 
