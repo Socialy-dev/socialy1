@@ -259,7 +259,7 @@ const Auth = () => {
       </div>
 
       {/* Right Panel - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
@@ -294,21 +294,21 @@ const Auth = () => {
 
 
           {/* Glass Card */}
-          <div className="glass-card p-8 rounded-3xl">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
+          <div className="glass-card p-6 md:p-8 rounded-2xl md:rounded-3xl">
+            <div className="text-center mb-6 md:mb-8">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
                 {isLogin ? "Bon retour !" : "Créer un compte"}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 {isLogin 
                   ? "Connectez-vous pour accéder à votre espace" 
                   : "Rejoignez-nous et commencez à gérer vos projets"}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
               {!isLogin && (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-foreground font-medium">
                       Prénom
@@ -405,7 +405,7 @@ const Auth = () => {
               <Button
                 type="submit"
                 disabled={loading || (!isLogin && !canSignup)}
-                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-base group transition-all duration-300"
+                className="w-full h-11 md:h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-sm md:text-base group transition-all duration-300"
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

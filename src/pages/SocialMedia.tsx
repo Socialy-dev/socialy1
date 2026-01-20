@@ -39,27 +39,28 @@ const SocialMedia = () => {
       <div
         className={cn(
           "flex-1 flex flex-col min-h-screen content-transition overflow-x-hidden",
-          sidebarCollapsed ? "ml-20" : "ml-72"
+          "md:ml-20 lg:ml-72",
+          sidebarCollapsed ? "md:ml-20" : "lg:ml-72"
         )}
       >
         <Header showTitle={false} sidebarCollapsed={sidebarCollapsed} />
 
-        <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden">
           <div className="max-w-[1600px] mx-auto">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-xl font-bold text-foreground mb-1">
+                <h1 className="text-lg md:text-xl font-bold text-foreground mb-1">
                   Social Media
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Performances et analyses de vos réseaux sociaux
                 </p>
               </div>
 
-              <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground bg-secondary/50 border border-border/50 rounded-xl hover:bg-secondary transition-all duration-200">
-                <Calendar className="w-4 h-4" />
-                30 derniers jours
-                <ChevronDown className="w-3.5 h-3.5" />
+              <button className="flex items-center gap-2 px-3 py-1.5 text-xs md:text-sm font-medium text-muted-foreground hover:text-foreground bg-secondary/50 border border-border/50 rounded-xl hover:bg-secondary transition-all duration-200 self-start md:self-auto">
+                <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="whitespace-nowrap">30 derniers jours</span>
+                <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5" />
               </button>
             </div>
 

@@ -137,8 +137,9 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "fixed left-0 top-0 h-screen flex flex-col z-50 overflow-hidden",
+        "fixed left-0 top-0 h-screen flex-col z-50 overflow-hidden",
         "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        "hidden md:flex",
         collapsed ? "w-20" : "w-72"
       )}
       style={{

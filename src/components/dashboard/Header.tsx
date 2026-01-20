@@ -61,21 +61,23 @@ export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed
 
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-      <div className="flex items-center justify-between h-16 px-6">
+      <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
         {/* Left Section - Title */}
         {showTitle ? (
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">{title}</h1>
-              <p className="text-sm text-muted-foreground">Bienvenue ! Voici un aperçu de votre journée.</p>
+          <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+            <div className="min-w-0">
+              <h1 className="text-base md:text-xl font-bold text-foreground tracking-tight truncate">{title}</h1>
+              <p className="hidden md:block text-sm text-muted-foreground truncate">Bienvenue ! Voici un aperçu de votre journée.</p>
             </div>
           </div>
         ) : (
-          <div />
+          <div className="md:hidden">
+            <h1 className="text-base font-bold text-foreground">Socialy</h1>
+          </div>
         )}
 
         {/* Right Section - Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2">
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -87,14 +89,14 @@ export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed
           </div>
 
           {/* Add Button */}
-          <button className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-            <Plus className="w-5 h-5" />
+          <button className="w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
           </button>
 
           {/* Notifications */}
-          <button className="relative w-10 h-10 rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center hover:bg-secondary transition-all">
+          <button className="relative w-9 h-9 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center hover:bg-secondary transition-all">
             <Bell className="w-4 h-4 text-foreground" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
+            <span className="absolute top-1.5 right-1.5 md:top-2 md:right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
           </button>
 
           {/* Theme Toggle */}

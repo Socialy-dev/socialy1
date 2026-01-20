@@ -270,16 +270,17 @@ const GrowthMarketing = () => {
       <div
         className={cn(
           "flex-1 flex flex-col min-h-screen content-transition",
-          sidebarCollapsed ? "ml-20" : "ml-72"
+          "md:ml-20 lg:ml-72",
+          sidebarCollapsed ? "md:ml-20" : "lg:ml-72"
         )}
       >
         <Header showTitle={false} sidebarCollapsed={sidebarCollapsed} />
 
-        <main className="flex-1 p-6 pt-4 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 pt-4 overflow-y-auto">
 
 
           <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
               <button
                 onClick={() => {
                   if (activeMainTab !== "linkedin") {
@@ -291,14 +292,14 @@ const GrowthMarketing = () => {
                   setGeneratedComments([]);
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                  "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border whitespace-nowrap",
                   activeMainTab === "linkedin"
                     ? "bg-foreground text-background border-foreground shadow-sm"
                     : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
                 )}
               >
-                <Linkedin className="w-4 h-4" />
-                LinkedIn
+                <Linkedin className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">LinkedIn</span>
                 {activeMainTab === "linkedin" ? (
                   <ChevronDown className="w-3.5 h-3.5" />
                 ) : (
@@ -315,62 +316,65 @@ const GrowthMarketing = () => {
                   setGeneratedComments([]);
                 }}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border",
+                  "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all duration-200 border whitespace-nowrap",
                   activeMainTab === "marche-public"
                     ? "bg-foreground text-background border-foreground shadow-sm"
                     : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
                 )}
               >
-                <Briefcase className="w-4 h-4" />
-                Marché Public
+                <Briefcase className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">Marché Public</span>
               </button>
             </div>
 
             {activeMainTab === "linkedin" && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setLinkedinSubTab("generation")}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                    "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap",
                     linkedinSubTab === "generation"
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
                   )}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Génération de contenu
+                  <Sparkles className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  <span className="hidden sm:inline">Génération</span>
+                  <span className="sm:hidden">Gen.</span>
                 </button>
                 <button
                   onClick={() => setLinkedinSubTab("comment")}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                    "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap",
                     linkedinSubTab === "comment"
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
                   )}
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Commentaire / Repost
+                  <RefreshCw className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  <span className="hidden sm:inline">Commentaire</span>
+                  <span className="sm:hidden">Com.</span>
                 </button>
                 <button
                   onClick={() => setLinkedinSubTab("classement")}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 border",
+                    "flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap",
                     linkedinSubTab === "classement"
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-transparent text-muted-foreground border-border hover:border-primary/30 hover:text-foreground"
                   )}
                 >
-                  <Trophy className="w-3.5 h-3.5" />
-                  Classement
+                  <Trophy className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  <span className="hidden sm:inline">Classement</span>
+                  <span className="sm:hidden">Class.</span>
                 </button>
               </div>
             )}
           </div>
 
-          <div className="glass-card rounded-2xl p-8">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-foreground">
+          <div className="glass-card rounded-2xl p-4 md:p-8">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
                 {activeMainTab === "marche-public"
                   ? "Marché Public"
                   : linkedinSubTab === "generation"
@@ -414,9 +418,9 @@ const GrowthMarketing = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                   {/* Left Column - Analytics & Posts */}
-                  <div className="lg:col-span-2 space-y-6">
+                  <div className="lg:col-span-2 space-y-4 md:space-y-6">
                     {/* Analytics Card with Glassmorphism */}
                     <div className="relative group">
                       <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500 to-blue-500 rounded-3xl opacity-20 group-hover:opacity-30 blur transition duration-500" />
@@ -437,7 +441,7 @@ const GrowthMarketing = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                           {/* Posts Stat */}
                           <div className="relative group/stat">
                             <div className="absolute -inset-0.5 bg-gradient-to-br from-violet-500 to-purple-500 rounded-2xl opacity-0 group-hover/stat:opacity-20 blur transition duration-300" />
@@ -718,8 +722,8 @@ const GrowthMarketing = () => {
             )}
 
             {activeMainTab === "linkedin" && linkedinSubTab === "comment" && (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6">
+                <div className="lg:col-span-3 space-y-4 md:space-y-6">
                   <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
@@ -873,8 +877,8 @@ const GrowthMarketing = () => {
             )}
 
             {activeMainTab === "linkedin" && linkedinSubTab === "classement" && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="lg:col-span-2 space-y-4 md:space-y-6">
                   <div className="bg-card rounded-2xl border border-border p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">

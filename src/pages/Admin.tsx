@@ -387,8 +387,9 @@ const Admin = () => {
 
       <main
         className={cn(
-          "min-h-screen p-8 content-transition",
-          collapsed ? "ml-20" : "ml-64"
+          "min-h-screen p-4 md:p-8 content-transition",
+          "md:ml-20 lg:ml-64",
+          collapsed ? "md:ml-20" : "lg:ml-64"
         )}
       >
         <Header title="Administration" />
@@ -397,9 +398,9 @@ const Admin = () => {
           <ResourcesPanel onBack={() => setShowResources(false)} />
         ) : (
           <>
-            <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <p className="text-muted-foreground">
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                <p className="text-sm md:text-base text-muted-foreground">
                   Gérez les utilisateurs, organisations et invitations
                 </p>
                 {isSuperAdmin && (
@@ -513,8 +514,8 @@ const Admin = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="glass-card p-6 rounded-2xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+              <div className="glass-card p-4 md:p-6 rounded-2xl">
                 <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
                   <Plus className="w-5 h-5" />
                   Nouvelle invitation
@@ -609,9 +610,9 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div className="glass-card p-6 rounded-2xl">
-                <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+              <div className="glass-card p-4 md:p-6 rounded-2xl">
+                <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4 md:mb-6 flex items-center gap-2">
+                  <Clock className="w-4 h-4 md:w-5 md:h-5" />
                   Invitations ({filteredInvitations.length})
                 </h2>
 
@@ -704,9 +705,9 @@ const Admin = () => {
               </div>
             </div>
 
-            <div className="glass-card p-6 rounded-2xl mt-8">
-              <h2 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-                <Users className="w-5 h-5" />
+            <div className="glass-card p-4 md:p-6 rounded-2xl mt-6 md:mt-8">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground mb-4 md:mb-6 flex items-center gap-2">
+                <Users className="w-4 h-4 md:w-5 md:h-5" />
                 Utilisateurs ({filteredUsers.length})
               </h2>
 

@@ -608,8 +608,8 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/30">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-3 md:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate("/dashboard")}
@@ -618,14 +618,14 @@ const Profile = () => {
                 <ArrowLeft className="w-5 h-5 text-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Mon Profil</h1>
-                <p className="text-sm text-muted-foreground">Gérez vos informations et préférences</p>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">Mon Profil</h1>
+                <p className="text-xs md:text-sm text-muted-foreground">Gérez vos informations et préférences</p>
               </div>
             </div>
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="h-11 px-6 rounded-xl bg-[#4F6BF7] hover:bg-[#4F6BF7]/90 text-white font-medium shadow-lg shadow-[#4F6BF7]/20"
+              className="h-10 md:h-11 px-4 md:px-6 rounded-xl bg-[#4F6BF7] hover:bg-[#4F6BF7]/90 text-white font-medium shadow-lg shadow-[#4F6BF7]/20 text-sm md:text-base w-full sm:w-auto"
             >
               {isSaving ? (
                 <span className="flex items-center gap-2">
@@ -641,7 +641,7 @@ const Profile = () => {
             </Button>
           </div>
 
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+          <div className="mt-4 md:mt-6 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -650,13 +650,13 @@ const Profile = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-5 py-3 rounded-full font-medium text-sm whitespace-nowrap transition-all",
+                    "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-3 rounded-full font-medium text-xs md:text-sm whitespace-nowrap transition-all",
                     isActive
                       ? "bg-[#4F6BF7] text-white shadow-lg shadow-[#4F6BF7]/20"
                       : "bg-secondary/50 text-foreground/70 hover:bg-secondary hover:text-foreground"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   {tab.label}
                 </button>
               );
@@ -665,7 +665,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {renderTabContent()}
       </main>
     </div>
