@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -13,10 +13,17 @@ import {
   ExternalLink,
   Video,
   Facebook,
-  Play
+  Play,
+  BarChart3
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Platform, platformsConfig } from "./PlatformDropdown";
+import { CrossPlatformEngagementChart } from "./analytics/CrossPlatformEngagementChart";
+import { CrossPlatformDistributionChart } from "./analytics/CrossPlatformDistributionChart";
+import { CrossPlatformTrendsChart } from "./analytics/CrossPlatformTrendsChart";
+import { CrossPlatformViewsChart } from "./analytics/CrossPlatformViewsChart";
+import { CrossPlatformBestPerformingChart } from "./analytics/CrossPlatformBestPerformingChart";
+import { CrossPlatformVideoDurationChart } from "./analytics/CrossPlatformVideoDurationChart";
 
 interface TikTokPost {
   id: string;
@@ -101,7 +108,10 @@ export const AllPlatformsView = () => {
   const [facebookPosts, setFacebookPosts] = useState<FacebookPost[]>([]);
   const [linkedinPosts, setLinkedinPosts] = useState<LinkedInPost[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>([]);
+  const [allTiktokPosts, setAllTiktokPosts] = useState<any[]>([]);
+  const [allInstagramPosts, setAllInstagramPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const tiktokScrollRef = useRef<HTMLDivElement>(null);
   const facebookScrollRef = useRef<HTMLDivElement>(null);
@@ -114,7 +124,7 @@ export const AllPlatformsView = () => {
 
       setLoading(true);
 
-      const [tiktokRes, facebookRes, linkedinRes, instagramRes] = await Promise.all([
+      const [tiktokRes, facebookRes, linkedinRes, instagramRes, allTiktokRes, allInstagramRes] = await Promise.all([
         supabase
           .from("organization_social_media_organique_tiktok")
           .select("id, post_id, tiktok_url, caption, likes_count, shares_count, views_count, comments_count, video_cover_url, author_name, posted_at")
@@ -138,19 +148,60 @@ export const AllPlatformsView = () => {
           .select("id, post_id, post_url, caption, likes_count, comments_count, views_count, video_play_count, images, profile_picture_url, company_name, content_type, posted_at")
           .eq("organization_id", effectiveOrgId)
           .order("posted_at", { ascending: false })
-          .limit(20)
+          .limit(20),
+        supabase
+          .from("organization_social_media_organique_tiktok")
+          .select("*")
+          .eq("organization_id", effectiveOrgId)
+          .order("posted_at", { ascending: false }),
+        supabase
+          .from("organization_social_media_organique_instagram")
+          .select("*")
+          .eq("organization_id", effectiveOrgId)
+          .order("posted_at", { ascending: false })
       ]);
 
       if (tiktokRes.data) setTiktokPosts(tiktokRes.data);
       if (facebookRes.data) setFacebookPosts(facebookRes.data as unknown as FacebookPost[]);
       if (linkedinRes.data) setLinkedinPosts(linkedinRes.data as unknown as LinkedInPost[]);
       if (instagramRes.data) setInstagramPosts(instagramRes.data as unknown as InstagramPost[]);
+      if (allTiktokRes.data) setAllTiktokPosts(allTiktokRes.data);
+      if (allInstagramRes.data) setAllInstagramPosts(allInstagramRes.data);
 
       setLoading(false);
     };
 
     fetchAllPosts();
   }, [effectiveOrgId]);
+
+  const analyticsData = useMemo(() => ({
+    tiktok: {
+      posts: tiktokPosts.length,
+      views: tiktokPosts.reduce((s, p) => s + (p.views_count || 0), 0),
+      likes: tiktokPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: tiktokPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      shares: tiktokPosts.reduce((s, p) => s + (p.shares_count || 0), 0)
+    },
+    facebook: {
+      posts: facebookPosts.length,
+      views: facebookPosts.reduce((s, p) => s + (p.views_count || 0), 0),
+      likes: facebookPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: facebookPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      shares: facebookPosts.reduce((s, p) => s + (p.shares_count || 0), 0)
+    },
+    linkedin: {
+      posts: linkedinPosts.length,
+      reactions: linkedinPosts.reduce((s, p) => s + (p.total_reactions || 0), 0),
+      comments: linkedinPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      reposts: linkedinPosts.reduce((s, p) => s + (p.reposts_count || 0), 0)
+    },
+    instagram: {
+      posts: instagramPosts.length,
+      views: instagramPosts.reduce((s, p) => s + (p.views_count || p.video_play_count || 0), 0),
+      likes: instagramPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: instagramPosts.reduce((s, p) => s + (p.comments_count || 0), 0)
+    }
+  }), [tiktokPosts, facebookPosts, linkedinPosts, instagramPosts]);
 
   const formatNumber = (num: number | null) => {
     if (num === null || num === undefined) return "0";
@@ -307,7 +358,82 @@ export const AllPlatformsView = () => {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
+          <button
+            onClick={() => setShowAnalytics(false)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+              !showAnalytics
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Video className="w-4 h-4" />
+            Publications
+          </button>
+          <button
+            onClick={() => setShowAnalytics(true)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+              showAnalytics
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analyse Cross-Platform
+          </button>
+        </div>
+      </div>
+
+      {showAnalytics ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CrossPlatformEngagementChart
+              tiktokData={analyticsData.tiktok}
+              facebookData={analyticsData.facebook}
+              linkedinData={analyticsData.linkedin}
+              instagramData={analyticsData.instagram}
+            />
+            <CrossPlatformViewsChart
+              tiktokViews={analyticsData.tiktok.views}
+              facebookViews={analyticsData.facebook.views}
+              linkedinReactions={analyticsData.linkedin.reactions}
+              instagramViews={analyticsData.instagram.views}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CrossPlatformDistributionChart
+              tiktokPosts={analyticsData.tiktok.posts}
+              facebookPosts={analyticsData.facebook.posts}
+              linkedinPosts={analyticsData.linkedin.posts}
+              instagramPosts={analyticsData.instagram.posts}
+            />
+            <CrossPlatformTrendsChart
+              tiktokPosts={tiktokPosts}
+              facebookPosts={facebookPosts}
+              linkedinPosts={linkedinPosts}
+              instagramPosts={instagramPosts}
+            />
+          </div>
+
+          <CrossPlatformBestPerformingChart
+            tiktokPosts={tiktokPosts}
+            facebookPosts={facebookPosts}
+            linkedinPosts={linkedinPosts}
+            instagramPosts={instagramPosts}
+          />
+
+          <CrossPlatformVideoDurationChart
+            tiktokPosts={allTiktokPosts}
+            instagramPosts={allInstagramPosts}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {platformCards.map((card) => {
           const IconComponent = card.icon;
           return (
@@ -775,6 +901,8 @@ export const AllPlatformsView = () => {
             Les publications de vos réseaux sociaux apparaîtront ici une fois synchronisées
           </p>
         </div>
+      )}
+        </>
       )}
     </div>
   );
