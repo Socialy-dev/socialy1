@@ -229,36 +229,48 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          facebook_url: string | null
           id: string
+          instagram_url: string | null
           linkedin: string | null
+          logo_url: string | null
           name: string
           notes: string | null
           organization_id: string
           specialty: string | null
+          tiktok_url: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           id?: string
+          instagram_url?: string | null
           linkedin?: string | null
+          logo_url?: string | null
           name: string
           notes?: string | null
           organization_id: string
           specialty?: string | null
+          tiktok_url?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           id?: string
+          instagram_url?: string | null
           linkedin?: string | null
+          logo_url?: string | null
           name?: string
           notes?: string | null
           organization_id?: string
           specialty?: string | null
+          tiktok_url?: string | null
           updated_at?: string
           website?: string | null
         }
