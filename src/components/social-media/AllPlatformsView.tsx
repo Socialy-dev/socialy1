@@ -203,6 +203,26 @@ export const AllPlatformsView = () => {
     return { totalPosts, totalViews, totalLikes, totalComments, totalShares: 0, engagementRate };
   };
 
+  const getInstagramImage = (post: InstagramPost): string | null => {
+    if (post.images) {
+      let imagesArray: string[] = [];
+      if (typeof post.images === 'string') {
+        try {
+          imagesArray = JSON.parse(post.images);
+        } catch {
+          imagesArray = [post.images];
+        }
+      } else if (Array.isArray(post.images)) {
+        imagesArray = post.images;
+      }
+      if (imagesArray.length > 0) {
+        return imagesArray[0];
+      }
+    }
+    if (post.profile_picture_url) return post.profile_picture_url;
+    return null;
+  };
+
   const tiktokStats = calculateStats(tiktokPosts);
   const facebookStats = calculateStats(facebookPosts);
   const linkedinStats = calculateLinkedInStats();
@@ -643,7 +663,109 @@ export const AllPlatformsView = () => {
         </div>
       )}
 
-      {tiktokPosts.length === 0 && facebookPosts.length === 0 && linkedinPosts.length === 0 && (
+      {instagramPosts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center shadow-lg">
+                <InstagramIcon />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Instagram</h2>
+                <p className="text-sm text-muted-foreground">{instagramPosts.length} publications récentes</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => scroll(instagramScrollRef, "left")}
+                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => scroll(instagramScrollRef, "right")}
+                className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={instagramScrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {instagramPosts.map((post, index) => {
+              const postImage = getInstagramImage(post);
+              return (
+                <a
+                  key={post.id}
+                  href={post.post_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "relative flex-shrink-0 w-64 rounded-2xl overflow-hidden group cursor-pointer",
+                    "bg-card border border-border/50 hover:border-pink-500/30",
+                    "transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/10 hover:scale-[1.02]"
+                  )}
+                >
+                  <div className="relative aspect-square">
+                    {postImage ? (
+                      <img
+                        src={postImage}
+                        alt="Instagram"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center">
+                        <InstagramIcon />
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                    <div className="absolute top-3 left-3 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg text-white font-bold text-2xl">
+                      {index + 1}
+                    </div>
+
+                    <div className="absolute top-3 right-3">
+                      <div className="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white text-xs font-medium">
+                        {post.content_type || "Post"}
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm font-medium mb-1 truncate">{post.company_name || "Instagram"}</p>
+                      <p className="text-white/80 text-xs line-clamp-2 mb-3">
+                        {post.caption || "Publication Instagram"}
+                      </p>
+                      <div className="flex items-center gap-4 text-white/80 text-xs">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          {formatNumber(post.likes_count)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3" />
+                          {formatNumber(post.comments_count)}
+                        </span>
+                        {(post.views_count || post.video_play_count) && (
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {formatNumber(post.views_count || post.video_play_count)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {tiktokPosts.length === 0 && facebookPosts.length === 0 && linkedinPosts.length === 0 && instagramPosts.length === 0 && (
         <div className="text-center py-16 rounded-3xl bg-card border border-dashed border-border">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-4">
             <Video className="w-8 h-8 text-white" />
