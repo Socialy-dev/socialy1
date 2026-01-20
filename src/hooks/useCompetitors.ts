@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export type CompetitorCategory = "organic_social_media" | "presse" | "ads" | "general";
+
 export interface Competitor {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface Competitor {
   facebook_url: string | null;
   specialty: string | null;
   notes: string | null;
+  category: CompetitorCategory;
   created_at: string;
 }
 
@@ -25,9 +28,10 @@ export interface NewCompetitor {
   tiktok_url?: string;
   instagram_url?: string;
   facebook_url?: string;
+  category?: CompetitorCategory;
 }
 
-export const useCompetitors = () => {
+export const useCompetitors = (categoryFilter?: CompetitorCategory) => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
   const { effectiveOrgId } = useAuth();
@@ -40,11 +44,17 @@ export const useCompetitors = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("competitor_agencies")
         .select("*")
         .eq("organization_id", effectiveOrgId)
         .order("created_at", { ascending: false });
+
+      if (categoryFilter) {
+        query = query.eq("category", categoryFilter);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setCompetitors((data as Competitor[]) || []);
@@ -72,6 +82,7 @@ export const useCompetitors = () => {
         tiktok_url: competitor.tiktok_url || null,
         instagram_url: competitor.instagram_url || null,
         facebook_url: competitor.facebook_url || null,
+        category: competitor.category || "organic_social_media",
       });
 
       if (error) throw error;
@@ -108,7 +119,7 @@ export const useCompetitors = () => {
 
   useEffect(() => {
     fetchCompetitors();
-  }, [effectiveOrgId]);
+  }, [effectiveOrgId, categoryFilter]);
 
   return {
     competitors,
