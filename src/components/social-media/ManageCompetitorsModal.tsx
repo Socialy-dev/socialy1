@@ -48,7 +48,7 @@ export const ManageCompetitorsModal = ({
   open,
   onOpenChange,
 }: ManageCompetitorsModalProps) => {
-  const { competitors, loading, addCompetitor, deleteCompetitor } = useCompetitors();
+  const { competitors, loading, addCompetitor, deleteCompetitor } = useCompetitors("organic_social_media");
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<NewCompetitor>({
@@ -59,7 +59,22 @@ export const ManageCompetitorsModal = ({
     tiktok_url: "",
     instagram_url: "",
     facebook_url: "",
+    category: "organic_social_media",
   });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      logo_url: "",
+      website: "",
+      linkedin: "",
+      tiktok_url: "",
+      instagram_url: "",
+      facebook_url: "",
+      category: "organic_social_media",
+    });
+    setShowForm(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,16 +83,7 @@ export const ManageCompetitorsModal = ({
     setSaving(true);
     const success = await addCompetitor(formData);
     if (success) {
-      setFormData({
-        name: "",
-        logo_url: "",
-        website: "",
-        linkedin: "",
-        tiktok_url: "",
-        instagram_url: "",
-        facebook_url: "",
-      });
-      setShowForm(false);
+      resetForm();
     }
     setSaving(false);
   };
@@ -97,15 +103,15 @@ export const ManageCompetitorsModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full h-[100vh] p-0 border-0 rounded-none bg-background">
+      <DialogContent className="max-w-full h-[100vh] p-0 border-0 rounded-none bg-background/95 backdrop-blur-xl">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between px-8 py-6 border-b border-border/50">
+          <div className="flex items-center justify-between px-8 py-6 border-b border-border/50 bg-card/50">
             <div>
               <h2 className="text-2xl font-bold text-foreground">
                 Gérer les concurrents
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Ajoutez et gérez les concurrents à surveiller sur les réseaux sociaux
+                Concurrents pour le suivi <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary ml-1">Social Media Organique</span>
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -122,187 +128,202 @@ export const ManageCompetitorsModal = ({
                 variant="ghost"
                 size="icon"
                 onClick={() => onOpenChange(false)}
-                className="rounded-full"
+                className="rounded-full hover:bg-destructive/10 hover:text-destructive"
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-8 bg-muted/30">
             {showForm && (
-              <div className="mb-8 p-6 rounded-3xl bg-card border border-border/50">
-                <h3 className="text-lg font-semibold text-foreground mb-6">
-                  Nouveau concurrent
-                </h3>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium">
-                        Nom de l'entreprise *
-                      </Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                        placeholder="Ex: Agence XYZ"
-                        className="h-11 rounded-xl bg-background border-border/50"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="logo_url" className="text-sm font-medium">
-                        URL du logo
-                      </Label>
-                      <Input
-                        id="logo_url"
-                        value={formData.logo_url}
-                        onChange={(e) =>
-                          setFormData({ ...formData, logo_url: e.target.value })
-                        }
-                        placeholder="https://..."
-                        className="h-11 rounded-xl bg-background border-border/50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="website" className="text-sm font-medium flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
-                      Site web
-                    </Label>
-                    <Input
-                      id="website"
-                      value={formData.website}
-                      onChange={(e) =>
-                        setFormData({ ...formData, website: e.target.value })
-                      }
-                      placeholder="https://www.example.com"
-                      className="h-11 rounded-xl bg-background border-border/50"
-                    />
-                  </div>
-
-                  <div className="border-t border-border/50 pt-6">
-                    <h4 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                      Réseaux sociaux
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="linkedin"
-                          className="text-sm font-medium flex items-center gap-2"
-                        >
-                          <span className="text-[#0A66C2]">
-                            <LinkedInIcon />
-                          </span>
-                          LinkedIn
-                        </Label>
-                        <Input
-                          id="linkedin"
-                          value={formData.linkedin}
-                          onChange={(e) =>
-                            setFormData({ ...formData, linkedin: e.target.value })
-                          }
-                          placeholder="https://linkedin.com/company/..."
-                          className="h-11 rounded-xl bg-background border-border/50"
-                        />
-                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <AlertCircle className="w-3 h-3" />
-                          Utilisez l'URL de la page entreprise LinkedIn
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="instagram"
-                          className="text-sm font-medium flex items-center gap-2"
-                        >
-                          <span className="text-[#E4405F]">
-                            <InstagramIcon />
-                          </span>
-                          Instagram
-                        </Label>
-                        <Input
-                          id="instagram"
-                          value={formData.instagram_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              instagram_url: e.target.value,
-                            })
-                          }
-                          placeholder="https://instagram.com/..."
-                          className="h-11 rounded-xl bg-background border-border/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="tiktok"
-                          className="text-sm font-medium flex items-center gap-2"
-                        >
-                          <span className="text-foreground">
-                            <TikTokIcon />
-                          </span>
-                          TikTok
-                        </Label>
-                        <Input
-                          id="tiktok"
-                          value={formData.tiktok_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              tiktok_url: e.target.value,
-                            })
-                          }
-                          placeholder="https://tiktok.com/@..."
-                          className="h-11 rounded-xl bg-background border-border/50"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="facebook"
-                          className="text-sm font-medium flex items-center gap-2"
-                        >
-                          <span className="text-[#1877F2]">
-                            <FacebookIcon />
-                          </span>
-                          Facebook
-                        </Label>
-                        <Input
-                          id="facebook"
-                          value={formData.facebook_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              facebook_url: e.target.value,
-                            })
-                          }
-                          placeholder="https://facebook.com/..."
-                          className="h-11 rounded-xl bg-background border-border/50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 pt-4">
+              <div className="mb-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent rounded-3xl" />
+                <div className="relative p-6 rounded-3xl bg-card border border-border shadow-xl">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Nouveau concurrent
+                    </h3>
                     <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowForm(false)}
-                      className="rounded-xl"
+                      variant="ghost"
+                      size="icon"
+                      onClick={resetForm}
+                      className="rounded-full hover:bg-muted"
                     >
-                      Annuler
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={saving || !formData.name.trim()}
-                      className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      {saving ? "Enregistrement..." : "Enregistrer le concurrent"}
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
-                </form>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-4">Informations générales</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-sm font-medium">
+                            Nom de l'entreprise *
+                          </Label>
+                          <Input
+                            id="name"
+                            value={formData.name}
+                            onChange={(e) =>
+                              setFormData({ ...formData, name: e.target.value })
+                            }
+                            placeholder="Ex: Agence XYZ"
+                            className="h-11 rounded-xl bg-background border-border"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="logo_url" className="text-sm font-medium">
+                            URL du logo
+                          </Label>
+                          <Input
+                            id="logo_url"
+                            value={formData.logo_url}
+                            onChange={(e) =>
+                              setFormData({ ...formData, logo_url: e.target.value })
+                            }
+                            placeholder="https://..."
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor="website" className="text-sm font-medium flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                          Site web
+                        </Label>
+                        <Input
+                          id="website"
+                          value={formData.website}
+                          onChange={(e) =>
+                            setFormData({ ...formData, website: e.target.value })
+                          }
+                          placeholder="https://www.example.com"
+                          className="h-11 rounded-xl bg-background border-border"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-muted/50 border border-border/50">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-4">Réseaux sociaux</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="linkedin"
+                            className="text-sm font-medium flex items-center gap-2"
+                          >
+                            <span className="text-[#0A66C2]">
+                              <LinkedInIcon />
+                            </span>
+                            LinkedIn
+                          </Label>
+                          <Input
+                            id="linkedin"
+                            value={formData.linkedin}
+                            onChange={(e) =>
+                              setFormData({ ...formData, linkedin: e.target.value })
+                            }
+                            placeholder="https://linkedin.com/company/..."
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            <AlertCircle className="w-3 h-3" />
+                            Utilisez l'URL de la page entreprise LinkedIn
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="instagram"
+                            className="text-sm font-medium flex items-center gap-2"
+                          >
+                            <span className="text-[#E4405F]">
+                              <InstagramIcon />
+                            </span>
+                            Instagram
+                          </Label>
+                          <Input
+                            id="instagram"
+                            value={formData.instagram_url}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                instagram_url: e.target.value,
+                              })
+                            }
+                            placeholder="https://instagram.com/..."
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="tiktok"
+                            className="text-sm font-medium flex items-center gap-2"
+                          >
+                            <span className="text-foreground">
+                              <TikTokIcon />
+                            </span>
+                            TikTok
+                          </Label>
+                          <Input
+                            id="tiktok"
+                            value={formData.tiktok_url}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                tiktok_url: e.target.value,
+                              })
+                            }
+                            placeholder="https://tiktok.com/@..."
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="facebook"
+                            className="text-sm font-medium flex items-center gap-2"
+                          >
+                            <span className="text-[#1877F2]">
+                              <FacebookIcon />
+                            </span>
+                            Facebook
+                          </Label>
+                          <Input
+                            id="facebook"
+                            value={formData.facebook_url}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                facebook_url: e.target.value,
+                              })
+                            }
+                            placeholder="https://facebook.com/..."
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={resetForm}
+                        className="rounded-xl"
+                      >
+                        Annuler
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || !formData.name.trim()}
+                        className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {saving ? "Enregistrement..." : "Enregistrer le concurrent"}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
               </div>
             )}
 
@@ -312,12 +333,14 @@ export const ManageCompetitorsModal = ({
               </div>
             ) : competitors.length === 0 && !showForm ? (
               <div className="text-center py-16">
-                <Building2 className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                  <Building2 className="w-10 h-10 text-muted-foreground/50" />
+                </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   Aucun concurrent
                 </h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Ajoutez des concurrents pour commencer à les surveiller
+                <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                  Ajoutez des concurrents pour commencer à surveiller leur activité sur les réseaux sociaux
                 </p>
                 <Button
                   onClick={() => setShowForm(true)}
@@ -328,120 +351,129 @@ export const ManageCompetitorsModal = ({
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {competitors.map((competitor) => (
-                  <div
-                    key={competitor.id}
-                    className={cn(
-                      "group relative rounded-3xl overflow-hidden",
-                      "bg-card border border-border/50",
-                      "hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
-                      "transition-all duration-300"
-                    )}
-                  >
-                    <div className="relative h-24 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
-                      {competitor.logo_url ? (
-                        <img
-                          src={competitor.logo_url}
-                          alt={competitor.name}
-                          className="absolute inset-0 w-full h-full object-cover opacity-50"
-                        />
-                      ) : null}
-                      <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                      <button
-                        onClick={() => handleDelete(competitor.id)}
-                        className="absolute top-3 right-3 p-2 rounded-xl bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all duration-200"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="p-5 -mt-8 relative">
-                      <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 flex items-center justify-center mb-4 shadow-lg">
+              <div>
+                {competitors.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                      {competitors.length} concurrent{competitors.length > 1 ? "s" : ""} configuré{competitors.length > 1 ? "s" : ""}
+                    </h3>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {competitors.map((competitor) => (
+                    <div
+                      key={competitor.id}
+                      className={cn(
+                        "group relative rounded-3xl overflow-hidden",
+                        "bg-card border border-border shadow-sm",
+                        "hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5",
+                        "transition-all duration-300"
+                      )}
+                    >
+                      <div className="relative h-24 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
                         {competitor.logo_url ? (
                           <img
                             src={competitor.logo_url}
                             alt={competitor.name}
-                            className="w-10 h-10 rounded-xl object-cover"
+                            className="absolute inset-0 w-full h-full object-cover opacity-50"
                           />
-                        ) : (
-                          <Building2 className="w-6 h-6 text-muted-foreground" />
-                        )}
+                        ) : null}
+                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                        <button
+                          onClick={() => handleDelete(competitor.id)}
+                          className="absolute top-3 right-3 p-2 rounded-xl bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 hover:bg-destructive/20 transition-all duration-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
 
-                      <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1">
-                        {competitor.name}
-                      </h3>
+                      <div className="p-5 -mt-8 relative">
+                        <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4 shadow-lg">
+                          {competitor.logo_url ? (
+                            <img
+                              src={competitor.logo_url}
+                              alt={competitor.name}
+                              className="w-10 h-10 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <Building2 className="w-6 h-6 text-muted-foreground" />
+                          )}
+                        </div>
 
-                      {competitor.website && (
-                        <a
-                          href={
-                            competitor.website.startsWith("http")
-                              ? competitor.website
-                              : `https://${competitor.website}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-4"
-                        >
-                          <Globe className="w-3 h-3" />
-                          <span className="line-clamp-1">
-                            {competitor.website.replace(/^https?:\/\//, "")}
-                          </span>
-                          <ExternalLink className="w-3 h-3 opacity-50" />
-                        </a>
-                      )}
+                        <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-1">
+                          {competitor.name}
+                        </h3>
 
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {competitor.linkedin && (
+                        {competitor.website && (
                           <a
-                            href={competitor.linkedin}
+                            href={
+                              competitor.website.startsWith("http")
+                                ? competitor.website
+                                : `https://${competitor.website}`
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2]/20 transition-colors"
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-4"
                           >
-                            <LinkedInIcon />
+                            <Globe className="w-3 h-3" />
+                            <span className="line-clamp-1">
+                              {competitor.website.replace(/^https?:\/\//, "")}
+                            </span>
+                            <ExternalLink className="w-3 h-3 opacity-50" />
                           </a>
                         )}
-                        {competitor.instagram_url && (
-                          <a
-                            href={competitor.instagram_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-[#E4405F]/10 text-[#E4405F] hover:bg-[#E4405F]/20 transition-colors"
-                          >
-                            <InstagramIcon />
-                          </a>
-                        )}
-                        {competitor.tiktok_url && (
-                          <a
-                            href={competitor.tiktok_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-foreground/10 text-foreground hover:bg-foreground/20 transition-colors"
-                          >
-                            <TikTokIcon />
-                          </a>
-                        )}
-                        {competitor.facebook_url && (
-                          <a
-                            href={competitor.facebook_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-lg bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 transition-colors"
-                          >
-                            <FacebookIcon />
-                          </a>
-                        )}
-                        {getPlatformCount(competitor) === 0 && (
-                          <span className="text-xs text-muted-foreground">
-                            Aucun réseau configuré
-                          </span>
-                        )}
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {competitor.linkedin && (
+                            <a
+                              href={competitor.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] hover:bg-[#0A66C2]/20 transition-colors"
+                            >
+                              <LinkedInIcon />
+                            </a>
+                          )}
+                          {competitor.instagram_url && (
+                            <a
+                              href={competitor.instagram_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-[#E4405F]/10 text-[#E4405F] hover:bg-[#E4405F]/20 transition-colors"
+                            >
+                              <InstagramIcon />
+                            </a>
+                          )}
+                          {competitor.tiktok_url && (
+                            <a
+                              href={competitor.tiktok_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-foreground/10 text-foreground hover:bg-foreground/20 transition-colors"
+                            >
+                              <TikTokIcon />
+                            </a>
+                          )}
+                          {competitor.facebook_url && (
+                            <a
+                              href={competitor.facebook_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-[#1877F2]/10 text-[#1877F2] hover:bg-[#1877F2]/20 transition-colors"
+                            >
+                              <FacebookIcon />
+                            </a>
+                          )}
+                          {getPlatformCount(competitor) === 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              Aucun réseau configuré
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>

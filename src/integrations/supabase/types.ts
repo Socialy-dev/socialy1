@@ -227,6 +227,7 @@ export type Database = {
       }
       competitor_agencies: {
         Row: {
+          category: string
           created_at: string
           email: string | null
           facebook_url: string | null
@@ -243,6 +244,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          category?: string
           created_at?: string
           email?: string | null
           facebook_url?: string | null
@@ -259,6 +261,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          category?: string
           created_at?: string
           email?: string | null
           facebook_url?: string | null
