@@ -1,0 +1,24 @@
+
+ALTER TABLE public.organization_social_media_organique_competitor_instagram
+ADD COLUMN category TEXT DEFAULT 'organic_social_media';
+
+ALTER TABLE public.organization_social_media_organique_competitor_facebook
+ADD COLUMN category TEXT DEFAULT 'organic_social_media';
+
+ALTER TABLE public.organization_social_media_organique_competitor_tiktok
+ADD COLUMN category TEXT DEFAULT 'organic_social_media';
+
+ALTER TABLE public.organization_social_media_organique_competitor_linkedin
+ADD COLUMN category TEXT DEFAULT 'organic_social_media';
+
+ALTER TABLE public.organization_social_media_organique_competitor_tiktok
+DROP CONSTRAINT IF EXISTS org_competitor_tiktok_unique;
+
+ALTER TABLE public.organization_social_media_organique_competitor_tiktok
+ADD CONSTRAINT org_competitor_tiktok_unique UNIQUE (organization_id, competitor_id, tiktok_url);
+
+ALTER TABLE public.organization_social_media_organique_competitor_linkedin
+DROP CONSTRAINT IF EXISTS org_competitor_linkedin_unique;
+
+ALTER TABLE public.organization_social_media_organique_competitor_linkedin
+ADD CONSTRAINT org_competitor_linkedin_unique UNIQUE (organization_id, competitor_id, post_url);

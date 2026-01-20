@@ -1080,6 +1080,7 @@ export type Database = {
       organization_social_media_organique_competitor_facebook: {
         Row: {
           caption: string | null
+          category: string | null
           comments_count: number | null
           competitor_id: string
           competitor_name: string | null
@@ -1106,6 +1107,7 @@ export type Database = {
         }
         Insert: {
           caption?: string | null
+          category?: string | null
           comments_count?: number | null
           competitor_id: string
           competitor_name?: string | null
@@ -1132,6 +1134,7 @@ export type Database = {
         }
         Update: {
           caption?: string | null
+          category?: string | null
           comments_count?: number | null
           competitor_id?: string
           competitor_name?: string | null
@@ -1176,6 +1179,7 @@ export type Database = {
       organization_social_media_organique_competitor_instagram: {
         Row: {
           caption: string | null
+          category: string | null
           comments_count: number | null
           company_name: string | null
           competitor_id: string
@@ -1208,6 +1212,7 @@ export type Database = {
         }
         Insert: {
           caption?: string | null
+          category?: string | null
           comments_count?: number | null
           company_name?: string | null
           competitor_id: string
@@ -1240,6 +1245,7 @@ export type Database = {
         }
         Update: {
           caption?: string | null
+          category?: string | null
           comments_count?: number | null
           company_name?: string | null
           competitor_id?: string
@@ -1294,6 +1300,7 @@ export type Database = {
           author_logo_url: string | null
           author_name: string | null
           caption: string | null
+          category: string | null
           celebrate_count: number | null
           comments_count: number | null
           company_source_url: string | null
@@ -1334,6 +1341,7 @@ export type Database = {
           author_logo_url?: string | null
           author_name?: string | null
           caption?: string | null
+          category?: string | null
           celebrate_count?: number | null
           comments_count?: number | null
           company_source_url?: string | null
@@ -1374,6 +1382,7 @@ export type Database = {
           author_logo_url?: string | null
           author_name?: string | null
           caption?: string | null
+          category?: string | null
           celebrate_count?: number | null
           comments_count?: number | null
           company_source_url?: string | null
@@ -1432,6 +1441,7 @@ export type Database = {
           author_total_likes: number | null
           author_total_videos: number | null
           caption: string | null
+          category: string | null
           collect_count: number | null
           comments_count: number | null
           competitor_id: string
@@ -1470,6 +1480,7 @@ export type Database = {
           author_total_likes?: number | null
           author_total_videos?: number | null
           caption?: string | null
+          category?: string | null
           collect_count?: number | null
           comments_count?: number | null
           competitor_id: string
@@ -1508,6 +1519,7 @@ export type Database = {
           author_total_likes?: number | null
           author_total_videos?: number | null
           caption?: string | null
+          category?: string | null
           collect_count?: number | null
           comments_count?: number | null
           competitor_id?: string
