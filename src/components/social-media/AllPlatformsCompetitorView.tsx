@@ -1,9 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-import { Heart, MessageCircle, Share2, Eye, TrendingUp, ChevronLeft, ChevronRight, Play, Video, Facebook } from "lucide-react";
+import { Heart, MessageCircle, Share2, Eye, TrendingUp, ChevronLeft, ChevronRight, Play, Video, Facebook, BarChart3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CrossPlatformEngagementChart } from "./analytics/CrossPlatformEngagementChart";
+import { CrossPlatformDistributionChart } from "./analytics/CrossPlatformDistributionChart";
+import { CrossPlatformTrendsChart } from "./analytics/CrossPlatformTrendsChart";
+import { CrossPlatformViewsChart } from "./analytics/CrossPlatformViewsChart";
+import { CrossPlatformBestPerformingChart } from "./analytics/CrossPlatformBestPerformingChart";
 
 interface CompetitorTikTokPost {
   id: string;
@@ -69,6 +74,7 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
   const [linkedinPosts, setLinkedinPosts] = useState<CompetitorLinkedInPost[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<CompetitorInstagramPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const tiktokScrollRef = useRef<HTMLDivElement>(null);
   const facebookScrollRef = useRef<HTMLDivElement>(null);
@@ -104,6 +110,35 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
 
     fetchAllPosts();
   }, [effectiveOrgId, selectedCompetitorId]);
+
+  const analyticsData = useMemo(() => ({
+    tiktok: {
+      posts: tiktokPosts.length,
+      views: tiktokPosts.reduce((s, p) => s + (p.views_count || 0), 0),
+      likes: tiktokPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: tiktokPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      shares: tiktokPosts.reduce((s, p) => s + (p.shares_count || 0), 0)
+    },
+    facebook: {
+      posts: facebookPosts.length,
+      views: facebookPosts.reduce((s, p) => s + (p.views_count || 0), 0),
+      likes: facebookPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: facebookPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      shares: facebookPosts.reduce((s, p) => s + (p.shares_count || 0), 0)
+    },
+    linkedin: {
+      posts: linkedinPosts.length,
+      reactions: linkedinPosts.reduce((s, p) => s + (p.total_reactions || 0), 0),
+      comments: linkedinPosts.reduce((s, p) => s + (p.comments_count || 0), 0),
+      reposts: linkedinPosts.reduce((s, p) => s + (p.reposts_count || 0), 0)
+    },
+    instagram: {
+      posts: instagramPosts.length,
+      views: instagramPosts.reduce((s, p) => s + (p.views_count || 0), 0),
+      likes: instagramPosts.reduce((s, p) => s + (p.likes_count || 0), 0),
+      comments: instagramPosts.reduce((s, p) => s + (p.comments_count || 0), 0)
+    }
+  }), [tiktokPosts, facebookPosts, linkedinPosts, instagramPosts]);
 
   const formatNumber = (num: number | null) => {
     if (num === null || num === undefined) return "0";
@@ -183,7 +218,45 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
 
   return (
     <div className="space-y-8">
-      {renderCarousel("TikTok Concurrents", tiktokPosts, tiktokScrollRef, "from-pink-500 via-red-500 to-yellow-500", <Video className="w-5 h-5 text-white" />, (post, i) => (
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
+          <button
+            onClick={() => setShowAnalytics(false)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+              !showAnalytics ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Video className="w-4 h-4" />
+            Publications
+          </button>
+          <button
+            onClick={() => setShowAnalytics(true)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+              showAnalytics ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Analyse Cross-Platform
+          </button>
+        </div>
+      </div>
+
+      {showAnalytics ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CrossPlatformEngagementChart tiktokData={analyticsData.tiktok} facebookData={analyticsData.facebook} linkedinData={analyticsData.linkedin} instagramData={analyticsData.instagram} />
+            <CrossPlatformViewsChart tiktokViews={analyticsData.tiktok.views} facebookViews={analyticsData.facebook.views} linkedinReactions={analyticsData.linkedin.reactions} instagramViews={analyticsData.instagram.views} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CrossPlatformDistributionChart tiktokPosts={analyticsData.tiktok.posts} facebookPosts={analyticsData.facebook.posts} linkedinPosts={analyticsData.linkedin.posts} instagramPosts={analyticsData.instagram.posts} />
+            <CrossPlatformTrendsChart tiktokPosts={tiktokPosts} facebookPosts={facebookPosts} linkedinPosts={linkedinPosts} instagramPosts={instagramPosts} />
+          </div>
+          <CrossPlatformBestPerformingChart tiktokPosts={tiktokPosts} facebookPosts={facebookPosts} linkedinPosts={linkedinPosts} instagramPosts={instagramPosts} />
+        </div>
+      ) : (
+        <>
         <a key={post.id} href={post.tiktok_url} target="_blank" rel="noopener noreferrer" className="relative flex-shrink-0 w-52 rounded-2xl overflow-hidden bg-card border border-border/50 hover:border-pink-500/30 transition-all duration-300 hover:shadow-xl">
           <div className="relative aspect-[9/16]">
             {post.video_cover_url ? <img src={post.video_cover_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center"><Video className="w-12 h-12 text-muted-foreground/50" /></div>}
@@ -257,6 +330,8 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
           </a>
         );
       })}
+        </>
+      )}
     </div>
   );
 };
