@@ -1077,6 +1077,486 @@ export type Database = {
           },
         ]
       }
+      organization_social_media_organique_competitor_facebook: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          competitor_id: string
+          competitor_name: string | null
+          created_at: string
+          has_collaborators: boolean | null
+          id: string
+          image_url: string | null
+          likes_count: number | null
+          organization_id: string
+          page_id: string | null
+          page_name: string | null
+          page_profile_pic: string | null
+          page_profile_url: string | null
+          page_url: string | null
+          post_id: string
+          post_type: string | null
+          post_url: string
+          posted_at: string | null
+          scraped_at: string | null
+          shares_count: number | null
+          updated_at: string
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          competitor_id: string
+          competitor_name?: string | null
+          created_at?: string
+          has_collaborators?: boolean | null
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          organization_id: string
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_pic?: string | null
+          page_profile_url?: string | null
+          page_url?: string | null
+          post_id: string
+          post_type?: string | null
+          post_url: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          competitor_id?: string
+          competitor_name?: string | null
+          created_at?: string
+          has_collaborators?: boolean | null
+          id?: string
+          image_url?: string | null
+          likes_count?: number | null
+          organization_id?: string
+          page_id?: string | null
+          page_name?: string | null
+          page_profile_pic?: string | null
+          page_profile_url?: string | null
+          page_url?: string | null
+          post_id?: string
+          post_type?: string | null
+          post_url?: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_compe_organization_id_fkey1"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_social_media_organique_competi_competitor_id_fkey1"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "organization_competitor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_social_media_organique_competitor_instagram: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          company_name: string | null
+          competitor_id: string
+          competitor_name: string | null
+          content_type: string | null
+          created_at: string
+          dimensions_height: number | null
+          dimensions_width: number | null
+          followers_count: number | null
+          following_count: number | null
+          hashtags: string[] | null
+          id: string
+          images: string[] | null
+          is_video: boolean | null
+          latest_comments: string | null
+          likes_count: number | null
+          logo_url: string | null
+          mentions: string[] | null
+          organization_id: string
+          post_id: string | null
+          post_url: string
+          posted_at: string | null
+          posts_count: number | null
+          profile_picture_url: string | null
+          updated_at: string
+          video_duration: string | null
+          video_play_count: number | null
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          company_name?: string | null
+          competitor_id: string
+          competitor_name?: string | null
+          content_type?: string | null
+          created_at?: string
+          dimensions_height?: number | null
+          dimensions_width?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          hashtags?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_video?: boolean | null
+          latest_comments?: string | null
+          likes_count?: number | null
+          logo_url?: string | null
+          mentions?: string[] | null
+          organization_id: string
+          post_id?: string | null
+          post_url: string
+          posted_at?: string | null
+          posts_count?: number | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          video_duration?: string | null
+          video_play_count?: number | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          company_name?: string | null
+          competitor_id?: string
+          competitor_name?: string | null
+          content_type?: string | null
+          created_at?: string
+          dimensions_height?: number | null
+          dimensions_width?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          hashtags?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_video?: boolean | null
+          latest_comments?: string | null
+          likes_count?: number | null
+          logo_url?: string | null
+          mentions?: string[] | null
+          organization_id?: string
+          post_id?: string | null
+          post_url?: string
+          posted_at?: string | null
+          posts_count?: number | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          video_duration?: string | null
+          video_play_count?: number | null
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_compet_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_social_media_organique_competit_competitor_id_fkey"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "organization_competitor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_social_media_organique_competitor_linkedin: {
+        Row: {
+          author_company_url: string | null
+          author_followers: number | null
+          author_logo_url: string | null
+          author_name: string | null
+          caption: string | null
+          celebrate_count: number | null
+          comments_count: number | null
+          company_source_url: string | null
+          competitor_id: string
+          competitor_name: string | null
+          created_at: string
+          document_page_count: number | null
+          document_title: string | null
+          document_url: string | null
+          full_urn: string | null
+          id: string
+          insight_count: number | null
+          is_edited: boolean | null
+          language: string | null
+          likes_count: number | null
+          love_count: number | null
+          media_thumbnail: string | null
+          media_title: string | null
+          media_type: string | null
+          media_url: string | null
+          organization_id: string
+          post_id: string
+          post_type: string | null
+          post_url: string
+          posted_at: string | null
+          posted_relative: string | null
+          reposts_count: number | null
+          scraped_at: string | null
+          support_count: number | null
+          timestamp: number | null
+          total_reactions: number | null
+          updated_at: string
+          video_duration: string | null
+        }
+        Insert: {
+          author_company_url?: string | null
+          author_followers?: number | null
+          author_logo_url?: string | null
+          author_name?: string | null
+          caption?: string | null
+          celebrate_count?: number | null
+          comments_count?: number | null
+          company_source_url?: string | null
+          competitor_id: string
+          competitor_name?: string | null
+          created_at?: string
+          document_page_count?: number | null
+          document_title?: string | null
+          document_url?: string | null
+          full_urn?: string | null
+          id?: string
+          insight_count?: number | null
+          is_edited?: boolean | null
+          language?: string | null
+          likes_count?: number | null
+          love_count?: number | null
+          media_thumbnail?: string | null
+          media_title?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          organization_id: string
+          post_id: string
+          post_type?: string | null
+          post_url: string
+          posted_at?: string | null
+          posted_relative?: string | null
+          reposts_count?: number | null
+          scraped_at?: string | null
+          support_count?: number | null
+          timestamp?: number | null
+          total_reactions?: number | null
+          updated_at?: string
+          video_duration?: string | null
+        }
+        Update: {
+          author_company_url?: string | null
+          author_followers?: number | null
+          author_logo_url?: string | null
+          author_name?: string | null
+          caption?: string | null
+          celebrate_count?: number | null
+          comments_count?: number | null
+          company_source_url?: string | null
+          competitor_id?: string
+          competitor_name?: string | null
+          created_at?: string
+          document_page_count?: number | null
+          document_title?: string | null
+          document_url?: string | null
+          full_urn?: string | null
+          id?: string
+          insight_count?: number | null
+          is_edited?: boolean | null
+          language?: string | null
+          likes_count?: number | null
+          love_count?: number | null
+          media_thumbnail?: string | null
+          media_title?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          organization_id?: string
+          post_id?: string
+          post_type?: string | null
+          post_url?: string
+          posted_at?: string | null
+          posted_relative?: string | null
+          reposts_count?: number | null
+          scraped_at?: string | null
+          support_count?: number | null
+          timestamp?: number | null
+          total_reactions?: number | null
+          updated_at?: string
+          video_duration?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_compe_organization_id_fkey3"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_social_media_organique_competi_competitor_id_fkey3"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "organization_competitor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_social_media_organique_competitor_tiktok: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_total_likes: number | null
+          author_total_videos: number | null
+          caption: string | null
+          collect_count: number | null
+          comments_count: number | null
+          competitor_id: string
+          competitor_name: string | null
+          created_at: string
+          effects_used: Json | null
+          followers_at_time: number | null
+          hashtags: string[] | null
+          id: string
+          is_ad: boolean | null
+          is_pinned: boolean | null
+          is_slideshow: boolean | null
+          is_sponsored: boolean | null
+          likes_count: number | null
+          location_created: string | null
+          music_author: string | null
+          music_id: string | null
+          music_name: string | null
+          organization_id: string
+          post_id: string
+          posted_at: string | null
+          scraped_at: string | null
+          shares_count: number | null
+          text_language: string | null
+          tiktok_url: string
+          updated_at: string
+          video_cover_url: string | null
+          video_duration: number | null
+          video_height: number | null
+          video_width: number | null
+          views_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_total_likes?: number | null
+          author_total_videos?: number | null
+          caption?: string | null
+          collect_count?: number | null
+          comments_count?: number | null
+          competitor_id: string
+          competitor_name?: string | null
+          created_at?: string
+          effects_used?: Json | null
+          followers_at_time?: number | null
+          hashtags?: string[] | null
+          id?: string
+          is_ad?: boolean | null
+          is_pinned?: boolean | null
+          is_slideshow?: boolean | null
+          is_sponsored?: boolean | null
+          likes_count?: number | null
+          location_created?: string | null
+          music_author?: string | null
+          music_id?: string | null
+          music_name?: string | null
+          organization_id: string
+          post_id: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          text_language?: string | null
+          tiktok_url: string
+          updated_at?: string
+          video_cover_url?: string | null
+          video_duration?: number | null
+          video_height?: number | null
+          video_width?: number | null
+          views_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_total_likes?: number | null
+          author_total_videos?: number | null
+          caption?: string | null
+          collect_count?: number | null
+          comments_count?: number | null
+          competitor_id?: string
+          competitor_name?: string | null
+          created_at?: string
+          effects_used?: Json | null
+          followers_at_time?: number | null
+          hashtags?: string[] | null
+          id?: string
+          is_ad?: boolean | null
+          is_pinned?: boolean | null
+          is_slideshow?: boolean | null
+          is_sponsored?: boolean | null
+          likes_count?: number | null
+          location_created?: string | null
+          music_author?: string | null
+          music_id?: string | null
+          music_name?: string | null
+          organization_id?: string
+          post_id?: string
+          posted_at?: string | null
+          scraped_at?: string | null
+          shares_count?: number | null
+          text_language?: string | null
+          tiktok_url?: string
+          updated_at?: string
+          video_cover_url?: string | null
+          video_duration?: number | null
+          video_height?: number | null
+          video_width?: number | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_social_media_organique_compe_organization_id_fkey2"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_social_media_organique_competi_competitor_id_fkey2"
+            columns: ["competitor_id"]
+            isOneToOne: false
+            referencedRelation: "organization_competitor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_social_media_organique_facebook: {
         Row: {
           caption: string | null
