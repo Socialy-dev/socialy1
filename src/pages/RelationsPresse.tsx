@@ -117,7 +117,7 @@ interface Journalist {
 const getSubTabs = (orgName: string) => [
   { id: "socialy", label: orgName, group: "articles" },
   { id: "concurrent", label: "Concurrents", group: "articles" },
-  { id: "client", label: "Client", group: "articles" },
+  { id: "client", label: "Clients", group: "articles" },
   { id: "veille-marche", label: "Veille Marché", group: "articles" },
   { id: "journalistes", label: "Journalistes", group: "contacts" },
   { id: "communiques", label: "Communiqués", group: "contacts" },
