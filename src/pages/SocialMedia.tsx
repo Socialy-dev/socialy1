@@ -38,13 +38,13 @@ const SocialMedia = () => {
 
       <div
         className={cn(
-          "flex-1 flex flex-col min-h-screen content-transition",
+          "flex-1 flex flex-col min-h-screen content-transition overflow-x-hidden",
           sidebarCollapsed ? "ml-20" : "ml-72"
         )}
       >
         <Header showTitle={false} sidebarCollapsed={sidebarCollapsed} />
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto overflow-x-hidden">
           <div className="max-w-[1600px] mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
