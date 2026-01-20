@@ -294,7 +294,7 @@ const RelationsPresse = () => {
 
   const fetchAgencies = async () => {
     if (effectiveOrgId) {
-      let query = supabase.from("competitor_agencies").select("id, name").eq("organization_id", effectiveOrgId);
+      let query = supabase.from("organization_competitor").select("id, name").eq("organization_id", effectiveOrgId);
       const { data } = await query.order("name");
       
       let agenciesList = data || [];
@@ -302,7 +302,7 @@ const RelationsPresse = () => {
       const hasAutre = agenciesList.some(a => a.name === "Autre");
       if (!hasAutre) {
         const { data: newAutre, error } = await supabase
-          .from("competitor_agencies")
+          .from("organization_competitor")
           .insert({ organization_id: effectiveOrgId, name: "Autre" })
           .select("id, name")
           .single();
@@ -767,7 +767,7 @@ const RelationsPresse = () => {
     setIsAddingCompetitor(true);
 
     try {
-      const { data: newCompetitor, error } = await supabase.from("competitor_agencies").insert({
+      const { data: newCompetitor, error } = await supabase.from("organization_competitor").insert({
         organization_id: effectiveOrgId,
         name: newCompetitorName.trim(),
       }).select("id, name").single();
@@ -953,7 +953,7 @@ const RelationsPresse = () => {
   };
 
   const handleDeleteCompetitor = async (agencyId: string, agencyName: string) => {
-    const { error } = await supabase.from("competitor_agencies").delete().eq("id", agencyId);
+    const { error } = await supabase.from("organization_competitor").delete().eq("id", agencyId);
     if (error) {
       toast({ title: "Échec de la suppression", description: "Impossible de supprimer le concurrent. Veuillez réessayer.", variant: "destructive" });
     } else {

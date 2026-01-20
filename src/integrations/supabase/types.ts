@@ -225,68 +225,6 @@ export type Database = {
           },
         ]
       }
-      competitor_agencies: {
-        Row: {
-          category: string
-          created_at: string
-          email: string | null
-          facebook_url: string | null
-          id: string
-          instagram_url: string | null
-          linkedin: string | null
-          logo_url: string | null
-          name: string
-          notes: string | null
-          organization_id: string
-          specialty: string | null
-          tiktok_url: string | null
-          updated_at: string
-          website: string | null
-        }
-        Insert: {
-          category?: string
-          created_at?: string
-          email?: string | null
-          facebook_url?: string | null
-          id?: string
-          instagram_url?: string | null
-          linkedin?: string | null
-          logo_url?: string | null
-          name: string
-          notes?: string | null
-          organization_id: string
-          specialty?: string | null
-          tiktok_url?: string | null
-          updated_at?: string
-          website?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          email?: string | null
-          facebook_url?: string | null
-          id?: string
-          instagram_url?: string | null
-          linkedin?: string | null
-          logo_url?: string | null
-          name?: string
-          notes?: string | null
-          organization_id?: string
-          specialty?: string | null
-          tiktok_url?: string | null
-          updated_at?: string
-          website?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "competitor_agencies_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       competitor_articles: {
         Row: {
           article_date: string | null
@@ -353,7 +291,7 @@ export type Database = {
             foreignKeyName: "competitor_articles_agency_id_fkey"
             columns: ["competitor_id"]
             isOneToOne: false
-            referencedRelation: "competitor_agencies"
+            referencedRelation: "organization_competitor"
             referencedColumns: ["id"]
           },
           {
@@ -819,6 +757,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "socialy_articles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_competitor: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          facebook_url: string | null
+          id: string
+          instagram_url: string | null
+          linkedin: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          organization_id: string
+          specialty: string | null
+          tiktok_url: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          organization_id: string
+          specialty?: string | null
+          tiktok_url?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          facebook_url?: string | null
+          id?: string
+          instagram_url?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          specialty?: string | null
+          tiktok_url?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_competitor_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"

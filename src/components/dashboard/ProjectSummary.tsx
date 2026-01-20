@@ -100,7 +100,7 @@ export const ProjectSummary = () => {
   const fetchAgencies = async () => {
     if (effectiveOrgId) {
       const { data } = await supabase
-        .from("competitor_agencies")
+        .from("organization_competitor")
         .select("id, name")
         .eq("organization_id", effectiveOrgId)
         .order("name");
