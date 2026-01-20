@@ -357,7 +357,7 @@ export const AllPlatformsView = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
           <button
@@ -522,7 +522,7 @@ export const AllPlatformsView = () => {
 
           <div
             ref={tiktokScrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {tiktokPosts.map((post, index) => (
@@ -614,7 +614,7 @@ export const AllPlatformsView = () => {
 
           <div
             ref={facebookScrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {facebookPosts.map((post, index) => (
@@ -713,7 +713,7 @@ export const AllPlatformsView = () => {
 
           <div
             ref={linkedinScrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {linkedinPosts.map((post, index) => (
@@ -819,7 +819,7 @@ export const AllPlatformsView = () => {
 
           <div
             ref={instagramScrollRef}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2"
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {instagramPosts.map((post, index) => {

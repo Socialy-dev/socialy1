@@ -209,7 +209,7 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
             <button onClick={() => scroll(scrollRef, "right")} className="w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"><ChevronRight className="w-5 h-5" /></button>
           </div>
         </div>
-        <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-2 px-2" style={{ scrollbarWidth: "none" }}>
+        <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-4" style={{ scrollbarWidth: "none" }}>
           {posts.map(renderCard)}
         </div>
       </div>
@@ -217,7 +217,7 @@ export const AllPlatformsCompetitorView = ({ selectedCompetitorId }: AllPlatform
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
           <button
