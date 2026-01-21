@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
-import { Calendar, ChevronDown, BarChart3, Image } from "lucide-react";
+import { BarChart3, Image, TrendingUp, Library } from "lucide-react";
 import { PaidDashboardView } from "@/components/social-media-paid/PaidDashboardView";
 import { PaidCreativesView } from "@/components/social-media-paid/PaidCreativesView";
+import { PaidDetailedPerformanceView } from "@/components/social-media-paid/PaidDetailedPerformanceView";
+import { PaidCreativeLibraryView } from "@/components/social-media-paid/PaidCreativeLibraryView";
 
-type PaidSection = "dashboard" | "creatives";
+type PaidSection = "dashboard" | "performance" | "creatives" | "library";
 
 const SocialMediaPaid = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -38,15 +40,9 @@ const SocialMediaPaid = () => {
                   Gérez vos campagnes publicitaires multi-clients
                 </p>
               </div>
-
-              <button className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground bg-secondary/50 border border-border/50 rounded-xl hover:bg-secondary transition-all duration-200">
-                <Calendar className="w-4 h-4" />
-                30 derniers jours
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
             </div>
 
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6">
               <button
                 onClick={() => setActiveSection("dashboard")}
                 className={cn(
@@ -57,7 +53,19 @@ const SocialMediaPaid = () => {
                 )}
               >
                 <BarChart3 className="w-4 h-4" />
-                Dashboards & Automatisation
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveSection("performance")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  activeSection === "performance"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                <TrendingUp className="w-4 h-4" />
+                Performances Détaillées
               </button>
               <button
                 onClick={() => setActiveSection("creatives")}
@@ -71,10 +79,24 @@ const SocialMediaPaid = () => {
                 <Image className="w-4 h-4" />
                 Créations Publicitaires
               </button>
+              <button
+                onClick={() => setActiveSection("library")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  activeSection === "library"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                )}
+              >
+                <Library className="w-4 h-4" />
+                Bibliothèque Créations
+              </button>
             </div>
 
             {activeSection === "dashboard" && <PaidDashboardView />}
+            {activeSection === "performance" && <PaidDetailedPerformanceView />}
             {activeSection === "creatives" && <PaidCreativesView />}
+            {activeSection === "library" && <PaidCreativeLibraryView />}
           </div>
         </main>
       </div>
