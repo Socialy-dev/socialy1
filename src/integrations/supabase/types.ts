@@ -2517,13 +2517,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "paid_insights_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "paid_campaigns"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "paid_insights_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
