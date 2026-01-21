@@ -2174,7 +2174,7 @@ export type Database = {
       }
       paid_ad_creatives: {
         Row: {
-          ad_account_id: string
+          ad_account_id: string | null
           body_text: string | null
           call_to_action: string | null
           campaign_id: string | null
@@ -2203,7 +2203,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          ad_account_id: string
+          ad_account_id?: string | null
           body_text?: string | null
           call_to_action?: string | null
           campaign_id?: string | null
@@ -2232,7 +2232,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          ad_account_id?: string
+          ad_account_id?: string | null
           body_text?: string | null
           call_to_action?: string | null
           campaign_id?: string | null
