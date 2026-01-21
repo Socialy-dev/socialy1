@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import RelationsPresse from "./pages/RelationsPresse";
 import GrowthMarketing from "./pages/GrowthMarketing";
 import SocialMedia from "./pages/SocialMedia";
+import SocialMediaPaid from "./pages/SocialMediaPaid";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -64,6 +65,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SocialMedia />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/social-media-paid"
+              element={
+                <ProtectedRoute>
+                  <SocialMediaPaid />
                 </ProtectedRoute>
               }
             />
