@@ -1,0 +1,1 @@
+ALTER TABLE public.paid_ad_creatives DROP CONSTRAINT IF EXISTS paid_ad_creatives_status_check;
