@@ -2024,6 +2024,521 @@ export type Database = {
         }
         Relationships: []
       }
+      paid_account_snapshots: {
+        Row: {
+          active_campaigns: number | null
+          active_creatives: number | null
+          ad_account_id: string
+          avg_cpc: number | null
+          avg_cpm: number | null
+          avg_ctr: number | null
+          avg_roas: number | null
+          client_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          period_end: string
+          period_start: string
+          platform: string
+          total_clicks: number | null
+          total_conversion_value: number | null
+          total_conversions: number | null
+          total_impressions: number | null
+          total_spend: number | null
+        }
+        Insert: {
+          active_campaigns?: number | null
+          active_creatives?: number | null
+          ad_account_id: string
+          avg_cpc?: number | null
+          avg_cpm?: number | null
+          avg_ctr?: number | null
+          avg_roas?: number | null
+          client_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          period_end: string
+          period_start: string
+          platform: string
+          total_clicks?: number | null
+          total_conversion_value?: number | null
+          total_conversions?: number | null
+          total_impressions?: number | null
+          total_spend?: number | null
+        }
+        Update: {
+          active_campaigns?: number | null
+          active_creatives?: number | null
+          ad_account_id?: string
+          avg_cpc?: number | null
+          avg_cpm?: number | null
+          avg_ctr?: number | null
+          avg_roas?: number | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          period_end?: string
+          period_start?: string
+          platform?: string
+          total_clicks?: number | null
+          total_conversion_value?: number | null
+          total_conversions?: number | null
+          total_impressions?: number | null
+          total_spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_account_snapshots_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "paid_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_account_snapshots_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_account_snapshots_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_ad_accounts: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          client_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          is_active: boolean
+          last_sync_at: string | null
+          organization_id: string
+          platform: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          client_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          organization_id: string
+          platform: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          client_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_active?: boolean
+          last_sync_at?: string | null
+          organization_id?: string
+          platform?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_ad_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_ad_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_ad_creatives: {
+        Row: {
+          ad_account_id: string
+          body_text: string | null
+          call_to_action: string | null
+          campaign_id: string | null
+          clicks: number | null
+          client_id: string
+          conversions: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          creative_id: string
+          creative_name: string | null
+          ctr: number | null
+          destination_url: string | null
+          format: string | null
+          headline: string | null
+          id: string
+          impressions: number | null
+          last_sync_at: string | null
+          media_url: string | null
+          organization_id: string
+          platform: string
+          roas: number | null
+          spend: number | null
+          status: string | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id: string
+          body_text?: string | null
+          call_to_action?: string | null
+          campaign_id?: string | null
+          clicks?: number | null
+          client_id: string
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          creative_id: string
+          creative_name?: string | null
+          ctr?: number | null
+          destination_url?: string | null
+          format?: string | null
+          headline?: string | null
+          id?: string
+          impressions?: number | null
+          last_sync_at?: string | null
+          media_url?: string | null
+          organization_id: string
+          platform: string
+          roas?: number | null
+          spend?: number | null
+          status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string
+          body_text?: string | null
+          call_to_action?: string | null
+          campaign_id?: string | null
+          clicks?: number | null
+          client_id?: string
+          conversions?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          creative_id?: string
+          creative_name?: string | null
+          ctr?: number | null
+          destination_url?: string | null
+          format?: string | null
+          headline?: string | null
+          id?: string
+          impressions?: number | null
+          last_sync_at?: string | null
+          media_url?: string | null
+          organization_id?: string
+          platform?: string
+          roas?: number | null
+          spend?: number | null
+          status?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_ad_creatives_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "paid_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_ad_creatives_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "paid_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_ad_creatives_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_ad_creatives_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_campaigns: {
+        Row: {
+          ad_account_id: string
+          campaign_id: string
+          campaign_name: string | null
+          client_id: string
+          created_at: string
+          daily_budget: number | null
+          end_date: string | null
+          id: string
+          lifetime_budget: number | null
+          objective: string | null
+          organization_id: string
+          platform: string
+          start_date: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_account_id: string
+          campaign_id: string
+          campaign_name?: string | null
+          client_id: string
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          id?: string
+          lifetime_budget?: number | null
+          objective?: string | null
+          organization_id: string
+          platform: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_account_id?: string
+          campaign_id?: string
+          campaign_name?: string | null
+          client_id?: string
+          created_at?: string
+          daily_budget?: number | null
+          end_date?: string | null
+          id?: string
+          lifetime_budget?: number | null
+          objective?: string | null
+          organization_id?: string
+          platform?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_campaigns_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "paid_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_campaigns_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_campaigns_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_clients: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          notes: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_clients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_insights: {
+        Row: {
+          ad_account_id: string
+          add_to_cart: number | null
+          campaign_id: string | null
+          clicks: number | null
+          client_id: string
+          conversion_value: number | null
+          conversions: number | null
+          cpa: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          frequency: number | null
+          id: string
+          impressions: number | null
+          landing_page_views: number | null
+          leads: number | null
+          link_clicks: number | null
+          organization_id: string
+          platform: string
+          purchases: number | null
+          raw_data: Json | null
+          reach: number | null
+          roas: number | null
+          spend: number | null
+          video_views: number | null
+          video_views_100: number | null
+          video_views_25: number | null
+          video_views_50: number | null
+          video_views_75: number | null
+        }
+        Insert: {
+          ad_account_id: string
+          add_to_cart?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          client_id: string
+          conversion_value?: number | null
+          conversions?: number | null
+          cpa?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          landing_page_views?: number | null
+          leads?: number | null
+          link_clicks?: number | null
+          organization_id: string
+          platform: string
+          purchases?: number | null
+          raw_data?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          video_views?: number | null
+          video_views_100?: number | null
+          video_views_25?: number | null
+          video_views_50?: number | null
+          video_views_75?: number | null
+        }
+        Update: {
+          ad_account_id?: string
+          add_to_cart?: number | null
+          campaign_id?: string | null
+          clicks?: number | null
+          client_id?: string
+          conversion_value?: number | null
+          conversions?: number | null
+          cpa?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          frequency?: number | null
+          id?: string
+          impressions?: number | null
+          landing_page_views?: number | null
+          leads?: number | null
+          link_clicks?: number | null
+          organization_id?: string
+          platform?: string
+          purchases?: number | null
+          raw_data?: Json | null
+          reach?: number | null
+          roas?: number | null
+          spend?: number | null
+          video_views?: number | null
+          video_views_100?: number | null
+          video_views_25?: number | null
+          video_views_50?: number | null
+          video_views_75?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_insights_ad_account_id_fkey"
+            columns: ["ad_account_id"]
+            isOneToOne: false
+            referencedRelation: "paid_ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_insights_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "paid_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paid_insights_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
