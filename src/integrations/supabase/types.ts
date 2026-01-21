@@ -2291,6 +2291,56 @@ export type Database = {
           },
         ]
       }
+      paid_ad_insights: {
+        Row: {
+          ad_id: string
+          clicks: number | null
+          client_id: string
+          cpc: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number | null
+          platform: string
+          spend: number | null
+        }
+        Insert: {
+          ad_id: string
+          clicks?: number | null
+          client_id: string
+          cpc?: number | null
+          created_at?: string
+          ctr?: number | null
+          date: string
+          id?: string
+          impressions?: number | null
+          platform?: string
+          spend?: number | null
+        }
+        Update: {
+          ad_id?: string
+          clicks?: number | null
+          client_id?: string
+          cpc?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          platform?: string
+          spend?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_ad_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "paid_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       paid_campaigns: {
         Row: {
           ad_account_id: string
