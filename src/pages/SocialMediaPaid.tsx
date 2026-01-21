@@ -2,17 +2,19 @@ import { useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
-import { BarChart3, Image, TrendingUp, Library } from "lucide-react";
+import { LayoutDashboard, Library } from "lucide-react";
 import { PaidDashboardView } from "@/components/social-media-paid/PaidDashboardView";
 import { PaidCreativesView } from "@/components/social-media-paid/PaidCreativesView";
 import { PaidDetailedPerformanceView } from "@/components/social-media-paid/PaidDetailedPerformanceView";
 import { PaidCreativeLibraryView } from "@/components/social-media-paid/PaidCreativeLibraryView";
 
-type PaidSection = "dashboard" | "performance" | "creatives" | "library";
+type MainTab = "dashboard" | "library";
+type DashboardSubTab = "global" | "detailed" | "creatives";
 
 const SocialMediaPaid = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeSection, setActiveSection] = useState<PaidSection>("dashboard");
+  const [mainTab, setMainTab] = useState<MainTab>("dashboard");
+  const [dashboardSubTab, setDashboardSubTab] = useState<DashboardSubTab>("global");
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -42,61 +44,78 @@ const SocialMediaPaid = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex gap-2 mb-6">
               <button
-                onClick={() => setActiveSection("dashboard")}
+                onClick={() => setMainTab("dashboard")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  activeSection === "dashboard"
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  mainTab === "dashboard"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                     : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
-                <BarChart3 className="w-4 h-4" />
-                Dashboard
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard Client
               </button>
               <button
-                onClick={() => setActiveSection("performance")}
+                onClick={() => setMainTab("library")}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  activeSection === "performance"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                <TrendingUp className="w-4 h-4" />
-                Performances Détaillées
-              </button>
-              <button
-                onClick={() => setActiveSection("creatives")}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  activeSection === "creatives"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                )}
-              >
-                <Image className="w-4 h-4" />
-                Créations Publicitaires
-              </button>
-              <button
-                onClick={() => setActiveSection("library")}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  activeSection === "library"
+                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                  mainTab === "library"
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
                     : "bg-secondary/50 text-muted-foreground hover:text-foreground hover:bg-secondary"
                 )}
               >
                 <Library className="w-4 h-4" />
-                Bibliothèque Créations
+                Librairie de Création
               </button>
             </div>
 
-            {activeSection === "dashboard" && <PaidDashboardView />}
-            {activeSection === "performance" && <PaidDetailedPerformanceView />}
-            {activeSection === "creatives" && <PaidCreativesView />}
-            {activeSection === "library" && <PaidCreativeLibraryView />}
+            {mainTab === "dashboard" && (
+              <>
+                <div className="flex gap-1.5 mb-6 p-1 bg-muted/30 rounded-xl w-fit">
+                  <button
+                    onClick={() => setDashboardSubTab("global")}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      dashboardSubTab === "global"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Performance Global
+                  </button>
+                  <button
+                    onClick={() => setDashboardSubTab("detailed")}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      dashboardSubTab === "detailed"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Performance Détaillée
+                  </button>
+                  <button
+                    onClick={() => setDashboardSubTab("creatives")}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                      dashboardSubTab === "creatives"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Créations Publicitaires
+                  </button>
+                </div>
+
+                {dashboardSubTab === "global" && <PaidDashboardView />}
+                {dashboardSubTab === "detailed" && <PaidDetailedPerformanceView />}
+                {dashboardSubTab === "creatives" && <PaidCreativesView />}
+              </>
+            )}
+
+            {mainTab === "library" && <PaidCreativeLibraryView />}
           </div>
         </main>
       </div>
