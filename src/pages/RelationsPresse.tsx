@@ -2240,11 +2240,93 @@ const RelationsPresse = () => {
             {activeSubTab === "client" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                    Retombées presse de vos clients
-                  </p>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowClientDropdown(!showClientDropdown)}
+                      className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                    >
+                      <Filter className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {selectedClientFilter ? clients.find(c => c.id === selectedClientFilter)?.name || "Tous les clients" : "Tous les clients"}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                          showClientDropdown && "rotate-180",
+                        )}
+                      />
+                    </button>
+
+                    {showClientDropdown && (
+                      <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              setSelectedClientFilter(null);
+                              setShowClientDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                              !selectedClientFilter ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                            )}
+                          >
+                            <Users2 className="w-5 h-5" />
+                            Tous les clients
+                            {!selectedClientFilter && <Check className="w-5 h-5 ml-auto" />}
+                          </button>
+
+                          {clients.length > 0 && <div className="border-t border-border my-2" />}
+
+                          {clients.map((client) => (
+                            <button
+                              key={client.id}
+                              onClick={() => {
+                                setSelectedClientFilter(client.id);
+                                setShowClientDropdown(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                selectedClientFilter === client.id
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-foreground hover:bg-secondary",
+                              )}
+                            >
+                              <Briefcase className="w-5 h-5" />
+                              {client.name}
+                              {selectedClientFilter === client.id && <Check className="w-5 h-5 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex items-center gap-3">
+                    {isOrgAdmin && hiddenClientArticles.length > 0 && (
+                      <Button
+                        variant={showHiddenClient ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setShowHiddenClient(!showHiddenClient);
+                          if (!showHiddenClient) fetchHiddenClientArticles();
+                        }}
+                        className="gap-2"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Masqués ({hiddenClientArticles.length})
+                      </Button>
+                    )}
+                    {isOrgAdmin && hiddenClientArticles.length === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fetchHiddenClientArticles()}
+                        className="gap-2 text-muted-foreground"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Voir masqués
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" onClick={() => setShowClientManager(true)} className="gap-2">
                       <Briefcase className="w-4 h-4" />
                       Clients
@@ -2254,59 +2336,135 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {clientArticles.length} article{clientArticles.length !== 1 ? "s" : ""}
+                      {(selectedClientFilter ? clientArticles.filter(a => a.client_id === selectedClientFilter) : clientArticles).length} article{(selectedClientFilter ? clientArticles.filter(a => a.client_id === selectedClientFilter) : clientArticles).length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
 
-                {clientArticles.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {clientArticles.map((article) => (
-                      <div
-                        key={article.id}
-                        className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
-                        onClick={() => window.open(article.link, "_blank")}
-                      >
-                        <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
-                          {article.thumbnail ? (
-                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
-                              <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
-                            </div>
-                          )}
+                {showHiddenClient && hiddenClientArticles.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {hiddenClientArticles.length} article{hiddenClientArticles.length !== 1 ? "s" : ""} masqué{hiddenClientArticles.length !== 1 ? "s" : ""}
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHiddenClient(false)}>
+                        Fermer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                      {hiddenClientArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                        >
+                          <button
+                            onClick={(e) => handleRestoreClientArticle(article.id, e)}
+                            className="absolute top-2 right-12 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                            title="Restaurer l'article"
+                          >
+                            <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const { error } = await supabase.from("client_articles").delete().eq("id", article.id);
+                              if (error) {
+                                toast({ title: "Échec de la suppression", variant: "destructive" });
+                              } else {
+                                toast({ title: "Article supprimé définitivement" });
+                                fetchHiddenClientArticles();
+                              }
+                            }}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-destructive/90 hover:bg-destructive flex items-center justify-center transition-all shadow-sm"
+                            title="Supprimer définitivement"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                          </button>
+                          <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                            {article.thumbnail ? (
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                            {article.article_date && (
+                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
-                          <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                            {article.client_name && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
-                                <Briefcase className="w-3 h-3" />
-                                {article.client_name}
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(() => {
+                  const filteredClientArticles = selectedClientFilter 
+                    ? clientArticles.filter(a => a.client_id === selectedClientFilter) 
+                    : clientArticles;
+                  
+                  return filteredClientArticles.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      {filteredClientArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
+                          onClick={() => window.open(article.link, "_blank")}
+                        >
+                          {isOrgAdmin && (
+                            <button
+                              onClick={(e) => handleHideClientArticle(article.id, e)}
+                              className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                              title="Masquer l'article"
+                            >
+                              <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                            </button>
+                          )}
+                          <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
+                            {article.thumbnail ? (
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
+                            <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                              {article.client_name && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
+                                  <Briefcase className="w-3 h-3" />
+                                  {article.client_name}
+                                </span>
+                              )}
+                            </div>
+                            {article.article_date && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
+                                <Calendar className="w-3 h-3" />
+                                {formatDate(article.article_date)}
                               </span>
                             )}
                           </div>
-                          {article.article_date && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium mt-1.5">
-                              <Calendar className="w-3 h-3" />
-                              {formatDate(article.article_date)}
-                            </span>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
-                      <Briefcase className="w-10 h-10 text-primary-foreground" />
+                      ))}
                     </div>
-                    <h4 className="text-2xl font-bold text-foreground">Retombées clients</h4>
-                    <p className="text-muted-foreground mt-2 text-center max-w-md">
-                      Ajoutez des clients et leurs articles pour suivre leurs retombées presse.
-                    </p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl border border-primary/20">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-6 shadow-lg shadow-primary/25">
+                        <Briefcase className="w-10 h-10 text-primary-foreground" />
+                      </div>
+                      <h4 className="text-2xl font-bold text-foreground">Retombées clients</h4>
+                      <p className="text-muted-foreground mt-2 text-center max-w-md">
+                        Ajoutez des clients et leurs articles pour suivre leurs retombées presse.
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
