@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.fetch-organization-articles]
 verify_jwt = false
+
+[functions.get-team-marche-selections]
+verify_jwt = false

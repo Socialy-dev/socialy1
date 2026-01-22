@@ -190,40 +190,19 @@ export const MarchePublicView = () => {
       const mySelections = allSelections.filter(s => s.user_id === user.id);
       setSelections(mySelections);
       
-      const otherSelections = allSelections.filter(s => s.user_id !== user.id && s.status === "selected");
+      const otherSelectionsLocal = allSelections.filter(s => s.user_id !== user.id && s.status === "selected");
       
-      if (otherSelections.length > 0) {
-        const userIds = [...new Set(otherSelections.map(s => s.user_id))];
-        
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("user_id, first_name, last_name")
-          .in("user_id", userIds);
-        
-        const profileMap = new Map<string, { name: string; initials: string }>();
-        (profiles || []).forEach(p => {
-          const userId = String(p.user_id);
-          const firstName = p.first_name || "";
-          const lastName = p.last_name || "";
-          const fullName = [firstName, lastName].filter(Boolean).join(" ");
-          const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "U";
-          profileMap.set(userId, { 
-            name: fullName || "Utilisateur",
-            initials: initials
-          });
+      if (otherSelectionsLocal.length > 0) {
+        const { data: teamData, error: teamError } = await supabase.functions.invoke("get-team-marche-selections", {
+          body: { organization_id: effectiveOrgId }
         });
         
-        const teamData: TeamSelection[] = otherSelections.map(s => {
-          const userId = String(s.user_id);
-          const profile = profileMap.get(userId);
-          return {
-            ...s,
-            user_name: profile?.name || "Utilisateur",
-            user_initials: profile?.initials || "U"
-          };
-        });
-        
-        setTeamSelections(teamData);
+        if (teamError) {
+          console.error("Error fetching team selections:", teamError);
+          setTeamSelections([]);
+        } else {
+          setTeamSelections(teamData?.teamSelections || []);
+        }
       } else {
         setTeamSelections([]);
       }
