@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
-import { Search, Bell, ChevronDown, LogOut, User, Settings, Shield, Plus } from "lucide-react";
+import { Bell, ChevronDown, LogOut, User, Settings, Shield, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import { ClientSelector } from "./ClientSelector";
 
 interface HeaderProps {
   title?: string;
@@ -62,7 +63,6 @@ export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="flex items-center justify-between h-16 px-6">
-        {/* Left Section - Title */}
         {showTitle ? (
           <div className="flex items-center gap-4">
             <div>
@@ -74,17 +74,8 @@ export const Header = ({ title = "Dashboard", showTitle = true, sidebarCollapsed
           <div />
         )}
 
-        {/* Right Section - Actions */}
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="w-64 h-10 pl-10 pr-4 rounded-xl bg-secondary/50 border border-border/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
-            />
-          </div>
+        <div className="flex items-center gap-3">
+          <ClientSelector />
 
           {/* Add Button */}
           <button className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
