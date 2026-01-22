@@ -194,10 +194,14 @@ export const MarchePublicView = () => {
       
       if (otherSelections.length > 0) {
         const userIds = [...new Set(otherSelections.map(s => s.user_id))];
-        const { data: profiles } = await supabase
+        console.log("Fetching profiles for userIds:", userIds);
+        
+        const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("user_id, first_name, last_name")
           .in("user_id", userIds);
+        
+        console.log("Profiles response:", profiles, "Error:", profileError);
         
         const profileMap = new Map<string, { name: string; initials: string }>();
         (profiles || []).forEach(p => {
@@ -206,6 +210,7 @@ export const MarchePublicView = () => {
           const lastName = p.last_name || "";
           const fullName = [firstName, lastName].filter(Boolean).join(" ");
           const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "U";
+          console.log("Adding to profileMap:", userId, "=>", fullName);
           profileMap.set(userId, { 
             name: fullName || "Utilisateur",
             initials: initials
@@ -215,6 +220,7 @@ export const MarchePublicView = () => {
         const teamData: TeamSelection[] = otherSelections.map(s => {
           const userId = String(s.user_id);
           const profile = profileMap.get(userId);
+          console.log("Looking up userId:", userId, "Found:", profile);
           return {
             ...s,
             user_name: profile?.name || "Utilisateur",
