@@ -199,21 +199,28 @@ export const MarchePublicView = () => {
           .select("user_id, first_name, last_name")
           .in("user_id", userIds);
         
-        const profileMap = new Map(
-          (profiles || []).map(p => [
-            p.user_id, 
-            { 
-              name: [p.first_name, p.last_name].filter(Boolean).join(" ") || "Utilisateur",
-              initials: ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "U"
-            }
-          ])
-        );
+        const profileMap = new Map<string, { name: string; initials: string }>();
+        (profiles || []).forEach(p => {
+          const userId = String(p.user_id);
+          const firstName = p.first_name || "";
+          const lastName = p.last_name || "";
+          const fullName = [firstName, lastName].filter(Boolean).join(" ");
+          const initials = ((firstName[0] || "") + (lastName[0] || "")).toUpperCase() || "U";
+          profileMap.set(userId, { 
+            name: fullName || "Utilisateur",
+            initials: initials
+          });
+        });
         
-        const teamData: TeamSelection[] = otherSelections.map(s => ({
-          ...s,
-          user_name: profileMap.get(s.user_id)?.name || "Utilisateur",
-          user_initials: profileMap.get(s.user_id)?.initials || "U"
-        }));
+        const teamData: TeamSelection[] = otherSelections.map(s => {
+          const userId = String(s.user_id);
+          const profile = profileMap.get(userId);
+          return {
+            ...s,
+            user_name: profile?.name || "Utilisateur",
+            user_initials: profile?.initials || "U"
+          };
+        });
         
         setTeamSelections(teamData);
       } else {
