@@ -13,8 +13,8 @@ import {
   TrendingUp,
   Check,
   Star,
-  Trash2,
-  X
+  X,
+  Users
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface MarchePublic {
   id: string;
@@ -41,8 +42,18 @@ interface MarchePublic {
 
 interface UserSelection {
   id: string;
+  user_id: string;
   marche_public_id: string;
   status: string;
+}
+
+interface TeamSelection {
+  id: string;
+  user_id: string;
+  marche_public_id: string;
+  status: string;
+  user_name: string;
+  user_initials: string;
 }
 
 const formatDate = (dateString: string | null) => {
@@ -95,10 +106,11 @@ export const MarchePublicView = () => {
   const { effectiveOrgId, user } = useAuth();
   const [marches, setMarches] = useState<MarchePublic[]>([]);
   const [selections, setSelections] = useState<UserSelection[]>([]);
+  const [teamSelections, setTeamSelections] = useState<TeamSelection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"all" | "selected" | "dismissed">("all");
+  const [viewMode, setViewMode] = useState<"all" | "selected" | "team" | "dismissed">("all");
   const [lastVisitAt, setLastVisitAt] = useState<Date | null>(null);
   const [newMarchesCount, setNewMarchesCount] = useState(0);
 
@@ -168,12 +180,45 @@ export const MarchePublicView = () => {
     try {
       const { data, error } = await supabase
         .from("user_marche_selections" as any)
-        .select("id, marche_public_id, status")
-        .eq("user_id", user.id)
+        .select("id, user_id, marche_public_id, status")
         .eq("organization_id", effectiveOrgId);
 
       if (error) throw error;
-      setSelections((data || []) as unknown as UserSelection[]);
+      
+      const allSelections = (data || []) as unknown as UserSelection[];
+      
+      const mySelections = allSelections.filter(s => s.user_id === user.id);
+      setSelections(mySelections);
+      
+      const otherSelections = allSelections.filter(s => s.user_id !== user.id && s.status === "selected");
+      
+      if (otherSelections.length > 0) {
+        const userIds = [...new Set(otherSelections.map(s => s.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, first_name, last_name")
+          .in("user_id", userIds);
+        
+        const profileMap = new Map(
+          (profiles || []).map(p => [
+            p.user_id, 
+            { 
+              name: [p.first_name, p.last_name].filter(Boolean).join(" ") || "Utilisateur",
+              initials: ((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "U"
+            }
+          ])
+        );
+        
+        const teamData: TeamSelection[] = otherSelections.map(s => ({
+          ...s,
+          user_name: profileMap.get(s.user_id)?.name || "Utilisateur",
+          user_initials: profileMap.get(s.user_id)?.initials || "U"
+        }));
+        
+        setTeamSelections(teamData);
+      } else {
+        setTeamSelections([]);
+      }
     } catch (error) {
       console.error("Error fetching selections:", error);
     }
@@ -216,7 +261,7 @@ export const MarchePublicView = () => {
           
           if (error) throw error;
           setSelections(prev => prev.filter(s => s.id !== existingSelection.id));
-          toast.success("Marché retiré de votre sélection");
+          toast.success("Marché retiré de vos favoris");
         } else {
           const { error } = await supabase
             .from("user_marche_selections" as any)
@@ -227,7 +272,7 @@ export const MarchePublicView = () => {
           setSelections(prev => prev.map(s => 
             s.id === existingSelection.id ? { ...s, status: "selected" } : s
           ));
-          toast.success("Marché ajouté à votre sélection");
+          toast.success("Marché ajouté à vos favoris");
         }
       } else {
         const { data, error } = await supabase
@@ -242,8 +287,9 @@ export const MarchePublicView = () => {
           .single();
         
         if (error) throw error;
-        setSelections(prev => [...prev, data as unknown as UserSelection]);
-        toast.success("Marché ajouté à votre sélection");
+        const newSelection = data as unknown as UserSelection;
+        setSelections(prev => [...prev, { ...newSelection, user_id: user.id }]);
+        toast.success("Marché ajouté à vos favoris");
       }
     } catch (error) {
       console.error("Error toggling selection:", error);
@@ -280,7 +326,8 @@ export const MarchePublicView = () => {
           .single();
         
         if (error) throw error;
-        setSelections(prev => [...prev, data as unknown as UserSelection]);
+        const newSelection = data as unknown as UserSelection;
+        setSelections(prev => [...prev, { ...newSelection, user_id: user.id }]);
       }
       toast.success("Marché masqué");
     } catch (error) {
@@ -294,9 +341,15 @@ export const MarchePublicView = () => {
     return selection?.status || null;
   };
 
+  const getTeamMembersForMarche = (marcheId: string): TeamSelection[] => {
+    return teamSelections.filter(s => s.marche_public_id === marcheId);
+  };
+
   const sources = [...new Set(marches.map(m => m.source).filter(Boolean))];
 
-  const selectedCount = selections.filter(s => s.status === "selected").length;
+  const myFavoritesCount = selections.filter(s => s.status === "selected").length;
+  const teamFavoritesCount = [...new Set(teamSelections.map(s => s.marche_public_id))].length;
+  const teamMembersCount = [...new Set(teamSelections.map(s => s.user_id))].length;
 
   const filteredMarches = marches.filter(m => {
     const matchesSearch = !searchQuery || 
@@ -305,8 +358,12 @@ export const MarchePublicView = () => {
     const matchesSource = !sourceFilter || m.source === sourceFilter;
     
     const status = getSelectionStatus(m.id);
+    const hasTeamSelection = teamSelections.some(ts => ts.marche_public_id === m.id);
+    
     if (viewMode === "selected") {
       return matchesSearch && status === "selected";
+    } else if (viewMode === "team") {
+      return matchesSearch && hasTeamSelection;
     } else if (viewMode === "dismissed") {
       return matchesSearch && status === "dismissed";
     } else {
@@ -330,7 +387,7 @@ export const MarchePublicView = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
@@ -365,13 +422,43 @@ export const MarchePublicView = () => {
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
               <Star className="w-5 h-5 text-amber-600" />
             </div>
-            <span className="text-sm text-muted-foreground">Mes sélections</span>
+            <span className="text-sm text-muted-foreground">Mes favoris</span>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-3xl font-bold text-foreground">{selectedCount}</p>
-            {selectedCount > 0 && (
+            <p className="text-3xl font-bold text-foreground">{myFavoritesCount}</p>
+            {myFavoritesCount > 0 && (
               <Badge className="bg-amber-500 text-white border-0">
                 {viewMode === "selected" ? "Voir tout" : "Voir"}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div 
+          className={cn(
+            "rounded-2xl p-5 border cursor-pointer transition-all duration-300",
+            viewMode === "team"
+              ? "bg-gradient-to-br from-violet-500/20 to-violet-500/10 border-violet-500/40 ring-2 ring-violet-500/30"
+              : "bg-gradient-to-br from-violet-500/10 to-violet-500/5 border-violet-500/20 hover:border-violet-500/40"
+          )}
+          onClick={() => setViewMode(viewMode === "team" ? "all" : "team")}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-violet-600" />
+            </div>
+            <span className="text-sm text-muted-foreground">Favoris équipe</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-foreground">{teamFavoritesCount}</p>
+              {teamMembersCount > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">par {teamMembersCount} membre{teamMembersCount > 1 ? "s" : ""}</p>
+              )}
+            </div>
+            {teamFavoritesCount > 0 && (
+              <Badge className="bg-violet-500 text-white border-0">
+                {viewMode === "team" ? "Voir tout" : "Voir"}
               </Badge>
             )}
           </div>
@@ -408,7 +495,19 @@ export const MarchePublicView = () => {
             )}
           >
             <Star className="w-3 h-3" />
-            Sélectionnés ({selectedCount})
+            Favoris ({myFavoritesCount})
+          </Button>
+          <Button
+            variant={viewMode === "team" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("team")}
+            className={cn(
+              "rounded-full gap-1",
+              viewMode === "team" && "bg-violet-500 hover:bg-violet-600"
+            )}
+          >
+            <Users className="w-3 h-3" />
+            Équipe ({teamFavoritesCount})
           </Button>
           <Button
             variant={viewMode === "dismissed" ? "default" : "outline"}
@@ -446,17 +545,21 @@ export const MarchePublicView = () => {
           <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground font-medium">
             {viewMode === "selected" 
-              ? "Aucun marché sélectionné" 
-              : viewMode === "dismissed"
-                ? "Aucun marché masqué"
-                : "Aucun marché public trouvé"}
+              ? "Aucun marché en favoris" 
+              : viewMode === "team"
+                ? "Aucun favori d'équipe"
+                : viewMode === "dismissed"
+                  ? "Aucun marché masqué"
+                  : "Aucun marché public trouvé"}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-1">
             {viewMode === "selected" 
-              ? "Cliquez sur l'étoile pour sélectionner des marchés" 
-              : viewMode === "dismissed"
-                ? "Les marchés masqués apparaîtront ici"
-                : "Les opportunités apparaîtront ici automatiquement"}
+              ? "Cliquez sur l'étoile pour ajouter des marchés en favoris" 
+              : viewMode === "team"
+                ? "Les marchés sélectionnés par votre équipe apparaîtront ici"
+                : viewMode === "dismissed"
+                  ? "Les marchés masqués apparaîtront ici"
+                  : "Les opportunités apparaîtront ici automatiquement"}
           </p>
         </div>
       ) : (
@@ -464,6 +567,7 @@ export const MarchePublicView = () => {
           {filteredMarches.map((marche) => {
             const status = getSelectionStatus(marche.id);
             const isSelected = status === "selected";
+            const teamMembers = getTeamMembersForMarche(marche.id);
             
             return (
               <div
@@ -472,7 +576,9 @@ export const MarchePublicView = () => {
                   "group relative bg-card rounded-3xl border p-6 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5",
                   isSelected 
                     ? "border-amber-500/50 ring-2 ring-amber-500/20" 
-                    : "border-border hover:border-primary/30",
+                    : teamMembers.length > 0
+                      ? "border-violet-500/30"
+                      : "border-border hover:border-primary/30",
                   isDeadlinePassed(marche.deadline) && "opacity-60"
                 )}
               >
@@ -531,6 +637,27 @@ export const MarchePublicView = () => {
                     </div>
                   </div>
                 </div>
+
+                {teamMembers.length > 0 && (
+                  <div className="mb-4 p-3 bg-violet-500/5 rounded-xl border border-violet-500/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-4 h-4 text-violet-600" />
+                      <span className="text-xs font-medium text-violet-600">Sélectionné par l'équipe</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {teamMembers.map((member) => (
+                        <div key={member.id} className="flex items-center gap-1.5 bg-violet-500/10 rounded-full px-2 py-1">
+                          <Avatar className="w-5 h-5">
+                            <AvatarFallback className="text-[10px] bg-violet-500 text-white">
+                              {member.user_initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-violet-700 dark:text-violet-300">{member.user_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   {marche.acheteur && (

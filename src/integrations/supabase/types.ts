@@ -2883,6 +2883,10 @@ export type Database = {
         Args: { check_org_id: string; check_user_id: string }
         Returns: Database["public"]["Enums"]["org_role"]
       }
+      get_user_organization_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       has_page_access: {
         Args: {
           _page: Database["public"]["Enums"]["app_page"]
