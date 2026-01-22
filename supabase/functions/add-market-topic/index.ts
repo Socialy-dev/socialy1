@@ -65,8 +65,8 @@ serve(async (req) => {
       .from("market_watch_topics")
       .upsert({
         organization_id,
-        name: topic_name.trim(),
-        link: topic_link?.trim() || null,
+        title: topic_name.trim(),
+        link: topic_link?.trim() || `https://veille-${Date.now()}`,
         created_by: user.id,
         status: "pending",
       }, {
