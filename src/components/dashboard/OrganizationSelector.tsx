@@ -13,9 +13,10 @@ import {
 
 interface OrganizationSelectorProps {
   collapsed: boolean;
+  onDropdownOpenChange?: (isOpen: boolean) => void;
 }
 
-export const OrganizationSelector = ({ collapsed }: OrganizationSelectorProps) => {
+export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: OrganizationSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { 
     currentOrganization, 
@@ -49,9 +50,11 @@ export const OrganizationSelector = ({ collapsed }: OrganizationSelectorProps) =
   const handleOpenChange = (open: boolean) => {
     if (collapsed) {
       setIsOpen(false);
+      onDropdownOpenChange?.(false);
       return;
     }
     setIsOpen(open);
+    onDropdownOpenChange?.(open);
   };
 
   return (

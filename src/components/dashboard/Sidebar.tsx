@@ -90,6 +90,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const navigate = useNavigate();
   const currentPath = location.pathname + location.search;
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
 
   const handleMouseEnter = () => {
     if (collapsed) {
@@ -98,7 +99,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   };
 
   const handleMouseLeave = () => {
-    if (!collapsed) {
+    if (!collapsed && !isOrgDropdownOpen) {
       onToggle();
       setExpandedItems([]);
     }
@@ -150,7 +151,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         "flex flex-col border-b border-white/5",
         collapsed ? "px-2 py-4" : "px-3 py-4"
       )}>
-        <OrganizationSelector collapsed={collapsed} />
+        <OrganizationSelector collapsed={collapsed} onDropdownOpenChange={setIsOrgDropdownOpen} />
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
