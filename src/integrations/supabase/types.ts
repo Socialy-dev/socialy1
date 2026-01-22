@@ -648,6 +648,7 @@ export type Database = {
           link: string
           organization_id: string
           position: number | null
+          search_topic: string | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
@@ -668,6 +669,7 @@ export type Database = {
           link: string
           organization_id: string
           position?: number | null
+          search_topic?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
@@ -688,6 +690,7 @@ export type Database = {
           link?: string
           organization_id?: string
           position?: number | null
+          search_topic?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null

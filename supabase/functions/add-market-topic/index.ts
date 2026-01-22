@@ -66,6 +66,7 @@ serve(async (req) => {
       .upsert({
         organization_id,
         title: topic_name.trim(),
+        search_topic: topic_name.trim(),
         link: topic_link?.trim() || `https://veille-${Date.now()}`,
         created_by: user.id,
         status: "pending",

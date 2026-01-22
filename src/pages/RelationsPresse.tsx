@@ -76,6 +76,7 @@ interface OrganizationArticle {
   article_date: string | null;
   snippet: string | null;
   hidden?: boolean;
+  search_topic?: string | null;
 }
 
 interface ClientArticle {
@@ -667,7 +668,7 @@ const RelationsPresse = () => {
     }
   };
 
-  const uniqueVeilleSources = [...new Set(veilleArticles.map(a => a.source_name).filter(Boolean))] as string[];
+  const uniqueVeilleTopics = [...new Set(veilleArticles.map(a => a.search_topic).filter(Boolean))] as string[];
 
   const handleHideOrganizationArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -2479,7 +2480,7 @@ const RelationsPresse = () => {
                     >
                       <Filter className="w-4 h-4 text-primary" />
                       <span className="text-sm font-semibold text-foreground">
-                        {selectedVeilleSource || "Toutes les sources"}
+                        {selectedVeilleSource || "Tous les sujets"}
                       </span>
                       <ChevronDown
                         className={cn(
@@ -2503,29 +2504,29 @@ const RelationsPresse = () => {
                             )}
                           >
                             <Eye className="w-5 h-5" />
-                            Toutes les sources
+                            Tous les sujets
                             {!selectedVeilleSource && <Check className="w-5 h-5 ml-auto" />}
                           </button>
 
-                          {uniqueVeilleSources.length > 0 && <div className="border-t border-border my-2" />}
+                          {uniqueVeilleTopics.length > 0 && <div className="border-t border-border my-2" />}
 
-                          {uniqueVeilleSources.map((source) => (
+                          {uniqueVeilleTopics.map((topic) => (
                             <button
-                              key={source}
+                              key={topic}
                               onClick={() => {
-                                setSelectedVeilleSource(source);
+                                setSelectedVeilleSource(topic);
                                 setShowVeilleDropdown(false);
                               }}
                               className={cn(
                                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                                selectedVeilleSource === source
+                                selectedVeilleSource === topic
                                   ? "bg-primary/10 text-primary"
                                   : "text-foreground hover:bg-secondary",
                               )}
                             >
-                              <Newspaper className="w-5 h-5" />
-                              {source}
-                              {selectedVeilleSource === source && <Check className="w-5 h-5 ml-auto" />}
+                              <Eye className="w-5 h-5" />
+                              {topic}
+                              {selectedVeilleSource === topic && <Check className="w-5 h-5 ml-auto" />}
                             </button>
                           ))}
                         </div>
@@ -2567,7 +2568,7 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length} article{(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length !== 1 ? "s" : ""}
+                      {(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length} article{(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -3362,7 +3363,7 @@ const RelationsPresse = () => {
                 </div>
               </div>
               <div className="p-8 space-y-6">
-                {uniqueVeilleSources.length === 0 ? (
+                {uniqueVeilleTopics.length === 0 ? (
                   <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
                     <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
                       <Eye className="w-8 h-8 text-muted-foreground/50" />
@@ -3372,16 +3373,16 @@ const RelationsPresse = () => {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {uniqueVeilleSources.map((source) => {
-                      const count = veilleArticles.filter(a => a.source_name === source).length;
+                    {uniqueVeilleTopics.map((topic) => {
+                      const count = veilleArticles.filter(a => a.search_topic === topic).length;
                       return (
-                        <div key={source} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
+                        <div key={topic} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                              <Newspaper className="w-6 h-6 text-emerald-600" />
+                              <Eye className="w-6 h-6 text-emerald-600" />
                             </div>
                             <div>
-                              <p className="font-semibold text-foreground text-base">{source}</p>
+                              <p className="font-semibold text-foreground text-base">{topic}</p>
                               <p className="text-sm text-muted-foreground">{count} article{count !== 1 ? "s" : ""}</p>
                             </div>
                           </div>
