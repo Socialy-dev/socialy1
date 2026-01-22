@@ -573,6 +573,15 @@ const RelationsPresse = () => {
   const [veilleArticles, setVeilleArticles] = useState<OrganizationArticle[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [isLoadingVeille, setIsLoadingVeille] = useState(false);
+  const [showHiddenClient, setShowHiddenClient] = useState(false);
+  const [hiddenClientArticles, setHiddenClientArticles] = useState<ClientArticle[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [selectedClientFilter, setSelectedClientFilter] = useState<string | null>(null);
+  const [showHiddenVeille, setShowHiddenVeille] = useState(false);
+  const [hiddenVeilleArticles, setHiddenVeilleArticles] = useState<OrganizationArticle[]>([]);
+  const [showVeilleDropdown, setShowVeilleDropdown] = useState(false);
+  const [selectedVeilleSource, setSelectedVeilleSource] = useState<string | null>(null);
+  const [showVeilleManager, setShowVeilleManager] = useState(false);
 
   const fetchHiddenOrganizationArticles = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -589,6 +598,76 @@ const RelationsPresse = () => {
       if (data) setHiddenCompetitorArticles(data.filter(a => a.title && a.title.trim() !== ""));
     }
   };
+
+  const fetchHiddenClientArticles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && isOrgAdmin && effectiveOrgId) {
+      const { data } = await supabase.from("client_articles").select("*").eq("hidden", true).eq("organization_id", effectiveOrgId).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      if (data) setHiddenClientArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
+    }
+  };
+
+  const fetchHiddenVeilleArticles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && isOrgAdmin && effectiveOrgId) {
+      const { data } = await supabase.from("market_watch_topics").select("*").eq("hidden", true).eq("organization_id", effectiveOrgId).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      if (data) setHiddenVeilleArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
+    }
+  };
+
+  const handleHideClientArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("client_articles").update({ hidden: true }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
+      fetchClientArticles();
+      fetchHiddenClientArticles();
+    }
+  };
+
+  const handleRestoreClientArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("client_articles").update({ hidden: false }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
+      fetchClientArticles();
+      fetchHiddenClientArticles();
+    }
+  };
+
+  const handleHideVeilleArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("market_watch_topics").update({ hidden: true }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
+      fetchVeilleArticles();
+      fetchHiddenVeilleArticles();
+    }
+  };
+
+  const handleRestoreVeilleArticle = async (articleId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { error } = await supabase.from("market_watch_topics").update({ hidden: false }).eq("id", articleId);
+    if (error) {
+      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+    } else {
+      toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
+      fetchVeilleArticles();
+      fetchHiddenVeilleArticles();
+    }
+  };
+
+  const uniqueVeilleSources = [...new Set(veilleArticles.map(a => a.source_name).filter(Boolean))] as string[];
 
   const handleHideOrganizationArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -2235,20 +2314,167 @@ const RelationsPresse = () => {
             {activeSubTab === "veille-marche" && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-medium text-foreground flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-primary" />
-                    Veille Marché
-                  </p>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowVeilleDropdown(!showVeilleDropdown)}
+                      className="flex items-center gap-3 px-5 py-3 bg-secondary/60 border border-border rounded-xl hover:border-primary/40 transition-all duration-200 shadow-sm"
+                    >
+                      <Filter className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">
+                        {selectedVeilleSource || "Toutes les sources"}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "w-4 h-4 text-muted-foreground transition-transform duration-200",
+                          showVeilleDropdown && "rotate-180",
+                        )}
+                      />
+                    </button>
+
+                    {showVeilleDropdown && (
+                      <div className="absolute top-full left-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 max-h-80 overflow-y-auto">
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              setSelectedVeilleSource(null);
+                              setShowVeilleDropdown(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                              !selectedVeilleSource ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                            )}
+                          >
+                            <Eye className="w-5 h-5" />
+                            Toutes les sources
+                            {!selectedVeilleSource && <Check className="w-5 h-5 ml-auto" />}
+                          </button>
+
+                          {uniqueVeilleSources.length > 0 && <div className="border-t border-border my-2" />}
+
+                          {uniqueVeilleSources.map((source) => (
+                            <button
+                              key={source}
+                              onClick={() => {
+                                setSelectedVeilleSource(source);
+                                setShowVeilleDropdown(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                selectedVeilleSource === source
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-foreground hover:bg-secondary",
+                              )}
+                            >
+                              <Newspaper className="w-5 h-5" />
+                              {source}
+                              {selectedVeilleSource === source && <Check className="w-5 h-5 ml-auto" />}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3">
+                    {isOrgAdmin && hiddenVeilleArticles.length > 0 && (
+                      <Button
+                        variant={showHiddenVeille ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setShowHiddenVeille(!showHiddenVeille);
+                          if (!showHiddenVeille) fetchHiddenVeilleArticles();
+                        }}
+                        className="gap-2"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Masqués ({hiddenVeilleArticles.length})
+                      </Button>
+                    )}
+                    {isOrgAdmin && hiddenVeilleArticles.length === 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => fetchHiddenVeilleArticles()}
+                        className="gap-2 text-muted-foreground"
+                      >
+                        <EyeOff className="w-4 h-4" />
+                        Voir masqués
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => setShowVeilleManager(true)} className="gap-2">
+                      <Eye className="w-4 h-4" />
+                      Sujets
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => setShowAddVeilleModal(true)} className="gap-2">
                       <Plus className="w-4 h-4" />
-                      Ajouter un sujet
+                      Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {veilleArticles.length} article{veilleArticles.length !== 1 ? "s" : ""}
+                      {(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length} article{(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
+
+                {showHiddenVeille && isOrgAdmin && hiddenVeilleArticles.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <EyeOff className="w-4 h-4" />
+                        Articles masqués
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => setShowHiddenVeille(false)}>
+                        Fermer
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                      {hiddenVeilleArticles.map((article) => (
+                        <div
+                          key={article.id}
+                          className="group relative flex gap-4 p-4 bg-secondary/40 rounded-2xl opacity-60 hover:opacity-100 transition-all"
+                        >
+                          <button
+                            onClick={(e) => handleRestoreVeilleArticle(article.id, e)}
+                            className="absolute top-2 right-10 z-10 w-8 h-8 rounded-full bg-primary/90 hover:bg-primary flex items-center justify-center transition-all shadow-sm"
+                            title="Restaurer l'article"
+                          >
+                            <RotateCcw className="w-4 h-4 text-primary-foreground" />
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const { error } = await supabase.from("market_watch_topics").delete().eq("id", article.id);
+                              if (error) {
+                                toast({ title: "Échec de la suppression", description: "Impossible de supprimer cet article.", variant: "destructive" });
+                              } else {
+                                toast({ title: "Article supprimé", description: "L'article a été définitivement supprimé" });
+                                fetchHiddenVeilleArticles();
+                              }
+                            }}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-destructive/90 hover:bg-destructive flex items-center justify-center transition-all shadow-sm"
+                            title="Supprimer définitivement"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive-foreground" />
+                          </button>
+                          <div className="relative w-20 h-16 rounded-lg bg-secondary overflow-hidden flex-shrink-0">
+                            {article.thumbnail ? (
+                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
+                                <ImageIcon className="w-6 h-6 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
+                            {article.article_date && (
+                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {isLoadingVeille ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -2262,14 +2488,23 @@ const RelationsPresse = () => {
                       </div>
                     ))}
                   </div>
-                ) : veilleArticles.length > 0 ? (
+                ) : (selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {veilleArticles.map((article) => (
+                    {(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).map((article) => (
                       <div
                         key={article.id}
                         className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
                         onClick={() => window.open(article.link, "_blank")}
                       >
+                        {isOrgAdmin && (
+                          <button
+                            onClick={(e) => handleHideVeilleArticle(article.id, e)}
+                            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-background/90 hover:bg-destructive/10 border border-border hover:border-destructive/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                            title="Masquer l'article"
+                          >
+                            <EyeOff className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        )}
                         <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                           {article.thumbnail ? (
                             <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -2944,6 +3179,65 @@ const RelationsPresse = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showVeilleManager && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card rounded-3xl w-full max-w-2xl border border-border shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                      <Eye className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">Sujets de veille</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">Vos sources de veille marché actives</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => setShowVeilleManager(false)}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+              <div className="p-8 space-y-6">
+                {uniqueVeilleSources.length === 0 ? (
+                  <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-dashed border-border">
+                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                      <Eye className="w-8 h-8 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-base font-medium text-muted-foreground">Aucun sujet de veille</p>
+                    <p className="text-sm text-muted-foreground mt-1">Ajoutez votre premier sujet de veille</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {uniqueVeilleSources.map((source) => {
+                      const count = veilleArticles.filter(a => a.source_name === source).length;
+                      return (
+                        <div key={source} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                              <Newspaper className="w-6 h-6 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground text-base">{source}</p>
+                              <p className="text-sm text-muted-foreground">{count} article{count !== 1 ? "s" : ""}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex justify-end pt-4">
+                  <Button variant="outline" size="lg" onClick={() => { setShowVeilleManager(false); setShowAddVeilleModal(true); }} className="gap-2">
+                    <Plus className="w-5 h-5" />
+                    Ajouter un sujet
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
