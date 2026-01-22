@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
+import { OrganizationSelector } from "./OrganizationSelector";
 
 interface SubMenuItem {
   icon: React.ElementType;
@@ -146,19 +147,10 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       }}
     >
       <div className={cn(
-        "flex px-4 border-b border-white/5 h-20 items-center",
-        collapsed ? "justify-center" : "justify-start gap-3"
+        "flex flex-col border-b border-white/5",
+        collapsed ? "px-2 py-4" : "px-3 py-4"
       )}>
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary/30 flex-shrink-0">
-          <span className="text-white font-bold text-lg">S</span>
-        </div>
-        <span className={cn(
-          "text-white font-bold text-xl tracking-tight whitespace-nowrap",
-          "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          collapsed ? "hidden" : "opacity-100"
-        )}>
-          Socialy
-        </span>
+        <OrganizationSelector collapsed={collapsed} />
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
