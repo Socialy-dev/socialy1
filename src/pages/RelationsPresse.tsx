@@ -375,11 +375,12 @@ const RelationsPresse = () => {
         .eq("hidden", false)
         .not("title", "is", null)
         .neq("title", "")
+        .not("source_name", "is", null)
         .eq("organization_id", effectiveOrgId)
         .order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setVeilleArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
+        setVeilleArticles(data.filter((a: any) => a.title && a.title.trim() !== "" && a.source_name));
       }
     }
     setIsLoadingVeille(false);
@@ -2518,15 +2519,15 @@ const RelationsPresse = () => {
                                 setShowVeilleDropdown(false);
                               }}
                               className={cn(
-                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all text-left",
                                 selectedVeilleSource === topic
                                   ? "bg-primary/10 text-primary"
                                   : "text-foreground hover:bg-secondary",
                               )}
                             >
-                              <Eye className="w-5 h-5" />
-                              {topic}
-                              {selectedVeilleSource === topic && <Check className="w-5 h-5 ml-auto" />}
+                              <Eye className="w-5 h-5 flex-shrink-0" />
+                              <span className="flex-1 text-left">{topic}</span>
+                              {selectedVeilleSource === topic && <Check className="w-5 h-5 flex-shrink-0" />}
                             </button>
                           ))}
                         </div>
@@ -2647,9 +2648,9 @@ const RelationsPresse = () => {
                       </div>
                     ))}
                   </div>
-                ) : (selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).length > 0 ? (
+                ) : (selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {(selectedVeilleSource ? veilleArticles.filter(a => a.source_name === selectedVeilleSource) : veilleArticles).map((article) => (
+                    {(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).map((article) => (
                       <div
                         key={article.id}
                         className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
