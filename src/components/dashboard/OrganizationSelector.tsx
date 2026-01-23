@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { ChevronDown, Check, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,9 +14,15 @@ import {
 interface OrganizationSelectorProps {
   collapsed: boolean;
   onDropdownOpenChange?: (isOpen: boolean) => void;
+  forceClose?: boolean;
 }
 
-export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: OrganizationSelectorProps) => {
+export interface OrganizationSelectorRef {
+  closeDropdown: () => void;
+}
+
+export const OrganizationSelector = forwardRef<OrganizationSelectorRef, OrganizationSelectorProps>(
+  ({ collapsed, onDropdownOpenChange, forceClose }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const { 
     currentOrganization, 
@@ -26,6 +32,20 @@ export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: Organi
     viewAsOrgId,
     setViewAsOrgId 
   } = useAuth();
+
+  useImperativeHandle(ref, () => ({
+    closeDropdown: () => {
+      setIsOpen(false);
+      onDropdownOpenChange?.(false);
+    }
+  }));
+
+  useEffect(() => {
+    if (forceClose && isOpen) {
+      setIsOpen(false);
+      onDropdownOpenChange?.(false);
+    }
+  }, [forceClose]);
 
   const orgsToShow = isSuperAdmin ? allOrganizations : [currentOrganization].filter(Boolean);
   const activeOrg = isSuperAdmin && viewAsOrgId 
@@ -45,6 +65,7 @@ export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: Organi
       switchOrganization(orgId);
     }
     setIsOpen(false);
+    onDropdownOpenChange?.(false);
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -134,4 +155,6 @@ export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: Organi
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+});
+
+OrganizationSelector.displayName = "OrganizationSelector";

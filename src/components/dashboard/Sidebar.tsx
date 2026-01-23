@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   LayoutGrid,
   HelpCircle,
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
-import { OrganizationSelector } from "./OrganizationSelector";
+import { OrganizationSelector, OrganizationSelectorRef } from "./OrganizationSelector";
 
 interface SubMenuItem {
   icon: React.ElementType;
@@ -91,6 +91,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const currentPath = location.pathname + location.search;
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isOrgDropdownOpen, setIsOrgDropdownOpen] = useState(false);
+  const orgSelectorRef = useRef<OrganizationSelectorRef>(null);
 
   const handleMouseEnter = () => {
     if (collapsed) {
@@ -100,6 +101,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   const handleMouseLeave = () => {
     if (!collapsed) {
+      orgSelectorRef.current?.closeDropdown();
       setIsOrgDropdownOpen(false);
       onToggle();
       setExpandedItems([]);
@@ -152,7 +154,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         "flex flex-col border-b border-white/5",
         collapsed ? "px-2 py-4" : "px-3 py-4"
       )}>
-        <OrganizationSelector collapsed={collapsed} onDropdownOpenChange={setIsOrgDropdownOpen} />
+        <OrganizationSelector ref={orgSelectorRef} collapsed={collapsed} onDropdownOpenChange={setIsOrgDropdownOpen} />
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
