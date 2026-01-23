@@ -35,3 +35,15 @@ verify_jwt = false
 
 [functions.get-team-marche-selections]
 verify_jwt = false
+
+[functions.gmail-auth-init]
+verify_jwt = false
+
+[functions.gmail-oauth-callback]
+verify_jwt = false
+
+[functions.gmail-refresh-token]
+verify_jwt = false
+
+[functions.gmail-read-emails]
+verify_jwt = false
