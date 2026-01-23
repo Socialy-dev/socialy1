@@ -118,9 +118,9 @@ export const OrganizationSelector = forwardRef<OrganizationSelectorRef, Organiza
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        side="bottom"
-        sideOffset={8}
-        className="w-64 bg-popover border border-border shadow-2xl rounded-xl p-1.5 z-[100]"
+        side="right"
+        sideOffset={16}
+        className="w-64 bg-popover border border-border shadow-2xl rounded-xl p-1.5 z-[200]"
       >
         <DropdownMenuLabel className="px-3 py-2 text-xs text-muted-foreground font-medium">
           {isSuperAdmin ? "Changer d'organisation" : "Vos organisations"}
