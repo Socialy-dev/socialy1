@@ -1,19 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-// Domaines autorisés pour CORS
-const getCorsHeaders = (origin: string | null) => {
-  const isAllowed = origin && (
-    origin.includes("localhost") ||
-    origin.endsWith(".lovableproject.com") ||
-    origin.endsWith(".lovable.app") ||
-    origin.includes("supabase.co")
-  );
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "https://socialy1.lovable.app",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Credentials": "true",
-  };
-};
+import { 
+  getCorsHeaders, 
+  validateAuthentication, 
+  createErrorResponse, 
+  createSuccessResponse,
+  getUserClient 
+} from "../_shared/security-helper.ts";
 
 interface CommuniquePayload {
   cpType: string;
@@ -34,6 +26,7 @@ interface CommuniquePayload {
   contactEmail: string;
   contactTelephone: string;
   infosSupplementaires?: string;
+  organization_id?: string;
 }
 
 Deno.serve(async (req) => {
@@ -46,35 +39,18 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    
+    const authResult = await validateAuthentication(authHeader);
+    if (!authResult.success) {
+      return createErrorResponse(authResult.error!, authResult.status!, corsHeaders);
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    const supabase = getUserClient(authHeader!);
     const payload: CommuniquePayload = await req.json();
 
     if (!payload.clientMarque || !payload.sujetPrincipal || !payload.dateDiffusion ||
       !payload.contactNom || !payload.contactEmail || !payload.contactTelephone) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return createErrorResponse("Missing required fields", 400, corsHeaders);
     }
 
     const cpName = payload.titre?.trim() || `${payload.clientMarque} - ${payload.cpType === "autre" ? payload.cpTypeOther : payload.cpType}`;
@@ -84,17 +60,15 @@ Deno.serve(async (req) => {
       .insert({
         name: cpName,
         assets_link: payload.lienAssets || payload.imageUrl || null,
-        created_by: user.id,
+        created_by: authResult.user!.id,
+        organization_id: payload.organization_id || null,
       })
       .select()
       .single();
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      return new Response(JSON.stringify({ error: "Failed to create communique" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return createErrorResponse("Failed to create communique", 500, corsHeaders);
     }
 
     const n8nWebhookUrl = Deno.env.get("N8N_CREATE_CP_WEBHOOK_URL");
@@ -103,7 +77,7 @@ Deno.serve(async (req) => {
       try {
         const webhookPayload = {
           communique_id: communique.id,
-          user_id: user.id,
+          user_id: authResult.user!.id,
           organization_id: communique.organization_id,
           ...payload,
           created_at: new Date().toISOString(),
@@ -119,15 +93,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, communique }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return createSuccessResponse({ success: true, communique }, corsHeaders);
   } catch (error) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return createErrorResponse("Internal server error", 500, corsHeaders);
   }
 });

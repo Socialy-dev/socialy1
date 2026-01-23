@@ -1,25 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const ALLOWED_ORIGINS = [
-  "https://socialy1.lovable.app",
-  "https://id-preview--d652ab17-4466-4f7d-9908-a5f63da4d0fe.lovable.app",
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
-
-const getCorsHeaders = (origin: string | null) => {
-  const isAllowed = origin && (
-    ALLOWED_ORIGINS.includes(origin) || 
-    origin.endsWith(".lovableproject.com") || 
-    origin.endsWith(".lovable.app")
-  );
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : ALLOWED_ORIGINS[0],
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-  };
-};
+import { 
+  getCorsHeaders, 
+  validateAuthAndOrg, 
+  createErrorResponse, 
+  createSuccessResponse,
+  getUserClient 
+} from "../_shared/security-helper.ts";
 
 serve(async (req) => {
   const origin = req.headers.get("Origin");
@@ -31,35 +17,19 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "No authorization header" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { topic_name, topic_link, organization_id } = await req.json();
+    const body = await req.json();
+    const { topic_name, topic_link, organization_id } = body;
 
     if (!topic_name || !organization_id) {
-      return new Response(JSON.stringify({ error: "Missing required fields: topic_name, organization_id" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return createErrorResponse("Missing required fields: topic_name, organization_id", 400, corsHeaders);
     }
+
+    const validation = await validateAuthAndOrg(authHeader, organization_id);
+    if (!validation.success) {
+      return createErrorResponse(validation.error!, validation.status!, corsHeaders);
+    }
+
+    const supabaseClient = getUserClient(authHeader!);
 
     const { data: topicData, error: insertError } = await supabaseClient
       .from("market_watch_topics")
@@ -68,7 +38,7 @@ serve(async (req) => {
         title: topic_name.trim(),
         search_topic: topic_name.trim(),
         link: topic_link?.trim() || `https://veille-${Date.now()}`,
-        created_by: user.id,
+        created_by: validation.user!.id,
         status: "pending",
       }, {
         onConflict: "organization_id,link",
@@ -78,10 +48,7 @@ serve(async (req) => {
 
     if (insertError) {
       console.error("Insert error:", insertError);
-      return new Response(JSON.stringify({ error: "Failed to save topic", details: insertError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return createErrorResponse("Failed to save topic", 500, corsHeaders);
     }
 
     const webhookUrl = Deno.env.get("N8N_MARKET_TOPIC_WEBHOOK_URL");
@@ -91,7 +58,7 @@ serve(async (req) => {
         topic_name: topic_name.trim(),
         topic_link: topic_link?.trim() || null,
         organization_id,
-        user_id: user.id,
+        user_id: validation.user!.id,
         timestamp: new Date().toISOString(),
       };
 
@@ -110,20 +77,14 @@ serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Topic added successfully",
-        topic: topicData,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createSuccessResponse({
+      success: true,
+      message: "Topic added successfully",
+      topic: topicData,
+    }, corsHeaders);
   } catch (error: unknown) {
     console.error("Error:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(message, 500, corsHeaders);
   }
 });

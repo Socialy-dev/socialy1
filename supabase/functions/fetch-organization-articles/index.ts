@@ -1,60 +1,45 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { 
+  getCorsHeaders, 
+  validateAuthAndOrg, 
+  createErrorResponse, 
+  createSuccessResponse,
+  getServiceClient 
+} from "../_shared/security-helper.ts";
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const n8nWebhookUrl = Deno.env.get("N8N_ORGANIZATION_ARTICLES_WEBHOOK_URL");
-
     if (!n8nWebhookUrl) {
       console.error("N8N_ORGANIZATION_ARTICLES_WEBHOOK_URL not configured");
-      return new Response(
-        JSON.stringify({ error: "N8N_ORGANIZATION_ARTICLES_WEBHOOK_URL not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("Webhook URL not configured", 500, corsHeaders);
     }
 
     const authHeader = req.headers.get("Authorization");
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    let userId: string | null = null;
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError) {
-        console.error("Auth error:", authError);
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      userId = user?.id || null;
-    }
-
     const body = await req.json();
     const { organization_id, organization_name, is_cron = false } = body;
 
-    console.log("Fetching articles for organization:", { organization_id, organization_name, is_cron, userId });
-
     if (!organization_id) {
-      return new Response(
-        JSON.stringify({ error: "organization_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("organization_id is required", 400, corsHeaders);
     }
+
+    const validation = await validateAuthAndOrg(authHeader, organization_id);
+    if (!validation.success) {
+      return createErrorResponse(validation.error!, validation.status!, corsHeaders);
+    }
+
+    console.log("Fetching articles for organization:", { organization_id, organization_name, is_cron, userId: validation.user!.id });
 
     let searchQuery = organization_name;
     if (!searchQuery) {
+      const supabase = getServiceClient();
       const { data: org, error: orgError } = await supabase
         .from("organizations")
         .select("name")
@@ -63,10 +48,7 @@ serve(async (req) => {
 
       if (orgError || !org) {
         console.error("Organization not found:", orgError);
-        return new Response(
-          JSON.stringify({ error: "Organization not found" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return createErrorResponse("Organization not found", 404, corsHeaders);
       }
       searchQuery = org.name;
     }
@@ -76,47 +58,35 @@ serve(async (req) => {
     const payload = {
       organization_id,
       organization_name: searchQuery,
-      user_id: userId,
+      user_id: validation.user!.id,
       is_cron,
       created_at: new Date().toISOString(),
     };
 
     const n8nResponse = await fetch(n8nWebhookUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     if (!n8nResponse.ok) {
       const errorText = await n8nResponse.text();
       console.error("n8n webhook error:", errorText);
-      return new Response(
-        JSON.stringify({ error: "n8n webhook failed", details: errorText }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("n8n webhook failed", 500, corsHeaders);
     }
 
     const n8nResult = await n8nResponse.json();
     console.log("n8n response:", n8nResult);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        organization_id,
-        organization_name: searchQuery,
-        n8n_response: n8nResult,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
+    return createSuccessResponse({
+      success: true,
+      organization_id,
+      organization_name: searchQuery,
+      n8n_response: n8nResult,
+    }, corsHeaders);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Unexpected error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error", details: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(errorMessage, 500, corsHeaders);
   }
 });
