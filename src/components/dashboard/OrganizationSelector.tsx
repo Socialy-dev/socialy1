@@ -1,4 +1,4 @@
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { useState } from "react";
 import { ChevronDown, Check, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,15 +14,9 @@ import {
 interface OrganizationSelectorProps {
   collapsed: boolean;
   onDropdownOpenChange?: (isOpen: boolean) => void;
-  forceClose?: boolean;
 }
 
-export interface OrganizationSelectorRef {
-  closeDropdown: () => void;
-}
-
-export const OrganizationSelector = forwardRef<OrganizationSelectorRef, OrganizationSelectorProps>(
-  ({ collapsed, onDropdownOpenChange, forceClose }, ref) => {
+export const OrganizationSelector = ({ collapsed, onDropdownOpenChange }: OrganizationSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { 
     currentOrganization, 
@@ -32,20 +26,6 @@ export const OrganizationSelector = forwardRef<OrganizationSelectorRef, Organiza
     viewAsOrgId,
     setViewAsOrgId 
   } = useAuth();
-
-  useImperativeHandle(ref, () => ({
-    closeDropdown: () => {
-      setIsOpen(false);
-      onDropdownOpenChange?.(false);
-    }
-  }));
-
-  useEffect(() => {
-    if (forceClose && isOpen) {
-      setIsOpen(false);
-      onDropdownOpenChange?.(false);
-    }
-  }, [forceClose]);
 
   const orgsToShow = isSuperAdmin ? allOrganizations : [currentOrganization].filter(Boolean);
   const activeOrg = isSuperAdmin && viewAsOrgId 
@@ -118,8 +98,8 @@ export const OrganizationSelector = forwardRef<OrganizationSelectorRef, Organiza
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        side="right"
-        sideOffset={16}
+        side="bottom"
+        sideOffset={8}
         className="w-64 bg-popover border border-border shadow-2xl rounded-xl p-1.5 z-[200]"
       >
         <DropdownMenuLabel className="px-3 py-2 text-xs text-muted-foreground font-medium">
@@ -155,6 +135,4 @@ export const OrganizationSelector = forwardRef<OrganizationSelectorRef, Organiza
       </DropdownMenuContent>
     </DropdownMenu>
   );
-});
-
-OrganizationSelector.displayName = "OrganizationSelector";
+};
