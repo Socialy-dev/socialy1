@@ -79,6 +79,8 @@ const getSourceColor = (source: string | null) => {
   switch (source?.toUpperCase()) {
     case "BOAMP":
       return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+    case "JOUE":
+      return "bg-orange-500/10 text-orange-600 border-orange-500/20";
     case "DECP_2022":
     case "DECP_V3":
       return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
@@ -632,9 +634,9 @@ export const MarchePublicView = () => {
                       {marche.titre || "Sans titre"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {isNew && viewMode !== "nouveaux" && (
-                        <Badge className="bg-emerald-500 text-white border-0 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 animate-pulse">
-                          New
+                      {isNew && (
+                        <Badge className="bg-emerald-500 text-white border-0 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 animate-pulse shadow-lg shadow-emerald-500/30">
+                          NEW
                         </Badge>
                       )}
                       {marche.source && (
