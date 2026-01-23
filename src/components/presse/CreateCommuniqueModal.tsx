@@ -106,8 +106,8 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      let pdfUrl: string | null = null;
-      let wordUrl: string | null = null;
+      let pdfPath: string | null = null;
+      let wordPath: string | null = null;
 
       if (formCommuniquePdf) {
         const fileExt = formCommuniquePdf.name.split(".").pop();
@@ -115,8 +115,7 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
         const filePath = `${user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniquePdf);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
-        pdfUrl = urlData.publicUrl;
+        pdfPath = filePath;
       }
 
       if (formCommuniqueWord) {
@@ -125,14 +124,13 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
         const filePath = `${user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniqueWord);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
-        wordUrl = urlData.publicUrl;
+        wordPath = filePath;
       }
 
       const { error } = await supabase.from("communique_presse").insert({
         name: formCommuniqueName.trim(),
-        pdf_url: pdfUrl,
-        word_url: wordUrl,
+        pdf_url: pdfPath,
+        word_url: wordPath,
         assets_link: formCommuniqueAssetsLink.trim() || null,
         created_by: user.id,
       });
@@ -177,15 +175,14 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
         return;
       }
 
-      let imageUrl: string | null = null;
+      let imagePath: string | null = null;
       if (imageFile) {
         const fileExt = imageFile.name.split(".").pop();
         const fileName = `${Date.now()}-img-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${session.user.id}/${fileName}`;
         const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, imageFile);
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
-        imageUrl = urlData.publicUrl;
+        imagePath = filePath;
       }
 
       const { data, error } = await supabase.functions.invoke("create-communique", {
@@ -200,7 +197,7 @@ export const CreateCommuniqueModal = ({ isOpen, onClose, onSuccess }: CreateComm
           messagesCles,
           dateDiffusion,
           lienAssets,
-          imageUrl,
+          imagePath,
           equipeClient,
           equipeSocialy,
           contactNom,
