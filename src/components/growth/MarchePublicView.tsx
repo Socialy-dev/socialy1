@@ -110,7 +110,7 @@ export const MarchePublicView = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"all" | "selected" | "team" | "dismissed">("all");
+  const [viewMode, setViewMode] = useState<"all" | "nouveaux" | "selected" | "team" | "dismissed">("all");
   const [lastVisitAt, setLastVisitAt] = useState<Date | null>(null);
   const [newMarchesCount, setNewMarchesCount] = useState(0);
 
@@ -328,6 +328,11 @@ export const MarchePublicView = () => {
     return selection?.status || null;
   };
 
+  const isNewMarche = (createdAt: string): boolean => {
+    if (!lastVisitAt) return true;
+    return new Date(createdAt) > lastVisitAt;
+  };
+
   const getTeamMembersForMarche = (marcheId: string): TeamSelection[] => {
     return teamSelections.filter(s => s.marche_public_id === marcheId);
   };
@@ -346,8 +351,11 @@ export const MarchePublicView = () => {
     
     const status = getSelectionStatus(m.id);
     const hasTeamSelection = teamSelections.some(ts => ts.marche_public_id === m.id);
+    const isNew = isNewMarche(m.created_at);
     
-    if (viewMode === "selected") {
+    if (viewMode === "nouveaux") {
+      return matchesSearch && isNew && status !== "dismissed";
+    } else if (viewMode === "selected") {
       return matchesSearch && status === "selected";
     } else if (viewMode === "team") {
       return matchesSearch && hasTeamSelection;
@@ -385,15 +393,32 @@ export const MarchePublicView = () => {
           <p className="text-3xl font-bold text-foreground">{stats.total}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 rounded-2xl p-5 border border-emerald-500/20">
+        <div 
+          className={cn(
+            "rounded-2xl p-5 border cursor-pointer transition-all duration-300",
+            viewMode === "nouveaux"
+              ? "bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30"
+              : "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40"
+          )}
+          onClick={() => setViewMode(viewMode === "nouveaux" ? "all" : "nouveaux")}
+        >
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
             <span className="text-sm text-muted-foreground">Nouveaux</span>
           </div>
-          <p className="text-3xl font-bold text-foreground">{newMarchesCount}</p>
-          <p className="text-xs text-muted-foreground mt-1">depuis votre dernière visite</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold text-foreground">{newMarchesCount}</p>
+              <p className="text-xs text-muted-foreground mt-1">depuis votre dernière visite</p>
+            </div>
+            {newMarchesCount > 0 && (
+              <Badge className="bg-emerald-500 text-white border-0">
+                {viewMode === "nouveaux" ? "Voir tout" : "Voir"}
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div 
@@ -531,22 +556,26 @@ export const MarchePublicView = () => {
         <div className="text-center py-16 bg-secondary/20 rounded-2xl">
           <Briefcase className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground font-medium">
-            {viewMode === "selected" 
-              ? "Aucun marché en favoris" 
-              : viewMode === "team"
-                ? "Aucun favori d'équipe"
-                : viewMode === "dismissed"
-                  ? "Aucun marché masqué"
-                  : "Aucun marché public trouvé"}
+            {viewMode === "nouveaux"
+              ? "Aucun nouveau marché"
+              : viewMode === "selected" 
+                ? "Aucun marché en favoris" 
+                : viewMode === "team"
+                  ? "Aucun favori d'équipe"
+                  : viewMode === "dismissed"
+                    ? "Aucun marché masqué"
+                    : "Aucun marché public trouvé"}
           </p>
           <p className="text-sm text-muted-foreground/70 mt-1">
-            {viewMode === "selected" 
-              ? "Cliquez sur l'étoile pour ajouter des marchés en favoris" 
-              : viewMode === "team"
-                ? "Les marchés sélectionnés par votre équipe apparaîtront ici"
-                : viewMode === "dismissed"
-                  ? "Les marchés masqués apparaîtront ici"
-                  : "Les opportunités apparaîtront ici automatiquement"}
+            {viewMode === "nouveaux"
+              ? "Tous les marchés ont été consultés lors de votre dernière visite"
+              : viewMode === "selected" 
+                ? "Cliquez sur l'étoile pour ajouter des marchés en favoris" 
+                : viewMode === "team"
+                  ? "Les marchés sélectionnés par votre équipe apparaîtront ici"
+                  : viewMode === "dismissed"
+                    ? "Les marchés masqués apparaîtront ici"
+                    : "Les opportunités apparaîtront ici automatiquement"}
           </p>
         </div>
       ) : (
@@ -555,6 +584,7 @@ export const MarchePublicView = () => {
             const status = getSelectionStatus(marche.id);
             const isSelected = status === "selected";
             const teamMembers = getTeamMembersForMarche(marche.id);
+            const isNew = isNewMarche(marche.created_at);
             
             return (
               <div
@@ -602,6 +632,11 @@ export const MarchePublicView = () => {
                       {marche.titre || "Sans titre"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {isNew && viewMode !== "nouveaux" && (
+                        <Badge className="bg-emerald-500 text-white border-0 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 animate-pulse">
+                          New
+                        </Badge>
+                      )}
                       {marche.source && (
                         <Badge variant="outline" className={cn("text-xs font-medium", getSourceColor(marche.source))}>
                           {marche.source}
