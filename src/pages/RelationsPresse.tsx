@@ -479,8 +479,8 @@ const RelationsPresse = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      let pdfUrl: string | null = null;
-      let wordUrl: string | null = null;
+      let pdfPath: string | null = null;
+      let wordPath: string | null = null;
 
       if (formCommuniquePdf) {
         const fileExt = formCommuniquePdf.name.split(".").pop();
@@ -492,8 +492,7 @@ const RelationsPresse = () => {
           .upload(filePath, formCommuniquePdf);
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
-        pdfUrl = urlData.publicUrl;
+        pdfPath = filePath;
       }
 
       if (formCommuniqueWord) {
@@ -506,14 +505,13 @@ const RelationsPresse = () => {
           .upload(filePath, formCommuniqueWord);
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
-        wordUrl = urlData.publicUrl;
+        wordPath = filePath;
       }
 
       const { error } = await supabase.from("communique_presse").insert({
         name: formCommuniqueName.trim(),
-        pdf_url: pdfUrl,
-        word_url: wordUrl,
+        pdf_url: pdfPath,
+        word_url: wordPath,
         assets_link: formCommuniqueAssetsLink.trim() || null,
         created_by: user.id,
       });
