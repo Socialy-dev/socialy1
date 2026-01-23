@@ -119,7 +119,7 @@ const getSubTabs = (orgName: string) => [
   { id: "socialy", label: orgName, group: "articles" },
   { id: "concurrent", label: "Concurrents", group: "articles" },
   { id: "client", label: "Clients", group: "articles" },
-  { id: "veille-marche", label: "Veille Marché", group: "articles" },
+  { id: "veille-marche", label: "Veille marché", group: "articles" },
   { id: "journalistes", label: "Journalistes", group: "contacts" },
   { id: "communiques", label: "Communiqués", group: "contacts" },
 ];
@@ -230,34 +230,34 @@ const RelationsPresse = () => {
     if (!effectiveOrgId) return;
 
     const channel = supabase
-      .channel('journalists-realtime')
+      .channel("journalists-realtime")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'journalists',
+          event: "*",
+          schema: "public",
+          table: "journalists",
         },
         (payload) => {
           const updatedJournalist = payload.new as any;
           if (updatedJournalist && updatedJournalist.organization_id === effectiveOrgId) {
-            setJournalists(prev => 
-              prev.map(j => 
-                j.id === updatedJournalist.id 
-                  ? { ...j, ...updatedJournalist, selected: j.selected } 
-                  : j
-              )
+            setJournalists((prev) =>
+              prev.map((j) =>
+                j.id === updatedJournalist.id ? { ...j, ...updatedJournalist, selected: j.selected } : j,
+              ),
             );
-            
-            if (updatedJournalist.enrichment_status === 'completed' && 
-                (updatedJournalist.linkedin || updatedJournalist.email)) {
+
+            if (
+              updatedJournalist.enrichment_status === "completed" &&
+              (updatedJournalist.linkedin || updatedJournalist.email)
+            ) {
               toast({
                 title: "Enrichissement réussi",
                 description: `${updatedJournalist.name} a été enrichi`,
               });
             }
           }
-        }
+        },
       )
       .subscribe();
 
@@ -268,7 +268,7 @@ const RelationsPresse = () => {
 
   useEffect(() => {
     const hasEnrichmentsInProgress = journalists.some(
-      j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing'
+      (j) => j.enrichment_status === "pending" || j.enrichment_status === "processing",
     );
 
     if (!hasEnrichmentsInProgress || !effectiveOrgId) return;
@@ -278,7 +278,10 @@ const RelationsPresse = () => {
     }, 5000);
 
     return () => clearInterval(pollInterval);
-  }, [journalists.some(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing'), effectiveOrgId]);
+  }, [
+    journalists.some((j) => j.enrichment_status === "pending" || j.enrichment_status === "processing"),
+    effectiveOrgId,
+  ]);
 
   const fetchJournalists = async () => {
     setIsLoadingJournalists(true);
@@ -297,17 +300,17 @@ const RelationsPresse = () => {
     if (effectiveOrgId) {
       let query = supabase.from("organization_competitor").select("id, name").eq("organization_id", effectiveOrgId);
       const { data } = await query.order("name");
-      
+
       let agenciesList = data || [];
-      
-      const hasAutre = agenciesList.some(a => a.name === "Autre");
+
+      const hasAutre = agenciesList.some((a) => a.name === "Autre");
       if (!hasAutre) {
         const { data: newAutre, error } = await supabase
           .from("organization_competitor")
           .insert({ organization_id: effectiveOrgId, name: "Autre" })
           .select("id, name")
           .single();
-        
+
         if (!error && newAutre) {
           agenciesList = [newAutre, ...agenciesList];
         }
@@ -318,7 +321,7 @@ const RelationsPresse = () => {
           return a.name.localeCompare(b.name);
         });
       }
-      
+
       setAgencies(agenciesList);
     }
   };
@@ -328,22 +331,22 @@ const RelationsPresse = () => {
     if (effectiveOrgId) {
       let query = supabase.from("client_agencies").select("id, name").eq("organization_id", effectiveOrgId);
       const { data } = await query.order("name");
-      
+
       let clientsList = data || [];
-      
-      const hasAutre = clientsList.some(c => c.name === "Autre");
+
+      const hasAutre = clientsList.some((c) => c.name === "Autre");
       if (!hasAutre) {
         const { data: newAutre, error } = await supabase
           .from("client_agencies")
           .insert({ organization_id: effectiveOrgId, name: "Autre" })
           .select("id, name")
           .single();
-        
+
         if (!error && newAutre) {
           clientsList = [newAutre, ...clientsList];
         }
       }
-      
+
       setClients(clientsList);
     }
     setIsLoadingClients(false);
@@ -389,11 +392,17 @@ const RelationsPresse = () => {
   const fetchArticles = async () => {
     setIsLoading(true);
     if (effectiveOrgId) {
-      let query = supabase.from("competitor_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "").eq("organization_id", effectiveOrgId);
+      let query = supabase
+        .from("competitor_articles")
+        .select("*")
+        .eq("hidden", false)
+        .not("title", "is", null)
+        .neq("title", "")
+        .eq("organization_id", effectiveOrgId);
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setArticles(data.filter(a => a.title && a.title.trim() !== ""));
+        setArticles(data.filter((a) => a.title && a.title.trim() !== ""));
       }
     }
     setIsLoading(false);
@@ -402,11 +411,17 @@ const RelationsPresse = () => {
   const fetchOrganizationArticles = async () => {
     setIsLoadingOrganization(true);
     if (effectiveOrgId) {
-      let query = supabase.from("organization_articles").select("*").eq("hidden", false).not("title", "is", null).neq("title", "").eq("organization_id", effectiveOrgId);
+      let query = supabase
+        .from("organization_articles")
+        .select("*")
+        .eq("hidden", false)
+        .not("title", "is", null)
+        .neq("title", "")
+        .eq("organization_id", effectiveOrgId);
       const { data, error } = await query.order("article_iso_date", { ascending: false });
 
       if (!error && data) {
-        setOrganizationArticles(data.filter(a => a.title && a.title.trim() !== ""));
+        setOrganizationArticles(data.filter((a) => a.title && a.title.trim() !== ""));
       }
     }
     setIsLoadingOrganization(false);
@@ -415,9 +430,7 @@ const RelationsPresse = () => {
   const fetchCommuniques = async () => {
     setIsLoadingCommuniques(true);
     try {
-      let query = supabase
-        .from("communique_presse")
-        .select("*");
+      let query = supabase.from("communique_presse").select("*");
 
       if (isViewingAsOtherOrg && effectiveOrgId) {
         query = query.eq("organization_id", effectiveOrgId);
@@ -442,12 +455,20 @@ const RelationsPresse = () => {
 
   const handleCommuniqueSubmit = async () => {
     if (!formCommuniqueName.trim()) {
-      toast({ title: "Champ obligatoire manquant", description: "Veuillez saisir un nom pour le communiqué", variant: "destructive" });
+      toast({
+        title: "Champ obligatoire manquant",
+        description: "Veuillez saisir un nom pour le communiqué",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!formCommuniquePdf && !formCommuniqueWord && !formCommuniqueAssetsLink.trim()) {
-      toast({ title: "Fichier ou lien requis", description: "Veuillez ajouter un PDF, un fichier Word ou un lien vers les assets", variant: "destructive" });
+      toast({
+        title: "Fichier ou lien requis",
+        description: "Veuillez ajouter un PDF, un fichier Word ou un lien vers les assets",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -466,7 +487,9 @@ const RelationsPresse = () => {
         const fileName = `${Date.now()}-pdf-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniquePdf);
+        const { error: uploadError } = await supabase.storage
+          .from("communique_presse")
+          .upload(filePath, formCommuniquePdf);
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
@@ -478,7 +501,9 @@ const RelationsPresse = () => {
         const fileName = `${Date.now()}-word-${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage.from("communique_presse").upload(filePath, formCommuniqueWord);
+        const { error: uploadError } = await supabase.storage
+          .from("communique_presse")
+          .upload(filePath, formCommuniqueWord);
         if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage.from("communique_presse").getPublicUrl(filePath);
@@ -500,7 +525,11 @@ const RelationsPresse = () => {
       fetchCommuniques();
     } catch (error: any) {
       console.error("Error adding communique:", error);
-      toast({ title: "Échec de la création", description: "Une erreur s'est produite lors de l'ajout du communiqué. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la création",
+        description: "Une erreur s'est produite lors de l'ajout du communiqué. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } finally {
       setUploadingCommunique(false);
     }
@@ -531,7 +560,11 @@ const RelationsPresse = () => {
       toast({ title: "Communiqué supprimé", description: "Le communiqué et ses fichiers associés ont été supprimés" });
       fetchCommuniques();
     } catch (error: any) {
-      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le communiqué. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la suppression",
+        description: "Impossible de supprimer le communiqué. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -586,33 +619,67 @@ const RelationsPresse = () => {
   const [showVeilleManager, setShowVeilleManager] = useState(false);
 
   const fetchHiddenOrganizationArticles = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user && isOrgAdmin) {
-      const { data } = await supabase.from("organization_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
-      if (data) setHiddenOrganizationArticles(data.filter(a => a.title && a.title.trim() !== ""));
+      const { data } = await supabase
+        .from("organization_articles")
+        .select("*")
+        .eq("hidden", true)
+        .not("title", "is", null)
+        .neq("title", "")
+        .order("article_iso_date", { ascending: false });
+      if (data) setHiddenOrganizationArticles(data.filter((a) => a.title && a.title.trim() !== ""));
     }
   };
 
   const fetchHiddenCompetitorArticles = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user && isOrgAdmin) {
-      const { data } = await supabase.from("competitor_articles").select("*").eq("hidden", true).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
-      if (data) setHiddenCompetitorArticles(data.filter(a => a.title && a.title.trim() !== ""));
+      const { data } = await supabase
+        .from("competitor_articles")
+        .select("*")
+        .eq("hidden", true)
+        .not("title", "is", null)
+        .neq("title", "")
+        .order("article_iso_date", { ascending: false });
+      if (data) setHiddenCompetitorArticles(data.filter((a) => a.title && a.title.trim() !== ""));
     }
   };
 
   const fetchHiddenClientArticles = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user && isOrgAdmin && effectiveOrgId) {
-      const { data } = await supabase.from("client_articles").select("*").eq("hidden", true).eq("organization_id", effectiveOrgId).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      const { data } = await supabase
+        .from("client_articles")
+        .select("*")
+        .eq("hidden", true)
+        .eq("organization_id", effectiveOrgId)
+        .not("title", "is", null)
+        .neq("title", "")
+        .order("article_iso_date", { ascending: false });
       if (data) setHiddenClientArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
     }
   };
 
   const fetchHiddenVeilleArticles = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user && isOrgAdmin && effectiveOrgId) {
-      const { data } = await supabase.from("market_watch_topics").select("*").eq("hidden", true).eq("organization_id", effectiveOrgId).not("title", "is", null).neq("title", "").order("article_iso_date", { ascending: false });
+      const { data } = await supabase
+        .from("market_watch_topics")
+        .select("*")
+        .eq("hidden", true)
+        .eq("organization_id", effectiveOrgId)
+        .not("title", "is", null)
+        .neq("title", "")
+        .order("article_iso_date", { ascending: false });
       if (data) setHiddenVeilleArticles(data.filter((a: any) => a.title && a.title.trim() !== ""));
     }
   };
@@ -622,7 +689,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("client_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec du masquage",
+        description: "Impossible de masquer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchClientArticles();
@@ -635,7 +706,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("client_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la restauration",
+        description: "Impossible de restaurer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchClientArticles();
@@ -648,7 +723,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("market_watch_topics").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec du masquage",
+        description: "Impossible de masquer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchVeilleArticles();
@@ -661,7 +740,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("market_watch_topics").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la restauration",
+        description: "Impossible de restaurer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchVeilleArticles();
@@ -669,14 +752,18 @@ const RelationsPresse = () => {
     }
   };
 
-  const uniqueVeilleTopics = [...new Set(veilleArticles.map(a => a.search_topic).filter(Boolean))] as string[];
+  const uniqueVeilleTopics = [...new Set(veilleArticles.map((a) => a.search_topic).filter(Boolean))] as string[];
 
   const handleHideOrganizationArticle = async (articleId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const { error } = await supabase.from("organization_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec du masquage",
+        description: "Impossible de masquer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchOrganizationArticles();
@@ -689,7 +776,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("organization_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la restauration",
+        description: "Impossible de restaurer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchOrganizationArticles();
@@ -702,7 +793,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("competitor_articles").update({ hidden: true }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec du masquage", description: "Impossible de masquer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec du masquage",
+        description: "Impossible de masquer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article masqué", description: "L'article ne sera plus visible dans la liste principale" });
       fetchArticles();
@@ -715,7 +810,11 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("competitor_articles").update({ hidden: false }).eq("id", articleId);
     if (error) {
-      toast({ title: "Échec de la restauration", description: "Impossible de restaurer cet article. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la restauration",
+        description: "Impossible de restaurer cet article. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Article restauré", description: "L'article est de nouveau visible dans la liste principale" });
       fetchArticles();
@@ -743,15 +842,19 @@ const RelationsPresse = () => {
         throw error;
       }
 
-      toast({ 
-        title: "Mise à jour terminée", 
-        description: `${data.inserted} nouveaux articles, ${data.updated} mis à jour` 
+      toast({
+        title: "Mise à jour terminée",
+        description: `${data.inserted} nouveaux articles, ${data.updated} mis à jour`,
       });
-      
+
       fetchOrganizationArticles();
     } catch (updateError) {
       console.error("Update error:", updateError);
-      toast({ title: "Échec de la mise à jour", description: "Impossible de récupérer les articles. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la mise à jour",
+        description: "Impossible de récupérer les articles. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setIsUpdatingOrganizationArticles(false);
@@ -759,7 +862,11 @@ const RelationsPresse = () => {
 
   const handleAddOrganizationArticle = async () => {
     if (!newArticleLink.trim()) {
-      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+      toast({
+        title: "Lien manquant",
+        description: "Veuillez coller le lien de l'article à ajouter",
+        variant: "destructive",
+      });
       return;
     }
     if (!effectiveOrgId) {
@@ -781,10 +888,17 @@ const RelationsPresse = () => {
         throw error;
       }
 
-      toast({ title: "Enrichissement en cours", description: `L'article ${effectiveOrgName} sera disponible dans quelques instants` });
+      toast({
+        title: "Enrichissement en cours",
+        description: `L'article ${effectiveOrgName} sera disponible dans quelques instants`,
+      });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'envoi",
+        description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setNewArticleLink("");
@@ -794,7 +908,11 @@ const RelationsPresse = () => {
 
   const handleAddCompetitorArticle = async () => {
     if (!newArticleLink.trim()) {
-      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+      toast({
+        title: "Lien manquant",
+        description: "Veuillez coller le lien de l'article à ajouter",
+        variant: "destructive",
+      });
       return;
     }
     if (!effectiveOrgId) {
@@ -802,9 +920,13 @@ const RelationsPresse = () => {
       return;
     }
 
-    const autreCompetitor = agencies.find(a => a.name === "Autre");
+    const autreCompetitor = agencies.find((a) => a.name === "Autre");
     if (!autreCompetitor) {
-      toast({ title: "Erreur", description: "Le concurrent 'Autre' n'existe pas. Veuillez l'ajouter d'abord.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Le concurrent 'Autre' n'existe pas. Veuillez l'ajouter d'abord.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -828,7 +950,11 @@ const RelationsPresse = () => {
       toast({ title: "Enrichissement en cours", description: "L'article sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'envoi",
+        description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setNewArticleLink("");
@@ -848,14 +974,22 @@ const RelationsPresse = () => {
     setIsAddingCompetitor(true);
 
     try {
-      const { data: newCompetitor, error } = await supabase.from("organization_competitor").insert({
-        organization_id: effectiveOrgId,
-        name: newCompetitorName.trim(),
-      }).select("id, name").single();
+      const { data: newCompetitor, error } = await supabase
+        .from("organization_competitor")
+        .insert({
+          organization_id: effectiveOrgId,
+          name: newCompetitorName.trim(),
+        })
+        .select("id, name")
+        .single();
 
       if (error) {
         if (error.code === "23505") {
-          toast({ title: "Concurrent existant", description: "Ce concurrent existe déjà dans votre liste", variant: "destructive" });
+          toast({
+            title: "Concurrent existant",
+            description: "Ce concurrent existe déjà dans votre liste",
+            variant: "destructive",
+          });
         } else {
           throw error;
         }
@@ -871,14 +1005,18 @@ const RelationsPresse = () => {
         } catch (webhookError) {
           console.error("Webhook notification failed:", webhookError);
         }
-        
+
         toast({ title: "Concurrent ajouté", description: `${newCompetitorName.trim()} a été ajouté à votre liste` });
         setNewCompetitorName("");
         fetchAgencies();
       }
     } catch (error) {
       console.error("Error adding competitor:", error);
-      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le concurrent. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'ajout",
+        description: "Impossible d'ajouter le concurrent. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setIsAddingCompetitor(false);
@@ -896,26 +1034,36 @@ const RelationsPresse = () => {
     setIsAddingClient(true);
 
     try {
-      const { data: insertedClient, error } = await supabase.from("client_agencies").insert({
-        organization_id: effectiveOrgId,
-        name: newClientName.trim(),
-      }).select().single();
+      const { data: insertedClient, error } = await supabase
+        .from("client_agencies")
+        .insert({
+          organization_id: effectiveOrgId,
+          name: newClientName.trim(),
+        })
+        .select()
+        .single();
 
       if (error) {
         if (error.code === "23505") {
-          toast({ title: "Client existant", description: "Ce client existe déjà dans votre liste", variant: "destructive" });
+          toast({
+            title: "Client existant",
+            description: "Ce client existe déjà dans votre liste",
+            variant: "destructive",
+          });
         } else {
           throw error;
         }
       } else {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session?.access_token && insertedClient) {
           try {
             await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-new-client`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${session.access_token}`,
+                Authorization: `Bearer ${session.access_token}`,
               },
               body: JSON.stringify({
                 client_id: insertedClient.id,
@@ -933,7 +1081,11 @@ const RelationsPresse = () => {
       }
     } catch (error) {
       console.error("Error adding client:", error);
-      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le client. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'ajout",
+        description: "Impossible d'ajouter le client. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setIsAddingClient(false);
@@ -941,12 +1093,20 @@ const RelationsPresse = () => {
 
   const handleDeleteClient = async (clientId: string, clientName: string) => {
     if (clientName === "Autre") {
-      toast({ title: "Action non autorisée", description: "Le client 'Autre' ne peut pas être supprimé", variant: "destructive" });
+      toast({
+        title: "Action non autorisée",
+        description: "Le client 'Autre' ne peut pas être supprimé",
+        variant: "destructive",
+      });
       return;
     }
     const { error } = await supabase.from("client_agencies").delete().eq("id", clientId);
     if (error) {
-      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le client. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la suppression",
+        description: "Impossible de supprimer le client. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Client supprimé", description: `${clientName} a été retiré de votre liste` });
       fetchClients();
@@ -955,7 +1115,11 @@ const RelationsPresse = () => {
 
   const handleAddClientArticle = async () => {
     if (!newArticleLink.trim()) {
-      toast({ title: "Lien manquant", description: "Veuillez coller le lien de l'article à ajouter", variant: "destructive" });
+      toast({
+        title: "Lien manquant",
+        description: "Veuillez coller le lien de l'article à ajouter",
+        variant: "destructive",
+      });
       return;
     }
     if (!effectiveOrgId) {
@@ -963,9 +1127,13 @@ const RelationsPresse = () => {
       return;
     }
 
-    const autreClient = clients.find(c => c.name === "Autre");
+    const autreClient = clients.find((c) => c.name === "Autre");
     if (!autreClient) {
-      toast({ title: "Erreur", description: "Le client 'Autre' n'existe pas. Veuillez rafraîchir la page.", variant: "destructive" });
+      toast({
+        title: "Erreur",
+        description: "Le client 'Autre' n'existe pas. Veuillez rafraîchir la page.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -989,7 +1157,11 @@ const RelationsPresse = () => {
       toast({ title: "Enrichissement en cours", description: "L'article sera disponible dans quelques instants" });
     } catch (enrichError) {
       console.error("Enrichment error:", enrichError);
-      toast({ title: "Échec de l'envoi", description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'envoi",
+        description: "Impossible d'envoyer l'article pour enrichissement. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setNewArticleLink("");
@@ -999,7 +1171,11 @@ const RelationsPresse = () => {
 
   const handleAddVeilleArticle = async () => {
     if (!newTopicName.trim()) {
-      toast({ title: "Sujet manquant", description: "Veuillez saisir un sujet de veille (ex: IA générative, Blockchain...)", variant: "destructive" });
+      toast({
+        title: "Sujet manquant",
+        description: "Veuillez saisir un sujet de veille (ex: IA générative, Blockchain...)",
+        variant: "destructive",
+      });
       return;
     }
     if (!effectiveOrgId) {
@@ -1024,7 +1200,11 @@ const RelationsPresse = () => {
       toast({ title: "Sujet ajouté", description: "La veille sur ce sujet sera configurée sous peu" });
     } catch (addError) {
       console.error("Add topic error:", addError);
-      toast({ title: "Échec de l'ajout", description: "Impossible d'ajouter le sujet. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de l'ajout",
+        description: "Impossible d'ajouter le sujet. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
 
     setNewArticleLink("");
@@ -1036,7 +1216,11 @@ const RelationsPresse = () => {
   const handleDeleteCompetitor = async (agencyId: string, agencyName: string) => {
     const { error } = await supabase.from("organization_competitor").delete().eq("id", agencyId);
     if (error) {
-      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le concurrent. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la suppression",
+        description: "Impossible de supprimer le concurrent. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Concurrent supprimé", description: `${agencyName} a été retiré de votre liste` });
       fetchAgencies();
@@ -1048,9 +1232,16 @@ const RelationsPresse = () => {
     e.stopPropagation();
     const { error } = await supabase.from("journalists").delete().eq("id", journalistId);
     if (error) {
-      toast({ title: "Échec de la suppression", description: "Impossible de supprimer le journaliste. Veuillez réessayer.", variant: "destructive" });
+      toast({
+        title: "Échec de la suppression",
+        description: "Impossible de supprimer le journaliste. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } else {
-      toast({ title: "Journaliste supprimé", description: `${journalistName} a été retiré de votre liste de contacts` });
+      toast({
+        title: "Journaliste supprimé",
+        description: `${journalistName} a été retiré de votre liste de contacts`,
+      });
       fetchJournalists();
     }
   };
@@ -1064,15 +1255,13 @@ const RelationsPresse = () => {
     }
 
     const allJournalistsToEnrich = journalists.filter(
-      j => !j.linkedin && !j.email && 
-           j.enrichment_status !== 'pending' && 
-           j.enrichment_status !== 'processing'
+      (j) => !j.linkedin && !j.email && j.enrichment_status !== "pending" && j.enrichment_status !== "processing",
     );
-    
+
     if (allJournalistsToEnrich.length === 0) {
-      toast({ 
-        title: "Aucun journaliste à enrichir", 
-        description: "Tous les journalistes sont déjà enrichis ou en cours d'enrichissement" 
+      toast({
+        title: "Aucun journaliste à enrichir",
+        description: "Tous les journalistes sont déjà enrichis ou en cours d'enrichissement",
       });
       return;
     }
@@ -1081,9 +1270,9 @@ const RelationsPresse = () => {
     const remaining = allJournalistsToEnrich.length - journalistsToEnrich.length;
 
     if (remaining > 0) {
-      toast({ 
-        title: "Enrichissement partiel", 
-        description: `Les ${MAX_ENRICHMENT_BATCH} premiers journalistes seront enrichis. ${remaining} restant(s) à traiter ensuite.`
+      toast({
+        title: "Enrichissement partiel",
+        description: `Les ${MAX_ENRICHMENT_BATCH} premiers journalistes seront enrichis. ${remaining} restant(s) à traiter ensuite.`,
       });
     }
 
@@ -1092,7 +1281,7 @@ const RelationsPresse = () => {
     try {
       const { data, error } = await supabase.functions.invoke("notify-new-journalist", {
         body: {
-          journalists: journalistsToEnrich.map(j => ({
+          journalists: journalistsToEnrich.map((j) => ({
             journalist_id: j.id,
             name: j.name,
             media: j.media,
@@ -1106,25 +1295,26 @@ const RelationsPresse = () => {
       if (error) throw error;
 
       if (data?.code === "BATCH_LIMIT_EXCEEDED") {
-        toast({ 
-          title: "Limite dépassée", 
-          description: data.error, 
-          variant: "destructive" 
+        toast({
+          title: "Limite dépassée",
+          description: data.error,
+          variant: "destructive",
         });
         return;
       }
 
-      toast({ 
-        title: "Enrichissement lancé", 
-        description: `${journalistsToEnrich.length} journaliste(s) en cours de traitement. Les résultats apparaîtront automatiquement.`
+      toast({
+        title: "Enrichissement lancé",
+        description: `${journalistsToEnrich.length} journaliste(s) en cours de traitement. Les résultats apparaîtront automatiquement.`,
       });
     } catch (err: any) {
       console.error("Enrichment error:", err);
-      const errorMessage = err?.message || "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.";
-      toast({ 
-        title: "Échec de l'enrichissement", 
-        description: errorMessage, 
-        variant: "destructive" 
+      const errorMessage =
+        err?.message || "Impossible d'envoyer les journalistes pour enrichissement. Veuillez réessayer.";
+      toast({
+        title: "Échec de l'enrichissement",
+        description: errorMessage,
+        variant: "destructive",
       });
     } finally {
       setIsEnrichingJournalists(false);
@@ -1133,30 +1323,31 @@ const RelationsPresse = () => {
 
   const handleResetStuckEnrichments = async () => {
     const stuckJournalists = journalists.filter(
-      j => (j.enrichment_status === 'pending' || j.enrichment_status === 'processing')
+      (j) => j.enrichment_status === "pending" || j.enrichment_status === "processing",
     );
-    
+
     if (stuckJournalists.length === 0) {
       toast({ title: "Aucun enrichissement bloqué" });
       return;
     }
 
     const { error } = await supabase
-      .from('journalists')
-      .update({ enrichment_status: null, enrichment_error: 'Réinitialisé manuellement' })
-      .in('id', stuckJournalists.map(j => j.id));
+      .from("journalists")
+      .update({ enrichment_status: null, enrichment_error: "Réinitialisé manuellement" })
+      .in(
+        "id",
+        stuckJournalists.map((j) => j.id),
+      );
 
     if (error) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } else {
-      setJournalists(journalists.map(j => 
-        stuckJournalists.find(s => s.id === j.id) 
-          ? { ...j, enrichment_status: null } 
-          : j
-      ));
-      toast({ 
-        title: "Enrichissements réinitialisés", 
-        description: `${stuckJournalists.length} journaliste(s) peuvent être ré-enrichis` 
+      setJournalists(
+        journalists.map((j) => (stuckJournalists.find((s) => s.id === j.id) ? { ...j, enrichment_status: null } : j)),
+      );
+      toast({
+        title: "Enrichissements réinitialisés",
+        description: `${stuckJournalists.length} journaliste(s) peuvent être ré-enrichis`,
       });
     }
   };
@@ -1327,9 +1518,7 @@ const RelationsPresse = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-foreground">Presse</h1>
-                <p className="text-muted-foreground text-sm">
-                  Gérez vos retombées presse et vos contacts journalistes
-                </p>
+                <p className="text-muted-foreground text-sm">Gérez vos retombées presse et vos contacts journalistes</p>
               </div>
             </div>
 
@@ -1340,12 +1529,10 @@ const RelationsPresse = () => {
                   const isActive = activeSubTab === tab.id;
                   const prevTab = arr[index - 1];
                   const showSeparator = prevTab && prevTab.group !== tab.group;
-                  
+
                   return (
                     <div key={tab.id} className="flex items-center">
-                      {showSeparator && (
-                        <div className="w-px h-6 bg-border mx-2" />
-                      )}
+                      {showSeparator && <div className="w-px h-6 bg-border mx-2" />}
                       <button
                         onClick={() => setActiveSubTab(tab.id)}
                         className={cn(
@@ -1407,12 +1594,7 @@ const RelationsPresse = () => {
                       <RefreshCw className={cn("w-4 h-4", isUpdatingOrganizationArticles && "animate-spin")} />
                       {isUpdatingOrganizationArticles ? "Mise à jour..." : "Mettre à jour"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAddSocialyModal(true)}
-                      className="gap-2"
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setShowAddSocialyModal(true)} className="gap-2">
                       <Plus className="w-4 h-4" />
                       Ajouter
                     </Button>
@@ -1458,7 +1640,9 @@ const RelationsPresse = () => {
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
                             {article.article_date && (
-                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {formatDate(article.article_date)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -1705,7 +1889,9 @@ const RelationsPresse = () => {
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
                             {article.article_date && (
-                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {formatDate(article.article_date)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -1884,13 +2070,30 @@ const RelationsPresse = () => {
                             variant="outline"
                             size="sm"
                             onClick={handleEnrichJournalists}
-                            disabled={isEnrichingJournalists || (journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length === 0)}
+                            disabled={
+                              isEnrichingJournalists ||
+                              journalists.filter(
+                                (j) =>
+                                  !j.linkedin &&
+                                  !j.email &&
+                                  j.enrichment_status !== "pending" &&
+                                  j.enrichment_status !== "processing",
+                              ).length === 0
+                            }
                             className="gap-2"
                           >
                             {(() => {
-                              const inProgress = journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length;
-                              const toEnrich = journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length;
-                              
+                              const inProgress = journalists.filter(
+                                (j) => j.enrichment_status === "pending" || j.enrichment_status === "processing",
+                              ).length;
+                              const toEnrich = journalists.filter(
+                                (j) =>
+                                  !j.linkedin &&
+                                  !j.email &&
+                                  j.enrichment_status !== "pending" &&
+                                  j.enrichment_status !== "processing",
+                              ).length;
+
                               if (inProgress > 0) {
                                 return (
                                   <>
@@ -1899,7 +2102,7 @@ const RelationsPresse = () => {
                                   </>
                                 );
                               }
-                              
+
                               if (toEnrich > MAX_ENRICHMENT_BATCH) {
                                 return (
                                   <>
@@ -1908,7 +2111,7 @@ const RelationsPresse = () => {
                                   </>
                                 );
                               }
-                              
+
                               return (
                                 <>
                                   <Zap className="w-4 h-4" />
@@ -1920,24 +2123,34 @@ const RelationsPresse = () => {
                         </TooltipTrigger>
                         <TooltipContent className="bg-card border-border shadow-lg">
                           {(() => {
-                            const inProgress = journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length;
-                            const toEnrich = journalists.filter(j => !j.linkedin && !j.email && j.enrichment_status !== 'pending' && j.enrichment_status !== 'processing').length;
-                            
+                            const inProgress = journalists.filter(
+                              (j) => j.enrichment_status === "pending" || j.enrichment_status === "processing",
+                            ).length;
+                            const toEnrich = journalists.filter(
+                              (j) =>
+                                !j.linkedin &&
+                                !j.email &&
+                                j.enrichment_status !== "pending" &&
+                                j.enrichment_status !== "processing",
+                            ).length;
+
                             if (inProgress > 0) {
                               return `${inProgress} journaliste(s) en cours d'enrichissement. Les résultats apparaîtront automatiquement.`;
                             }
-                            
+
                             if (toEnrich > MAX_ENRICHMENT_BATCH) {
                               return `${toEnrich} journalistes à enrichir. Les ${MAX_ENRICHMENT_BATCH} premiers seront traités, puis relancez pour les suivants.`;
                             }
-                            
+
                             return `Rechercher LinkedIn et email pour ${toEnrich} journaliste(s)`;
                           })()}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
 
-                    {journalists.filter(j => j.enrichment_status === 'pending' || j.enrichment_status === 'processing').length > 0 && (
+                    {journalists.filter(
+                      (j) => j.enrichment_status === "pending" || j.enrichment_status === "processing",
+                    ).length > 0 && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -2071,14 +2284,16 @@ const RelationsPresse = () => {
                             <div
                               className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 transition-all duration-300",
-                                journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing'
+                                journalist.enrichment_status === "pending" ||
+                                  journalist.enrichment_status === "processing"
                                   ? "bg-primary/20 text-primary animate-pulse"
-                                  : journalist.selected 
-                                    ? "bg-primary text-primary-foreground" 
+                                  : journalist.selected
+                                    ? "bg-primary text-primary-foreground"
                                     : "bg-secondary text-foreground",
                               )}
                             >
-                              {journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing' ? (
+                              {journalist.enrichment_status === "pending" ||
+                              journalist.enrichment_status === "processing" ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                               ) : (
                                 journalist.name
@@ -2088,7 +2303,8 @@ const RelationsPresse = () => {
                                   .slice(0, 2)
                               )}
                             </div>
-                            {(journalist.enrichment_status === 'pending' || journalist.enrichment_status === 'processing') && (
+                            {(journalist.enrichment_status === "pending" ||
+                              journalist.enrichment_status === "processing") && (
                               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
                                 <Zap className="w-2.5 h-2.5 text-primary-foreground" />
                               </div>
@@ -2249,7 +2465,9 @@ const RelationsPresse = () => {
                     >
                       <Filter className="w-4 h-4 text-primary" />
                       <span className="text-sm font-semibold text-foreground">
-                        {selectedClientFilter ? clients.find(c => c.id === selectedClientFilter)?.name || "Tous les clients" : "Tous les clients"}
+                        {selectedClientFilter
+                          ? clients.find((c) => c.id === selectedClientFilter)?.name || "Tous les clients"
+                          : "Tous les clients"}
                       </span>
                       <ChevronDown
                         className={cn(
@@ -2269,7 +2487,9 @@ const RelationsPresse = () => {
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              !selectedClientFilter ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                              !selectedClientFilter
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground hover:bg-secondary",
                             )}
                           >
                             <Users2 className="w-5 h-5" />
@@ -2338,7 +2558,19 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {(selectedClientFilter ? clientArticles.filter(a => a.client_id === selectedClientFilter) : clientArticles).length} article{(selectedClientFilter ? clientArticles.filter(a => a.client_id === selectedClientFilter) : clientArticles).length !== 1 ? "s" : ""}
+                      {
+                        (selectedClientFilter
+                          ? clientArticles.filter((a) => a.client_id === selectedClientFilter)
+                          : clientArticles
+                        ).length
+                      }{" "}
+                      article
+                      {(selectedClientFilter
+                        ? clientArticles.filter((a) => a.client_id === selectedClientFilter)
+                        : clientArticles
+                      ).length !== 1
+                        ? "s"
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -2347,7 +2579,8 @@ const RelationsPresse = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-muted-foreground">
-                        {hiddenClientArticles.length} article{hiddenClientArticles.length !== 1 ? "s" : ""} masqué{hiddenClientArticles.length !== 1 ? "s" : ""}
+                        {hiddenClientArticles.length} article{hiddenClientArticles.length !== 1 ? "s" : ""} masqué
+                        {hiddenClientArticles.length !== 1 ? "s" : ""}
                       </p>
                       <Button variant="ghost" size="sm" onClick={() => setShowHiddenClient(false)}>
                         Fermer
@@ -2395,7 +2628,9 @@ const RelationsPresse = () => {
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
                             {article.article_date && (
-                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {formatDate(article.article_date)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -2405,10 +2640,10 @@ const RelationsPresse = () => {
                 )}
 
                 {(() => {
-                  const filteredClientArticles = selectedClientFilter 
-                    ? clientArticles.filter(a => a.client_id === selectedClientFilter) 
+                  const filteredClientArticles = selectedClientFilter
+                    ? clientArticles.filter((a) => a.client_id === selectedClientFilter)
                     : clientArticles;
-                  
+
                   return filteredClientArticles.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                       {filteredClientArticles.map((article) => (
@@ -2428,7 +2663,11 @@ const RelationsPresse = () => {
                           )}
                           <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                             {article.thumbnail ? (
-                              <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <img
+                                src={article.thumbnail}
+                                alt=""
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
                                 <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
@@ -2436,7 +2675,9 @@ const RelationsPresse = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
+                            <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                              {article.title}
+                            </h4>
                             <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                               {article.client_name && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-primary/15 text-primary text-xs font-semibold">
@@ -2501,7 +2742,9 @@ const RelationsPresse = () => {
                             }}
                             className={cn(
                               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
-                              !selectedVeilleSource ? "bg-primary/10 text-primary" : "text-foreground hover:bg-secondary",
+                              !selectedVeilleSource
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground hover:bg-secondary",
                             )}
                           >
                             <Eye className="w-5 h-5" />
@@ -2569,7 +2812,19 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length} article{(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length !== 1 ? "s" : ""}
+                      {
+                        (selectedVeilleSource
+                          ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
+                          : veilleArticles
+                        ).length
+                      }{" "}
+                      article
+                      {(selectedVeilleSource
+                        ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
+                        : veilleArticles
+                      ).length !== 1
+                        ? "s"
+                        : ""}
                     </span>
                   </div>
                 </div>
@@ -2602,11 +2857,21 @@ const RelationsPresse = () => {
                             onClick={async (e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              const { error } = await supabase.from("market_watch_topics").delete().eq("id", article.id);
+                              const { error } = await supabase
+                                .from("market_watch_topics")
+                                .delete()
+                                .eq("id", article.id);
                               if (error) {
-                                toast({ title: "Échec de la suppression", description: "Impossible de supprimer cet article.", variant: "destructive" });
+                                toast({
+                                  title: "Échec de la suppression",
+                                  description: "Impossible de supprimer cet article.",
+                                  variant: "destructive",
+                                });
                               } else {
-                                toast({ title: "Article supprimé", description: "L'article a été définitivement supprimé" });
+                                toast({
+                                  title: "Article supprimé",
+                                  description: "L'article a été définitivement supprimé",
+                                });
                                 fetchHiddenVeilleArticles();
                               }
                             }}
@@ -2627,7 +2892,9 @@ const RelationsPresse = () => {
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-semibold text-foreground line-clamp-2">{article.title}</h4>
                             {article.article_date && (
-                              <span className="text-xs text-muted-foreground mt-1">{formatDate(article.article_date)}</span>
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {formatDate(article.article_date)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -2648,9 +2915,15 @@ const RelationsPresse = () => {
                       </div>
                     ))}
                   </div>
-                ) : (selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).length > 0 ? (
+                ) : (selectedVeilleSource
+                    ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
+                    : veilleArticles
+                  ).length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {(selectedVeilleSource ? veilleArticles.filter(a => a.search_topic === selectedVeilleSource) : veilleArticles).map((article) => (
+                    {(selectedVeilleSource
+                      ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
+                      : veilleArticles
+                    ).map((article) => (
                       <div
                         key={article.id}
                         className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
@@ -2667,7 +2940,11 @@ const RelationsPresse = () => {
                         )}
                         <div className="relative w-28 h-24 rounded-xl bg-secondary overflow-hidden flex-shrink-0">
                           {article.thumbnail ? (
-                            <img src={article.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <img
+                              src={article.thumbnail}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary to-muted">
                               <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
@@ -2675,7 +2952,9 @@ const RelationsPresse = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">{article.title}</h4>
+                          <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                            {article.title}
+                          </h4>
                           <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-500/15 text-emerald-600 text-xs font-semibold">
                               <Eye className="w-3 h-3" />
@@ -2683,7 +2962,9 @@ const RelationsPresse = () => {
                             </span>
                             {article.source_name && (
                               <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                                {article.source_icon && <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />}
+                                {article.source_icon && (
+                                  <img src={article.source_icon} alt="" className="w-3.5 h-3.5 rounded" />
+                                )}
                                 {article.source_name}
                               </span>
                             )}
@@ -2721,9 +3002,7 @@ const RelationsPresse = () => {
                       <FileText className="w-5 h-5 text-primary" />
                       Vos communiqués de presse
                     </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Gérez vos communiqués avec PDF, Word et assets
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">Gérez vos communiqués avec PDF, Word et assets</p>
                   </div>
                   <Button onClick={() => setShowAddCommuniqueForm(true)} className="gap-2">
                     <Plus className="w-4 h-4" />
@@ -2748,9 +3027,12 @@ const RelationsPresse = () => {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {communiques.map((communique) => {
-                      const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                      const statusInfo = STATUS_OPTIONS.find((s) => s.value === communique.status) || STATUS_OPTIONS[0];
                       return (
-                        <div key={communique.id} className="relative bg-card/80 backdrop-blur-sm p-6 rounded-3xl group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/50 hover:border-primary/20 hover:-translate-y-1">
+                        <div
+                          key={communique.id}
+                          className="relative bg-card/80 backdrop-blur-sm p-6 rounded-3xl group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 border border-border/50 hover:border-primary/20 hover:-translate-y-1"
+                        >
                           <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/50 to-transparent pointer-events-none" />
 
                           <div className="relative">
@@ -2762,15 +3044,23 @@ const RelationsPresse = () => {
                                 <Select
                                   value={communique.status}
                                   onValueChange={async (newStatus) => {
-                                    await supabase.from("communique_presse").update({ status: newStatus }).eq("id", communique.id);
+                                    await supabase
+                                      .from("communique_presse")
+                                      .update({ status: newStatus })
+                                      .eq("id", communique.id);
                                     fetchCommuniques();
                                   }}
                                 >
-                                  <SelectTrigger className={cn("h-8 text-xs font-semibold border rounded-full px-3 py-1 w-auto min-w-[100px] shadow-sm", statusInfo.color)}>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "h-8 text-xs font-semibold border rounded-full px-3 py-1 w-auto min-w-[100px] shadow-sm",
+                                      statusInfo.color,
+                                    )}
+                                  >
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {STATUS_OPTIONS.map(opt => (
+                                    {STATUS_OPTIONS.map((opt) => (
                                       <SelectItem key={opt.value} value={opt.value}>
                                         {opt.label}
                                       </SelectItem>
@@ -2890,9 +3180,7 @@ const RelationsPresse = () => {
                     <div className="text-center py-8 bg-secondary/30 rounded-xl border border-dashed border-border">
                       <FileText className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
                       <p className="text-sm text-muted-foreground">Aucun communiqué disponible</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Créez-en un dans l'onglet Communiqués
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Créez-en un dans l'onglet Communiqués</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -2904,27 +3192,33 @@ const RelationsPresse = () => {
                             "group relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
                             selectedCommunique?.id === communique.id
                               ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
-                              : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50"
+                              : "border-border bg-secondary/30 hover:border-primary/40 hover:bg-secondary/50",
                           )}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                              selectedCommunique?.id === communique.id
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-primary/10 text-primary group-hover:bg-primary/20"
-                            )}>
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                                selectedCommunique?.id === communique.id
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-primary/10 text-primary group-hover:bg-primary/20",
+                              )}
+                            >
                               <FileText className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold text-sm text-foreground truncate">
-                                  {communique.name}
-                                </h4>
+                                <h4 className="font-semibold text-sm text-foreground truncate">{communique.name}</h4>
                                 {(() => {
-                                  const statusInfo = STATUS_OPTIONS.find(s => s.value === communique.status) || STATUS_OPTIONS[0];
+                                  const statusInfo =
+                                    STATUS_OPTIONS.find((s) => s.value === communique.status) || STATUS_OPTIONS[0];
                                   return (
-                                    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border", statusInfo.color)}>
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                                        statusInfo.color,
+                                      )}
+                                    >
                                       {statusInfo.label}
                                     </span>
                                   );
@@ -3035,7 +3329,15 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowAddSocialyModal(false);
+                      setNewArticleLink("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3054,10 +3356,22 @@ const RelationsPresse = () => {
                   </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddSocialyModal(false); setNewArticleLink(""); }}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setShowAddSocialyModal(false);
+                      setNewArticleLink("");
+                    }}
+                  >
                     Annuler
                   </Button>
-                  <Button size="lg" onClick={handleAddOrganizationArticle} disabled={isAddingArticle} className="min-w-32">
+                  <Button
+                    size="lg"
+                    onClick={handleAddOrganizationArticle}
+                    disabled={isAddingArticle}
+                    className="min-w-32"
+                  >
                     {isAddingArticle ? (
                       <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     ) : (
@@ -3087,7 +3401,16 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un article de veille</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); setSelectedCompetitorId(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowAddCompetitorModal(false);
+                      setNewArticleLink("");
+                      setSelectedCompetitorId("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3106,10 +3429,22 @@ const RelationsPresse = () => {
                   </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddCompetitorModal(false); setNewArticleLink(""); }}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setShowAddCompetitorModal(false);
+                      setNewArticleLink("");
+                    }}
+                  >
                     Annuler
                   </Button>
-                  <Button size="lg" onClick={handleAddCompetitorArticle} disabled={isAddingArticle || !newArticleLink.trim()} className="min-w-32">
+                  <Button
+                    size="lg"
+                    onClick={handleAddCompetitorArticle}
+                    disabled={isAddingArticle || !newArticleLink.trim()}
+                    className="min-w-32"
+                  >
                     {isAddingArticle ? (
                       <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     ) : (
@@ -3139,7 +3474,15 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des concurrents</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowCompetitorManager(false); setNewCompetitorName(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowCompetitorManager(false);
+                      setNewCompetitorName("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3172,38 +3515,38 @@ const RelationsPresse = () => {
                       <Building2 className="w-8 h-8 text-muted-foreground/50" />
                     </div>
                     <p className="text-base font-medium text-muted-foreground">Aucun concurrent</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Ajoutez votre premier concurrent ci-dessus
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">Ajoutez votre premier concurrent ci-dessus</p>
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {agencies.filter(a => a.name !== "Autre").map((agency) => (
-                      <div
-                        key={agency.id}
-                        className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-foreground text-base">{agency.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {articles.filter(a => a.competitor_id === agency.id).length} article(s)
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                          onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                    {agencies
+                      .filter((a) => a.name !== "Autre")
+                      .map((agency) => (
+                        <div
+                          key={agency.id}
+                          className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
                         >
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Building2 className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground text-base">{agency.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {articles.filter((a) => a.competitor_id === agency.id).length} article(s)
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                            onClick={() => handleDeleteCompetitor(agency.id, agency.name)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
@@ -3225,7 +3568,16 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez une retombée presse client</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); setSelectedClientId(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowAddClientModal(false);
+                      setNewArticleLink("");
+                      setSelectedClientId("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3233,13 +3585,41 @@ const RelationsPresse = () => {
               <div className="p-8 space-y-6">
                 <div>
                   <Label className="text-sm font-semibold text-foreground">Lien de l'article</Label>
-                  <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
-                  <p className="text-xs text-muted-foreground mt-2">Les métadonnées seront récupérées automatiquement</p>
+                  <Input
+                    value={newArticleLink}
+                    onChange={(e) => setNewArticleLink(e.target.value)}
+                    placeholder="https://example.com/article..."
+                    className="mt-3 h-12 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Les métadonnées seront récupérées automatiquement
+                  </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddClientModal(false); setNewArticleLink(""); }}>Annuler</Button>
-                  <Button size="lg" onClick={handleAddClientArticle} disabled={isAddingArticle || !newArticleLink.trim()} className="min-w-32">
-                    {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setShowAddClientModal(false);
+                      setNewArticleLink("");
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={handleAddClientArticle}
+                    disabled={isAddingArticle || !newArticleLink.trim()}
+                    className="min-w-32"
+                  >
+                    {isAddingArticle ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -3261,7 +3641,16 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez un sujet à surveiller</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); setNewTopicName(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowAddVeilleModal(false);
+                      setNewArticleLink("");
+                      setNewTopicName("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3269,18 +3658,54 @@ const RelationsPresse = () => {
               <div className="p-8 space-y-6">
                 <div>
                   <Label className="text-sm font-semibold text-foreground">Sujet de veille *</Label>
-                  <Input value={newTopicName} onChange={(e) => setNewTopicName(e.target.value)} placeholder="Ex: IA générative, Green Tech, Blockchain..." className="mt-3 h-12 text-base" />
-                  <p className="text-xs text-muted-foreground mt-2">Le sujet sur lequel vous souhaitez configurer une veille marché</p>
+                  <Input
+                    value={newTopicName}
+                    onChange={(e) => setNewTopicName(e.target.value)}
+                    placeholder="Ex: IA générative, Green Tech, Blockchain..."
+                    className="mt-3 h-12 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Le sujet sur lequel vous souhaitez configurer une veille marché
+                  </p>
                 </div>
                 <div>
                   <Label className="text-sm font-semibold text-foreground">Lien de référence (optionnel)</Label>
-                  <Input value={newArticleLink} onChange={(e) => setNewArticleLink(e.target.value)} placeholder="https://example.com/article..." className="mt-3 h-12 text-base" />
-                  <p className="text-xs text-muted-foreground mt-2">Un lien vers un article de référence sur ce sujet</p>
+                  <Input
+                    value={newArticleLink}
+                    onChange={(e) => setNewArticleLink(e.target.value)}
+                    placeholder="https://example.com/article..."
+                    className="mt-3 h-12 text-base"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Un lien vers un article de référence sur ce sujet
+                  </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowAddVeilleModal(false); setNewArticleLink(""); setNewTopicName(""); }}>Annuler</Button>
-                  <Button size="lg" onClick={handleAddVeilleArticle} disabled={isAddingArticle || !newTopicName.trim()} className="min-w-32">
-                    {isAddingArticle ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setShowAddVeilleModal(false);
+                      setNewArticleLink("");
+                      setNewTopicName("");
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    size="lg"
+                    onClick={handleAddVeilleArticle}
+                    disabled={isAddingArticle || !newTopicName.trim()}
+                    className="min-w-32"
+                  >
+                    {isAddingArticle ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -3302,16 +3727,37 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Ajoutez ou supprimez des clients</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => { setShowClientManager(false); setNewClientName(""); }}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => {
+                      setShowClientManager(false);
+                      setNewClientName("");
+                    }}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
               </div>
               <div className="p-8 space-y-6">
                 <div className="flex gap-3">
-                  <Input value={newClientName} onChange={(e) => setNewClientName(e.target.value)} placeholder="Nom du client..." className="flex-1 h-12 text-base" onKeyDown={(e) => e.key === "Enter" && handleAddClient()} />
+                  <Input
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    placeholder="Nom du client..."
+                    className="flex-1 h-12 text-base"
+                    onKeyDown={(e) => e.key === "Enter" && handleAddClient()}
+                  />
                   <Button size="lg" onClick={handleAddClient} disabled={isAddingClient} className="px-6">
-                    {isAddingClient ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <><Plus className="w-5 h-5 mr-2" />Ajouter</>}
+                    {isAddingClient ? (
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Ajouter
+                      </>
+                    )}
                   </Button>
                 </div>
                 {clients.length === 0 ? (
@@ -3324,19 +3770,29 @@ const RelationsPresse = () => {
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {clients.filter(c => c.name !== "Autre").map((client) => (
-                      <div key={client.id} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <Briefcase className="w-6 h-6 text-primary" />
+                    {clients
+                      .filter((c) => c.name !== "Autre")
+                      .map((client) => (
+                        <div
+                          key={client.id}
+                          className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                              <Briefcase className="w-6 h-6 text-primary" />
+                            </div>
+                            <p className="font-semibold text-foreground text-base">{client.name}</p>
                           </div>
-                          <p className="font-semibold text-foreground text-base">{client.name}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                            onClick={() => handleDeleteClient(client.id, client.name)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleDeleteClient(client.id, client.name)}>
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </div>
@@ -3358,7 +3814,12 @@ const RelationsPresse = () => {
                       <p className="text-sm text-muted-foreground mt-0.5">Vos sources de veille marché actives</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full h-10 w-10" onClick={() => setShowVeilleManager(false)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10"
+                    onClick={() => setShowVeilleManager(false)}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -3375,16 +3836,21 @@ const RelationsPresse = () => {
                 ) : (
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {uniqueVeilleTopics.map((topic) => {
-                      const count = veilleArticles.filter(a => a.search_topic === topic).length;
+                      const count = veilleArticles.filter((a) => a.search_topic === topic).length;
                       return (
-                        <div key={topic} className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border">
+                        <div
+                          key={topic}
+                          className="group flex items-center justify-between p-5 bg-secondary/40 hover:bg-secondary/60 rounded-2xl transition-all border border-transparent hover:border-border"
+                        >
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                               <Eye className="w-6 h-6 text-emerald-600" />
                             </div>
                             <div>
                               <p className="font-semibold text-foreground text-base">{topic}</p>
-                              <p className="text-sm text-muted-foreground">{count} article{count !== 1 ? "s" : ""}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {count} article{count !== 1 ? "s" : ""}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -3393,7 +3859,15 @@ const RelationsPresse = () => {
                   </div>
                 )}
                 <div className="flex justify-end pt-4">
-                  <Button variant="outline" size="lg" onClick={() => { setShowVeilleManager(false); setShowAddVeilleModal(true); }} className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      setShowVeilleManager(false);
+                      setShowAddVeilleModal(true);
+                    }}
+                    className="gap-2"
+                  >
                     <Plus className="w-5 h-5" />
                     Ajouter un sujet
                   </Button>
