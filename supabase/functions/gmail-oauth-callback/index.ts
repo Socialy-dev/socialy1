@@ -1,6 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+async function verifyHmacSignature(data: string, signature: string, secret: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const dataToVerify = encoder.encode(data);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+  
+  const signatureBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+  
+  return await crypto.subtle.verify("HMAC", cryptoKey, signatureBytes, dataToVerify);
+}
+
 serve(async (req) => {
   try {
     const url = new URL(req.url);
@@ -46,7 +64,24 @@ serve(async (req) => {
       return errorRedirect("Invalid state parameter");
     }
 
-    const { user_id, org_id, timestamp, nonce } = stateData;
+    const { payload, signature } = stateData;
+    
+    if (!payload || !signature) {
+      return errorRedirect("Invalid state structure");
+    }
+
+    const isValidSignature = await verifyHmacSignature(
+      JSON.stringify(payload),
+      signature,
+      googleClientSecret
+    );
+
+    if (!isValidSignature) {
+      console.error("Invalid state signature - potential tampering detected");
+      return errorRedirect("Security validation failed");
+    }
+
+    const { user_id, org_id, timestamp, nonce } = payload;
 
     if (!user_id || !org_id || !timestamp || !nonce) {
       return errorRedirect("Invalid state data");
@@ -55,6 +90,20 @@ serve(async (req) => {
     const stateAge = Date.now() - timestamp;
     if (stateAge > 10 * 60 * 1000) {
       return errorRedirect("State expired, please try again");
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: membership, error: memberError } = await supabase
+      .from("organization_members")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("organization_id", org_id)
+      .single();
+
+    if (memberError || !membership) {
+      console.error("User not member of organization:", user_id, org_id);
+      return errorRedirect("Access denied");
     }
 
     const redirectUri = `${supabaseUrl}/functions/v1/gmail-oauth-callback`;
@@ -94,8 +143,6 @@ serve(async (req) => {
       console.error("User info error:", userInfo);
       return errorRedirect("Failed to get user email");
     }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const tokenExpiry = new Date(Date.now() + expires_in * 1000).toISOString();
 
