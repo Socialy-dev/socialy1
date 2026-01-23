@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   ArrowLeft, 
   Fingerprint, 
@@ -17,7 +17,10 @@ import {
   Linkedin,
   Twitter,
   Instagram,
-  Facebook
+  Facebook,
+  Loader2,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { useGmailConnections } from "@/hooks/useGmailConnections";
 
 type TabType = "identity" | "company" | "memory" | "contact" | "integrations";
 
@@ -46,10 +50,40 @@ const tabs: TabItem[] = [
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, currentOrganization } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("identity");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const {
+    connections: gmailConnections,
+    isLoading: isLoadingGmail,
+    connectGmail,
+    isConnecting,
+    disconnectGmail,
+    isDisconnecting,
+  } = useGmailConnections();
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tabs.some(t => t.id === tab)) {
+      setActiveTab(tab as TabType);
+    }
+    
+    const success = searchParams.get("success");
+    const error = searchParams.get("error");
+    
+    if (success === "gmail_connected") {
+      toast.success("Compte Gmail connecté avec succès !");
+      setSearchParams({});
+    }
+    
+    if (error) {
+      toast.error(decodeURIComponent(error));
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
   
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -554,6 +588,72 @@ const Profile = () => {
               </div>
               <div className="p-6">
                 <div className="grid gap-4">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/30 hover:bg-secondary/50 transition-all border border-transparent hover:border-border/30">
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: "#EA433515" }}
+                      >
+                        <Mail className="w-6 h-6" style={{ color: "#EA4335" }} />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Gmail</p>
+                        {gmailConnections.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                            <p className="text-sm text-muted-foreground">
+                              {gmailConnections.length} compte{gmailConnections.length > 1 ? "s" : ""} connecté{gmailConnections.length > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Non connecté</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => connectGmail()}
+                      disabled={isConnecting}
+                      className="h-10 rounded-xl"
+                    >
+                      {isConnecting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Connecter"
+                      )}
+                    </Button>
+                  </div>
+
+                  {gmailConnections.map((connection) => (
+                    <div
+                      key={connection.id}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                          <Mail className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{connection.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Connecté le {new Date(connection.connected_at).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => disconnectGmail(connection.id)}
+                        disabled={isDisconnecting}
+                        className="h-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        {isDisconnecting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Déconnecter"
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+
                   {[
                     { name: "LinkedIn", icon: Linkedin, connected: false, color: "#0A66C2" },
                     { name: "Google Drive", icon: Globe, connected: false, color: "#4285F4" },

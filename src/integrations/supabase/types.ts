@@ -403,6 +403,62 @@ export type Database = {
           },
         ]
       }
+      gmail_connections: {
+        Row: {
+          access_token: string
+          connected_at: string
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          last_synced_at: string | null
+          organization_id: string
+          refresh_token: string
+          scopes: string[]
+          token_expiry: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          connected_at?: string
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          organization_id: string
+          refresh_token: string
+          scopes?: string[]
+          token_expiry: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          connected_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          last_synced_at?: string | null
+          organization_id?: string
+          refresh_token?: string
+          scopes?: string[]
+          token_expiry?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gmail_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           created_at: string
