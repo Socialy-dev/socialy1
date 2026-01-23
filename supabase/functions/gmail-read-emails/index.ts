@@ -1,24 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { 
+  getCorsHeaders, 
+  validateAuthAndOrg, 
+  createErrorResponse, 
+  createSuccessResponse 
+} from "../_shared/security-helper.ts";
 import { getValidGmailToken } from "../_shared/gmail-token-helper.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
     const { user_id, organization_id, max_results = 10 } = await req.json();
 
     if (!user_id) {
-      return new Response(
-        JSON.stringify({ error: "user_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return createErrorResponse("user_id is required", 400, corsHeaders);
+    }
+
+    if (!organization_id) {
+      return createErrorResponse("organization_id is required", 400, corsHeaders);
+    }
+
+    const validation = await validateAuthAndOrg(authHeader, organization_id);
+    if (!validation.success) {
+      return createErrorResponse(validation.error!, validation.status!, corsHeaders);
+    }
+
+    if (validation.user!.id !== user_id) {
+      return createErrorResponse("Cannot read emails for another user", 403, corsHeaders);
     }
 
     let accessToken: string;
@@ -27,22 +42,10 @@ serve(async (req) => {
     } catch (err) {
       const error = err as Error;
       if (error.message === "GMAIL_NOT_CONNECTED") {
-        return new Response(
-          JSON.stringify({ 
-            error: "GMAIL_NOT_CONNECTED", 
-            message: "No active Gmail connection found. Please connect your Gmail account." 
-          }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return createErrorResponse("Gmail not connected", 404, corsHeaders);
       }
       if (error.message === "REFRESH_TOKEN_REVOKED") {
-        return new Response(
-          JSON.stringify({ 
-            error: "REFRESH_TOKEN_REVOKED", 
-            message: "Gmail access has been revoked. Please reconnect your account." 
-          }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return createErrorResponse("Gmail access revoked, please reconnect", 401, corsHeaders);
       }
       throw error;
     }
@@ -50,9 +53,7 @@ serve(async (req) => {
     const messagesResponse = await fetch(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${max_results}`,
       {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
@@ -61,20 +62,11 @@ serve(async (req) => {
       console.error("Gmail API error:", errorData);
 
       if (messagesResponse.status === 401) {
-        return new Response(
-          JSON.stringify({ 
-            error: "GMAIL_AUTH_ERROR", 
-            message: "Gmail authentication failed. Please reconnect your account." 
-          }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return createErrorResponse("Gmail authentication failed", 401, corsHeaders);
       }
 
       return new Response(
-        JSON.stringify({ 
-          error: "GMAIL_API_ERROR", 
-          message: errorData.error?.message || "Failed to fetch emails" 
-        }),
+        JSON.stringify({ error: "Failed to fetch emails", details: errorData }),
         { status: messagesResponse.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -87,9 +79,7 @@ serve(async (req) => {
         const detailResponse = await fetch(
           `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
           {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
+            headers: { Authorization: `Bearer ${accessToken}` },
           }
         );
 
@@ -100,7 +90,7 @@ serve(async (req) => {
         const detail = await detailResponse.json();
         const headers = detail.payload?.headers || [];
 
-        const getHeader = (name: string) => 
+        const getHeader = (name: string) =>
           headers.find((h: { name: string; value: string }) => h.name.toLowerCase() === name.toLowerCase())?.value || null;
 
         return {
@@ -115,21 +105,14 @@ serve(async (req) => {
       })
     );
 
-    return new Response(
-      JSON.stringify({ 
-        emails: emailDetails,
-        result_size_estimate: messagesData.resultSizeEstimate,
-        next_page_token: messagesData.nextPageToken 
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
+    return createSuccessResponse({
+      emails: emailDetails,
+      result_size_estimate: messagesData.resultSizeEstimate,
+      next_page_token: messagesData.nextPageToken,
+    }, corsHeaders);
   } catch (err) {
     const error = err as Error;
     console.error("Unexpected error:", error);
-    return new Response(
-      JSON.stringify({ error: "INTERNAL_ERROR", message: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error.message, 500, corsHeaders);
   }
 });
