@@ -99,7 +99,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   };
 
   const handleMouseLeave = () => {
-    if (!collapsed && !isOrgDropdownOpen) {
+    if (!collapsed) {
+      setIsOrgDropdownOpen(false);
       onToggle();
       setExpandedItems([]);
     }
