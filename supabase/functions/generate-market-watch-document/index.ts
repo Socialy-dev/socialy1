@@ -40,19 +40,14 @@ serve(async (req) => {
     const supabase = getServiceClient();
 
     const now = new Date();
-    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    const periodStartStr = periodStart.toISOString().split('T')[0];
-    const periodEndStr = periodEnd.toISOString().split('T')[0];
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
     const { data: existingDoc, error: existingError } = await supabase
       .from("market_watch_documents")
       .select("*")
       .eq("organization_id", organization_id)
-      .eq("period_start", periodStartStr)
-      .eq("period_end", periodEndStr)
-      .single();
+      .eq("month", currentMonth)
+      .maybeSingle();
 
     if (existingDoc && existingDoc.status === 'completed' && !force_regenerate) {
       console.log("Document already exists and is completed:", existingDoc.id);
@@ -74,14 +69,17 @@ serve(async (req) => {
       return createErrorResponse("Organization not found", 404, corsHeaders);
     }
 
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
     const { data: topics, error: topicsError } = await supabase
       .from("market_watch_topics")
       .select("search_topic, title, snippet, source_name, link, article_date")
       .eq("organization_id", organization_id)
       .eq("hidden", false)
       .not("title", "is", null)
-      .gte("created_at", periodStart.toISOString())
-      .lte("created_at", periodEnd.toISOString())
+      .gte("created_at", monthStart.toISOString())
+      .lte("created_at", monthEnd.toISOString())
       .order("article_iso_date", { ascending: false });
 
     if (topicsError) {
@@ -120,8 +118,7 @@ serve(async (req) => {
         .insert({
           organization_id,
           title: documentTitle,
-          period_start: periodStartStr,
-          period_end: periodEndStr,
+          month: currentMonth,
           status: 'pending',
         })
         .select()
@@ -138,8 +135,7 @@ serve(async (req) => {
       document_id: documentRecord.id,
       organization_id,
       organization_name: org.name,
-      period_start: periodStartStr,
-      period_end: periodEndStr,
+      month: currentMonth,
       topics: topics || [],
       user_id: validation.user!.id,
       created_at: new Date().toISOString(),

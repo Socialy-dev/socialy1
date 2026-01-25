@@ -7,8 +7,7 @@ interface MarketWatchDocument {
   organization_id: string;
   title: string;
   content: string | null;
-  period_start: string;
-  period_end: string;
+  month: string;
   status: string;
   generated_at: string | null;
   created_at: string;
@@ -27,19 +26,14 @@ export function useMarketWatchDocument(organizationId: string | null) {
     setIsLoading(true);
     try {
       const now = new Date();
-      const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      const periodStartStr = periodStart.toISOString().split('T')[0];
-      const periodEndStr = periodEnd.toISOString().split('T')[0];
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
       const { data, error } = await supabase
         .from("market_watch_documents")
         .select("*")
         .eq("organization_id", organizationId)
-        .eq("period_start", periodStartStr)
-        .eq("period_end", periodEndStr)
-        .single();
+        .eq("month", currentMonth)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error("Error fetching document:", error);
