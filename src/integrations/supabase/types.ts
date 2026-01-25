@@ -701,7 +701,7 @@ export type Database = {
           month: string
           organization_id: string
           status: string
-          title: string
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -712,7 +712,7 @@ export type Database = {
           month: string
           organization_id: string
           status?: string
-          title: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -723,7 +723,7 @@ export type Database = {
           month?: string
           organization_id?: string
           status?: string
-          title?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: [

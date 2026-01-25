@@ -1,0 +1,1 @@
+ALTER TABLE public.market_watch_documents ALTER COLUMN title DROP NOT NULL;
