@@ -42,6 +42,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
+import { MarketWatchDocumentModal } from "@/components/presse/MarketWatchDocumentModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import { useMarketWatchDocument } from "@/hooks/useMarketWatchDocument";
 
 interface Article {
   id: string;
@@ -615,6 +617,13 @@ const RelationsPresse = () => {
   const [showVeilleDropdown, setShowVeilleDropdown] = useState(false);
   const [selectedVeilleSource, setSelectedVeilleSource] = useState<string | null>(null);
   const [showVeilleManager, setShowVeilleManager] = useState(false);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+
+  const { 
+    document: marketWatchDocument, 
+    isGenerating: isGeneratingDocument, 
+    generateDocument 
+  } = useMarketWatchDocument(effectiveOrgId);
 
   const fetchHiddenOrganizationArticles = async () => {
     const {
@@ -2801,6 +2810,14 @@ const RelationsPresse = () => {
                         Voir masqués
                       </Button>
                     )}
+                    <Button 
+                      onClick={() => setShowDocumentModal(true)}
+                      size="sm"
+                      className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md shadow-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/30"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Document veille du mois
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => setShowVeilleManager(true)} className="gap-2">
                       <Eye className="w-4 h-4" />
                       Sujets
@@ -3874,6 +3891,14 @@ const RelationsPresse = () => {
             </div>
           </div>
         )}
+
+        <MarketWatchDocumentModal
+          isOpen={showDocumentModal}
+          onClose={() => setShowDocumentModal(false)}
+          document={marketWatchDocument}
+          isGenerating={isGeneratingDocument}
+          onGenerate={generateDocument}
+        />
       </div>
     </div>
   );
