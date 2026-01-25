@@ -692,6 +692,53 @@ export type Database = {
           },
         ]
       }
+      market_watch_documents: {
+        Row: {
+          content: string | null
+          created_at: string
+          generated_at: string | null
+          id: string
+          organization_id: string
+          period_end: string
+          period_start: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          organization_id: string
+          period_end: string
+          period_start: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          organization_id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_watch_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_watch_topics: {
         Row: {
           article_date: string | null
