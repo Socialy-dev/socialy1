@@ -86,7 +86,7 @@ export function MarketWatchDocumentModal({
       );
     }
 
-    if (document.status === 'pending') {
+    if (document.status === 'pending' && !document.content) {
       return (
         <div className="flex flex-col items-center justify-center py-20 px-8">
           <div className="relative w-24 h-24 mb-6">
@@ -236,28 +236,40 @@ export function MarketWatchDocumentModal({
 function formatMarkdownToHtml(markdown: string): string {
   let html = markdown;
 
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  html = html.replace(/^#### (.+)$/gm, '<h4 class="text-lg font-semibold mt-6 mb-3 text-foreground">$1</h4>');
+  html = html.replace(/^### (.+)$/gm, '<h3 class="text-xl font-bold mt-10 mb-4 text-foreground border-l-4 border-primary pl-4">$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold mt-14 mb-6 text-primary pb-3 border-b border-border">$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 class="text-4xl font-extrabold mb-10 pb-6 border-b-2 border-primary text-foreground">$1</h1>');
 
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
 
-  html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-medium">$1</a>');
 
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  html = html.replace(/^\s*[-•]\s+(.+)$/gm, '<li class="mb-2 pl-2">$1</li>');
+  html = html.replace(/(<li[^>]*>.*<\/li>\n?)+/g, (match) => `<ul class="my-6 ml-6 space-y-2 list-disc list-outside">${match}</ul>`);
 
-  html = html.replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li class="mb-2 pl-2">$1</li>');
 
-  html = html.replace(/---/g, '<hr />');
+  html = html.replace(/^>\s*(.+)$/gm, '<blockquote class="my-6 py-4 px-6 bg-primary/5 border-l-4 border-primary rounded-r-xl italic text-muted-foreground">$1</blockquote>');
 
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = '<p>' + html + '</p>';
-  html = html.replace(/<p><(h[1-3]|ul|blockquote|hr)/g, '<$1');
-  html = html.replace(/<\/(h[1-3]|ul|blockquote)><\/p>/g, '</$1>');
-  html = html.replace(/<p><\/p>/g, '');
-  html = html.replace(/<hr \/><\/p>/g, '<hr />');
+  html = html.replace(/^---$/gm, '<hr class="my-12 border-t-2 border-border" />');
+  html = html.replace(/^\*\*\*$/gm, '<hr class="my-12 border-t-2 border-border" />');
+
+  const paragraphs = html.split(/\n\n+/);
+  html = paragraphs.map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || 
+        trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr') || trimmed.startsWith('<li')) {
+      return trimmed;
+    }
+    return `<p class="mb-6 leading-relaxed text-muted-foreground">${trimmed}</p>`;
+  }).join('\n');
+
+  html = html.replace(/<p[^>]*>\s*<(h[1-4]|ul|ol|blockquote|hr)/g, '<$1');
+  html = html.replace(/<\/(h[1-4]|ul|ol|blockquote)>\s*<\/p>/g, '</$1>');
+  html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
 
   return html;
 }
