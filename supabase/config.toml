@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.gmail-read-emails]
 verify_jwt = false
+
+[functions.generate-market-watch-document]
+verify_jwt = false
