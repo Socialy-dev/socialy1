@@ -8,8 +8,7 @@ interface MarketWatchDocument {
   organization_id: string;
   title: string;
   content: string | null;
-  period_start: string;
-  period_end: string;
+  month: string;
   status: string;
   generated_at: string | null;
   created_at: string;
@@ -41,6 +40,15 @@ export function MarketWatchDocumentModal({
       month: "long",
       year: "numeric",
     });
+  };
+
+  const formatMonth = (monthStr: string) => {
+    const [year, month] = monthStr.split('-');
+    const monthNames = [
+      "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+    return `${monthNames[parseInt(month, 10) - 1]} ${year}`;
   };
 
   const renderContent = () => {
@@ -143,9 +151,7 @@ export function MarketWatchDocumentModal({
               <h2 className="text-xl font-bold text-foreground">{document.title}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4" />
-                <span>
-                  {formatDate(document.period_start)} - {formatDate(document.period_end)}
-                </span>
+                <span>{formatMonth(document.month)}</span>
               </div>
             </div>
           </div>

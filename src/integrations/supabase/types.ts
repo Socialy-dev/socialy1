@@ -698,9 +698,8 @@ export type Database = {
           created_at: string
           generated_at: string | null
           id: string
+          month: string
           organization_id: string
-          period_end: string
-          period_start: string
           status: string
           title: string
           updated_at: string
@@ -710,9 +709,8 @@ export type Database = {
           created_at?: string
           generated_at?: string | null
           id?: string
+          month: string
           organization_id: string
-          period_end: string
-          period_start: string
           status?: string
           title: string
           updated_at?: string
@@ -722,9 +720,8 @@ export type Database = {
           created_at?: string
           generated_at?: string | null
           id?: string
+          month?: string
           organization_id?: string
-          period_end?: string
-          period_start?: string
           status?: string
           title?: string
           updated_at?: string
