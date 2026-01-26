@@ -17,23 +17,15 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("authorization");
     const body = await req.json();
-    const { keyword, country, media_type, organization_id, user_id } = body;
+    const { search_term, search_type, organization_id, user_id } = body;
 
     const authResult = await validateAuthAndOrg(authHeader, organization_id);
     if (!authResult.success) {
       return createErrorResponse(authResult.error!, authResult.status!, corsHeaders);
     }
 
-    if (!keyword || typeof keyword !== "string" || keyword.trim().length === 0) {
-      return createErrorResponse("INVALID_KEYWORD", 400, corsHeaders);
-    }
-
-    if (!country || !["FR", "US", "GB", "DE", "ES"].includes(country)) {
-      return createErrorResponse("INVALID_COUNTRY", 400, corsHeaders);
-    }
-
-    if (!media_type || !["all", "image", "video"].includes(media_type)) {
-      return createErrorResponse("INVALID_MEDIA_TYPE", 400, corsHeaders);
+    if (!search_term || typeof search_term !== "string" || search_term.trim().length < 2) {
+      return createErrorResponse("INVALID_SEARCH_TERM", 400, corsHeaders);
     }
 
     const webhookUrl = Deno.env.get("N8N_SEARCH_CREATIVES_WEBHOOK_URL");
@@ -42,16 +34,20 @@ serve(async (req) => {
       return createErrorResponse("WEBHOOK_NOT_CONFIGURED", 500, corsHeaders);
     }
 
+    const detectedType = search_term.includes("pinterest.com") ? "url" : "keyword";
+
     const payload = {
-      keyword: keyword.trim(),
-      country,
-      media_type,
+      search_term: search_term.trim(),
+      search_type: search_type || detectedType,
       organization_id,
       user_id: user_id || authResult.user!.id,
       requested_at: new Date().toISOString(),
     };
 
-    console.log("Sending search request to webhook:", { keyword: payload.keyword, country, media_type });
+    console.log("Sending Pinterest search request to webhook:", { 
+      search_term: payload.search_term, 
+      search_type: payload.search_type 
+    });
 
     const webhookResponse = await fetch(webhookUrl, {
       method: "POST",
