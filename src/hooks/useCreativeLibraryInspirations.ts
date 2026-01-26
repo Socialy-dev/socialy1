@@ -21,6 +21,8 @@ export interface CreativeInspiration {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  storage_path: string | null;
+  original_url: string | null;
 }
 
 export interface CreateInspirationInput {
@@ -33,6 +35,59 @@ export interface CreateInspirationInput {
   tags?: string[];
   industry?: string;
   format?: string;
+  file?: File;
+}
+
+async function uploadInspirationFile(
+  file: File,
+  organizationId: string
+): Promise<{ storagePath: string; signedUrl: string } | null> {
+  try {
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${organizationId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("creative_inspirations")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return null;
+    }
+
+    const { data: signedData, error: signError } = await supabase.storage
+      .from("creative_inspirations")
+      .createSignedUrl(filePath, 3600);
+
+    if (signError || !signedData) {
+      console.error("Sign URL error:", signError);
+      return null;
+    }
+
+    return { storagePath: filePath, signedUrl: signedData.signedUrl };
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    return null;
+  }
+}
+
+export async function getInspirationSignedUrl(storagePath: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.storage
+      .from("creative_inspirations")
+      .createSignedUrl(storagePath, 3600);
+
+    if (error) {
+      console.error("Error creating signed URL:", error);
+      return null;
+    }
+
+    return data.signedUrl;
+  } catch (error) {
+    console.error("Error in getInspirationSignedUrl:", error);
+    return null;
+  }
 }
 
 export function useCreativeLibraryInspirations(
@@ -71,7 +126,24 @@ export function useCreativeLibraryInspirations(
         return [];
       }
 
-      return data as CreativeInspiration[];
+      const inspirationsWithUrls = await Promise.all(
+        (data as CreativeInspiration[]).map(async (item) => {
+          if (item.storage_path) {
+            const signedUrl = await getInspirationSignedUrl(item.storage_path);
+            if (signedUrl) {
+              const isVideo = item.storage_path.match(/\.(mp4|webm|mov|avi)$/i);
+              return {
+                ...item,
+                image_url: isVideo ? item.image_url : signedUrl,
+                video_url: isVideo ? signedUrl : item.video_url,
+              };
+            }
+          }
+          return item;
+        })
+      );
+
+      return inspirationsWithUrls;
     },
     enabled: !!effectiveOrgId,
   });
@@ -83,6 +155,28 @@ export function useCreativeLibraryInspirations(
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) throw new Error("Not authenticated");
 
+      let storagePath: string | null = null;
+      let imageUrl = input.image_url || null;
+      let videoUrl = input.video_url || null;
+      let originalUrl: string | null = null;
+
+      if (input.file) {
+        const uploadResult = await uploadInspirationFile(input.file, effectiveOrgId);
+        if (uploadResult) {
+          storagePath = uploadResult.storagePath;
+          const isVideo = input.file.type.startsWith("video/");
+          if (isVideo) {
+            videoUrl = uploadResult.signedUrl;
+          } else {
+            imageUrl = uploadResult.signedUrl;
+          }
+        }
+      } else if (input.image_url) {
+        originalUrl = input.image_url;
+      } else if (input.video_url) {
+        originalUrl = input.video_url;
+      }
+
       const { data, error } = await supabase
         .from("creative_library_inspirations")
         .insert({
@@ -90,8 +184,8 @@ export function useCreativeLibraryInspirations(
           platform: input.platform,
           title: input.title,
           description: input.description,
-          image_url: input.image_url,
-          video_url: input.video_url,
+          image_url: storagePath ? null : imageUrl,
+          video_url: storagePath ? null : videoUrl,
           source_url: input.source_url,
           tags: input.tags,
           industry: input.industry,
@@ -99,6 +193,8 @@ export function useCreativeLibraryInspirations(
           source_type: "manual",
           is_scraped: false,
           created_by: session.session.user.id,
+          storage_path: storagePath,
+          original_url: originalUrl,
         })
         .select()
         .single();
@@ -125,6 +221,18 @@ export function useCreativeLibraryInspirations(
 
   const deleteInspiration = useMutation({
     mutationFn: async (id: string) => {
+      const inspiration = inspirations.find((i) => i.id === id);
+      
+      if (inspiration?.storage_path) {
+        const { error: storageError } = await supabase.storage
+          .from("creative_inspirations")
+          .remove([inspiration.storage_path]);
+        
+        if (storageError) {
+          console.error("Error deleting file from storage:", storageError);
+        }
+      }
+
       const { error } = await supabase
         .from("creative_library_inspirations")
         .delete()

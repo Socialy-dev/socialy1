@@ -314,10 +314,12 @@ export type Database = {
           industry: string | null
           is_scraped: boolean
           organization_id: string
+          original_url: string | null
           platform: string
           scraped_at: string | null
           source_type: string
           source_url: string | null
+          storage_path: string | null
           tags: string[] | null
           title: string | null
           updated_at: string
@@ -333,10 +335,12 @@ export type Database = {
           industry?: string | null
           is_scraped?: boolean
           organization_id: string
+          original_url?: string | null
           platform: string
           scraped_at?: string | null
           source_type?: string
           source_url?: string | null
+          storage_path?: string | null
           tags?: string[] | null
           title?: string | null
           updated_at?: string
@@ -352,10 +356,12 @@ export type Database = {
           industry?: string | null
           is_scraped?: boolean
           organization_id?: string
+          original_url?: string | null
           platform?: string
           scraped_at?: string | null
           source_type?: string
           source_url?: string | null
+          storage_path?: string | null
           tags?: string[] | null
           title?: string | null
           updated_at?: string
