@@ -1591,16 +1591,6 @@ const RelationsPresse = () => {
                         Voir masqués
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleUpdateOrganizationArticles}
-                      disabled={isUpdatingOrganizationArticles}
-                      className="gap-2"
-                    >
-                      <RefreshCw className={cn("w-4 h-4", isUpdatingOrganizationArticles && "animate-spin")} />
-                      {isUpdatingOrganizationArticles ? "Mise à jour..." : "Mettre à jour"}
-                    </Button>
                     <Button variant="outline" size="sm" onClick={() => setShowAddSocialyModal(true)} className="gap-2">
                       <Plus className="w-4 h-4" />
                       Ajouter
