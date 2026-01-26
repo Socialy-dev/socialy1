@@ -303,6 +303,74 @@ export type Database = {
           },
         ]
       }
+      creative_library_inspirations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          format: string | null
+          id: string
+          image_url: string | null
+          industry: string | null
+          is_scraped: boolean
+          organization_id: string
+          platform: string
+          scraped_at: string | null
+          source_type: string
+          source_url: string | null
+          tags: string[] | null
+          title: string | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          is_scraped?: boolean
+          organization_id: string
+          platform: string
+          scraped_at?: string | null
+          source_type?: string
+          source_url?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          format?: string | null
+          id?: string
+          image_url?: string | null
+          industry?: string | null
+          is_scraped?: boolean
+          organization_id?: string
+          platform?: string
+          scraped_at?: string | null
+          source_type?: string
+          source_url?: string | null
+          tags?: string[] | null
+          title?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creative_library_inspirations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           content: string
