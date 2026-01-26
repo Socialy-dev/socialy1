@@ -152,7 +152,7 @@ serve(async (req) => {
     }
 
     const adAccountsResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/adaccounts?fields=id,name,account_id,account_status,business&access_token=${longLivedToken}`
+      `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name&access_token=${longLivedToken}`
     );
 
     const adAccountsData = await adAccountsResponse.json();
@@ -161,10 +161,11 @@ serve(async (req) => {
     let businessId: string | null = null;
 
     if (adAccountsResponse.ok && adAccountsData.data) {
-      adAccountIds = adAccountsData.data.map((acc: any) => acc.account_id || acc.id.replace("act_", ""));
-      if (adAccountsData.data[0]?.business?.id) {
-        businessId = adAccountsData.data[0].business.id;
-      }
+      adAccountIds = adAccountsData.data.map((acc: any) => {
+        const accountId = acc.account_id;
+        return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+      });
+      console.log("Ad Account IDs fetched:", adAccountIds);
     }
 
     const tokenExpiry = new Date(Date.now() + longLivedExpiry * 1000).toISOString();
