@@ -152,6 +152,7 @@ serve(async (req) => {
     }
 
     let adAccountIds: string[] = [];
+    let adAccountDetails: Array<{ id: string; name: string; business_name: string }> = [];
     let businessId: string | null = null;
 
     const businessesResponse = await fetch(
@@ -169,15 +170,19 @@ serve(async (req) => {
 
         while (nextUrl) {
           const response: Response = await fetch(nextUrl);
-          const data: { data?: Array<{ account_id: string; name: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+          const data: { data?: Array<{ account_id: string; name: string; business_name?: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
 
           if (response.ok && data.data) {
-            const pageIds = data.data.map((acc) => {
-              const accountId = acc.account_id;
-              return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
-            });
-            adAccountIds = [...adAccountIds, ...pageIds];
-            console.log(`Fetched ${pageIds.length} ad accounts from business ${business.name} (total: ${adAccountIds.length})`);
+            for (const acc of data.data) {
+              const accountId = acc.account_id.startsWith("act_") ? acc.account_id : `act_${acc.account_id}`;
+              adAccountIds.push(accountId);
+              adAccountDetails.push({
+                id: accountId,
+                name: acc.name || accountId,
+                business_name: acc.business_name || business.name || "",
+              });
+            }
+            console.log(`Fetched ${data.data.length} ad accounts from business ${business.name} (total: ${adAccountIds.length})`);
             nextUrl = data.paging?.next || null;
           } else {
             console.error("Error fetching business ad accounts:", data);
@@ -189,18 +194,22 @@ serve(async (req) => {
 
     if (adAccountIds.length === 0) {
       console.log("No business ad accounts found, falling back to personal ad accounts");
-      let nextUrl: string | null = `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name&limit=100&access_token=${longLivedToken}`;
+      let nextUrl: string | null = `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name,business_name&limit=100&access_token=${longLivedToken}`;
 
       while (nextUrl) {
         const response: Response = await fetch(nextUrl);
-        const data: { data?: Array<{ account_id: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+        const data: { data?: Array<{ account_id: string; name?: string; business_name?: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
 
         if (response.ok && data.data) {
-          const pageIds = data.data.map((acc) => {
-            const accountId = acc.account_id;
-            return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
-          });
-          adAccountIds = [...adAccountIds, ...pageIds];
+          for (const acc of data.data) {
+            const accountId = acc.account_id.startsWith("act_") ? acc.account_id : `act_${acc.account_id}`;
+            adAccountIds.push(accountId);
+            adAccountDetails.push({
+              id: accountId,
+              name: acc.name || accountId,
+              business_name: acc.business_name || "",
+            });
+          }
           nextUrl = data.paging?.next || null;
         } else {
           break;
@@ -208,7 +217,8 @@ serve(async (req) => {
       }
     }
 
-    console.log("Total Ad Account IDs fetched:", adAccountIds.length, adAccountIds);
+    console.log("Total Ad Account IDs fetched:", adAccountIds.length);
+    console.log("Ad Account Details:", JSON.stringify(adAccountDetails));
 
     const tokenExpiry = new Date(Date.now() + longLivedExpiry * 1000).toISOString();
 
@@ -221,6 +231,7 @@ serve(async (req) => {
           access_token: longLivedToken,
           token_expiry: tokenExpiry,
           ad_account_ids: adAccountIds,
+          ad_account_details: adAccountDetails,
           business_id: businessId,
           user_name: userInfo.name,
           email: userInfo.email || `meta_${userInfo.id}@facebook.com`,

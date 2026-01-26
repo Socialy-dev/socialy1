@@ -3,6 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
+interface AdAccountDetail {
+  id: string;
+  name: string;
+  business_name: string;
+}
+
 interface MetaConnection {
   id: string;
   organization_id: string;
@@ -10,6 +16,7 @@ interface MetaConnection {
   user_name: string | null;
   email: string | null;
   ad_account_ids: string[] | null;
+  ad_account_details: AdAccountDetail[] | null;
   business_id: string | null;
   connected_at: string;
   last_synced_at: string | null;
@@ -28,13 +35,16 @@ export const useMetaConnections = () => {
 
       const { data, error } = await supabase
         .from("meta_connections")
-        .select("id, organization_id, user_id, user_name, email, ad_account_ids, business_id, connected_at, last_synced_at, is_active")
+        .select("id, organization_id, user_id, user_name, email, ad_account_ids, ad_account_details, business_id, connected_at, last_synced_at, is_active")
         .eq("organization_id", effectiveOrgId)
         .eq("is_active", true)
         .order("connected_at", { ascending: false });
 
       if (error) throw error;
-      return data as MetaConnection[];
+      return (data || []).map((conn) => ({
+        ...conn,
+        ad_account_details: (conn.ad_account_details as unknown as AdAccountDetail[]) || [],
+      })) as MetaConnection[];
     },
     enabled: !!effectiveOrgId,
   });
