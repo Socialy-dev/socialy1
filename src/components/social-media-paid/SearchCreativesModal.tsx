@@ -3,47 +3,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Search, ExternalLink } from "lucide-react";
+import { Loader2, Search, Info } from "lucide-react";
 
 interface SearchCreativesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const MEDIA_TYPES = [
-  { value: "all", label: "Tous les types" },
-  { value: "image", label: "Image" },
-  { value: "video", label: "Vidéo" },
-];
-
-const META_ADS_LIBRARY_URL = "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=FR&is_targeted_country=false&media_type=all&search_type=page&sort_data[direction]=desc&sort_data[mode]=total_impressions&source=fb-logo&view_all_page_id=434174436675167";
-
 export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalProps) => {
   const { effectiveOrgId, user } = useAuth();
-  const [metaUrl, setMetaUrl] = useState("");
-  const [mediaType, setMediaType] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [urlError, setUrlError] = useState("");
 
-  const validateUrl = (url: string): boolean => {
-    if (!url.trim()) {
-      setUrlError("Veuillez entrer une URL");
-      return false;
-    }
-    if (!url.includes("facebook.com/ads/library")) {
-      setUrlError("L'URL doit provenir de Meta Ads Library");
-      return false;
-    }
-    setUrlError("");
-    return true;
-  };
+  const isValidInput = searchTerm.trim().length >= 2;
 
   const handleSearch = async () => {
-    if (!validateUrl(metaUrl)) {
+    if (!isValidInput) {
+      toast.error("Veuillez entrer au moins 2 caractères");
       return;
     }
 
@@ -57,8 +36,8 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
     try {
       const { data, error } = await supabase.functions.invoke("search-creatives", {
         body: {
-          meta_url: metaUrl.trim(),
-          media_type: mediaType,
+          search_term: searchTerm.trim(),
+          search_type: searchTerm.includes("pinterest.com") ? "url" : "keyword",
           organization_id: effectiveOrgId,
           user_id: user?.id,
         },
@@ -77,17 +56,8 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
   };
 
   const handleClose = () => {
-    setMetaUrl("");
-    setMediaType("all");
-    setUrlError("");
+    setSearchTerm("");
     onClose();
-  };
-
-  const handleUrlChange = (value: string) => {
-    setMetaUrl(value);
-    if (urlError) {
-      validateUrl(value);
-    }
   };
 
   return (
@@ -101,66 +71,29 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
         </DialogHeader>
 
         <div className="space-y-5 py-4">
-          <div className="rounded-xl bg-muted/50 p-4 space-y-3">
-            <p className="text-sm font-medium text-foreground">
-              1. Accédez à Meta Ads Library
-            </p>
-            <Button
-              variant="outline"
-              className="w-full gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0"
-              onClick={() => window.open(META_ADS_LIBRARY_URL, "_blank")}
-            >
-              <ExternalLink className="w-4 h-4" />
-              Ouvrir Meta Ads Library
-            </Button>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              2. Cherchez votre marque (ex: Nike, Apple, SFR...)
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">
-              3. Copiez l'URL complète de la page
+          <div className="flex items-start gap-3 rounded-xl bg-muted/50 p-4">
+            <Info className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              Les recherches sont effectuées sur <span className="font-medium text-foreground">Pinterest</span>. 
+              Entrez une URL Pinterest ou un mot-clé pour trouver des inspirations créatives.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="meta-url">URL Meta Ads Library</Label>
+            <Label htmlFor="search-term">URL Pinterest ou mot-clé</Label>
             <Input
-              id="meta-url"
-              placeholder="https://www.facebook.com/ads/library/?..."
-              value={metaUrl}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              className={urlError ? "border-destructive" : ""}
+              id="search-term"
+              placeholder="https://pinterest.com/... ou Nike sneakers"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && isValidInput && handleSearch()}
             />
-            {urlError && (
-              <p className="text-xs text-destructive">{urlError}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Type de média</Label>
-            <Select value={mediaType} onValueChange={setMediaType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {MEDIA_TYPES.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
         <Button
           onClick={handleSearch}
-          disabled={isSearching || !metaUrl.trim()}
+          disabled={isSearching || !isValidInput}
           className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
         >
           {isSearching ? (
