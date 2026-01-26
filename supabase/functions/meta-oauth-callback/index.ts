@@ -153,24 +153,58 @@ serve(async (req) => {
 
     let adAccountIds: string[] = [];
     let businessId: string | null = null;
-    let nextUrl: string | null = `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name,account_status,business_name&limit=100&access_token=${longLivedToken}`;
 
-    while (nextUrl) {
-      const response: Response = await fetch(nextUrl);
-      const data: { data?: Array<{ account_id: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+    const businessesResponse = await fetch(
+      `https://graph.facebook.com/v21.0/me/businesses?fields=id,name&access_token=${longLivedToken}`
+    );
+    const businessesData = await businessesResponse.json();
+    console.log("Businesses fetched:", businessesData);
 
-      if (response.ok && data.data) {
-        const pageIds = data.data.map((acc) => {
-          const accountId = acc.account_id;
-          return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
-        });
-        adAccountIds = [...adAccountIds, ...pageIds];
-        console.log(`Fetched ${pageIds.length} ad accounts (total: ${adAccountIds.length})`);
+    if (businessesResponse.ok && businessesData.data && businessesData.data.length > 0) {
+      for (const business of businessesData.data) {
+        businessId = business.id;
+        console.log(`Fetching ad accounts for business: ${business.name} (${business.id})`);
 
-        nextUrl = data.paging?.next || null;
-      } else {
-        console.error("Error fetching ad accounts page:", data);
-        break;
+        let nextUrl: string | null = `https://graph.facebook.com/v21.0/${business.id}/owned_ad_accounts?fields=account_id,name,account_status,business_name&limit=100&access_token=${longLivedToken}`;
+
+        while (nextUrl) {
+          const response: Response = await fetch(nextUrl);
+          const data: { data?: Array<{ account_id: string; name: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+
+          if (response.ok && data.data) {
+            const pageIds = data.data.map((acc) => {
+              const accountId = acc.account_id;
+              return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+            });
+            adAccountIds = [...adAccountIds, ...pageIds];
+            console.log(`Fetched ${pageIds.length} ad accounts from business ${business.name} (total: ${adAccountIds.length})`);
+            nextUrl = data.paging?.next || null;
+          } else {
+            console.error("Error fetching business ad accounts:", data);
+            break;
+          }
+        }
+      }
+    }
+
+    if (adAccountIds.length === 0) {
+      console.log("No business ad accounts found, falling back to personal ad accounts");
+      let nextUrl: string | null = `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name&limit=100&access_token=${longLivedToken}`;
+
+      while (nextUrl) {
+        const response: Response = await fetch(nextUrl);
+        const data: { data?: Array<{ account_id: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+
+        if (response.ok && data.data) {
+          const pageIds = data.data.map((acc) => {
+            const accountId = acc.account_id;
+            return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+          });
+          adAccountIds = [...adAccountIds, ...pageIds];
+          nextUrl = data.paging?.next || null;
+        } else {
+          break;
+        }
       }
     }
 
