@@ -47,7 +47,7 @@ export const PaidCreativeLibraryView = () => {
             "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
             activeSection === "scraped"
               ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Sparkles className="w-4 h-4" />
@@ -59,7 +59,7 @@ export const PaidCreativeLibraryView = () => {
             "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
             activeSection === "manual"
               ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Upload className="w-4 h-4" />
@@ -71,17 +71,14 @@ export const PaidCreativeLibraryView = () => {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-3">
-              <PaidPlatformFilter
-                selectedPlatform={selectedPlatform}
-                onSelect={setSelectedPlatform}
-              />
+              <PaidPlatformFilter selectedPlatform={selectedPlatform} onSelect={setSelectedPlatform} />
             </div>
             <Button
               onClick={() => setShowSearchModal(true)}
               className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
             >
               <Search className="w-4 h-4" />
-              🔍 Rechercher des créas
+              Rechercher des créas
             </Button>
           </div>
 
@@ -96,9 +93,7 @@ export const PaidCreativeLibraryView = () => {
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
                 <Sparkles className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Aucune création scrapée
-              </h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Aucune création scrapée</h3>
               <p className="text-sm text-muted-foreground max-w-md">
                 Les créations publicitaires scrapées depuis Meta Ads Library, Google Ads etc. apparaîtront ici.
               </p>
@@ -106,11 +101,7 @@ export const PaidCreativeLibraryView = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {scrapedInspirations.map((inspiration) => (
-                <InspirationCard
-                  key={inspiration.id}
-                  inspiration={inspiration}
-                  onDelete={handleDeleteInspiration}
-                />
+                <InspirationCard key={inspiration.id} inspiration={inspiration} onDelete={handleDeleteInspiration} />
               ))}
             </div>
           )}
@@ -119,10 +110,7 @@ export const PaidCreativeLibraryView = () => {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-3">
-              <PaidPlatformFilter
-                selectedPlatform={selectedPlatform}
-                onSelect={setSelectedPlatform}
-              />
+              <PaidPlatformFilter selectedPlatform={selectedPlatform} onSelect={setSelectedPlatform} />
             </div>
             <Button onClick={() => setShowAddModal(true)} className="gap-2">
               <Plus className="w-4 h-4" />
@@ -141,9 +129,7 @@ export const PaidCreativeLibraryView = () => {
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
                 <Upload className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                Aucune inspiration ajoutée
-              </h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Aucune inspiration ajoutée</h3>
               <p className="text-sm text-muted-foreground max-w-md mb-6">
                 Ajoutez vos propres inspirations créatives pour les retrouver facilement.
               </p>
@@ -155,11 +141,7 @@ export const PaidCreativeLibraryView = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {manualInspirations.map((inspiration) => (
-                <InspirationCard
-                  key={inspiration.id}
-                  inspiration={inspiration}
-                  onDelete={handleDeleteInspiration}
-                />
+                <InspirationCard key={inspiration.id} inspiration={inspiration} onDelete={handleDeleteInspiration} />
               ))}
             </div>
           )}
