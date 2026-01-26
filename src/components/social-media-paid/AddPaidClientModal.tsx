@@ -39,7 +39,17 @@ export const AddPaidClientModal = ({ isOpen, onClose }: AddPaidClientModalProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableMetaAccounts = connections.flatMap(
-    (conn) => conn.ad_account_ids?.map((id) => ({ id, userName: conn.user_name })) || []
+    (conn) => conn.ad_account_details?.map((detail) => ({ 
+      id: detail.id, 
+      name: detail.name,
+      businessName: detail.business_name,
+      userName: conn.user_name 
+    })) || conn.ad_account_ids?.map((id) => ({ 
+      id, 
+      name: id,
+      businessName: "",
+      userName: conn.user_name 
+    })) || []
   );
 
   const handlePlatformToggle = (platformId: string) => {
@@ -180,9 +190,11 @@ export const AddPaidClientModal = ({ isOpen, onClose }: AddPaidClientModalProps)
                               {availableMetaAccounts.map((acc) => (
                                 <SelectItem key={acc.id} value={acc.id}>
                                   <div className="flex items-center gap-2">
-                                    <Link2 className="w-3 h-3" />
-                                    <span>{acc.id}</span>
-                                    <span className="text-muted-foreground text-xs">({acc.userName})</span>
+                                    <Link2 className="w-3 h-3 flex-shrink-0" />
+                                    <span className="font-medium">{acc.name}</span>
+                                    {acc.businessName && (
+                                      <span className="text-muted-foreground text-xs">• {acc.businessName}</span>
+                                    )}
                                   </div>
                                 </SelectItem>
                               ))}

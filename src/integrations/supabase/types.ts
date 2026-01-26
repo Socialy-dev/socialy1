@@ -879,6 +879,7 @@ export type Database = {
       meta_connections: {
         Row: {
           access_token: string
+          ad_account_details: Json | null
           ad_account_ids: string[] | null
           business_id: string | null
           connected_at: string | null
@@ -895,6 +896,7 @@ export type Database = {
         }
         Insert: {
           access_token: string
+          ad_account_details?: Json | null
           ad_account_ids?: string[] | null
           business_id?: string | null
           connected_at?: string | null
@@ -911,6 +913,7 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          ad_account_details?: Json | null
           ad_account_ids?: string[] | null
           business_id?: string | null
           connected_at?: string | null
