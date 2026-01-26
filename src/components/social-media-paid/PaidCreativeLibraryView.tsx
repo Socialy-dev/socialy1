@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Plus, Sparkles, Upload } from "lucide-react";
+import { Plus, Sparkles, Upload, Search } from "lucide-react";
 import { useCreativeLibraryInspirations } from "@/hooks/useCreativeLibraryInspirations";
 import { PaidPlatformFilter } from "./PaidPlatformFilter";
 import { InspirationCard } from "./InspirationCard";
 import { AddInspirationModal } from "./AddInspirationModal";
+import { SearchCreativesModal } from "./SearchCreativesModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import type { PaidPlatform } from "./PaidDashboardView";
@@ -15,6 +16,7 @@ export const PaidCreativeLibraryView = () => {
   const [activeSection, setActiveSection] = useState<LibrarySection>("scraped");
   const [selectedPlatform, setSelectedPlatform] = useState<PaidPlatform>("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const {
     inspirations: scrapedInspirations,
@@ -49,7 +51,7 @@ export const PaidCreativeLibraryView = () => {
           )}
         >
           <Sparkles className="w-4 h-4" />
-          Créas Scrapées
+          Les créations
         </button>
         <button
           onClick={() => setActiveSection("manual")}
@@ -74,6 +76,13 @@ export const PaidCreativeLibraryView = () => {
                 onSelect={setSelectedPlatform}
               />
             </div>
+            <Button
+              onClick={() => setShowSearchModal(true)}
+              className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+            >
+              <Search className="w-4 h-4" />
+              🔍 Rechercher des créas
+            </Button>
           </div>
 
           {scrapedLoading ? (
@@ -158,6 +167,7 @@ export const PaidCreativeLibraryView = () => {
       )}
 
       <AddInspirationModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+      <SearchCreativesModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
     </div>
   );
 };
