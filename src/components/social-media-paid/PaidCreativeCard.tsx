@@ -42,7 +42,8 @@ export const PaidCreativeCard = ({ creative }: PaidCreativeCardProps) => {
   };
 
   const getStatusColor = (status: string | null) => {
-    switch (status) {
+    const s = status?.toLowerCase();
+    switch (s) {
       case "active":
         return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
       case "paused":
@@ -56,7 +57,8 @@ export const PaidCreativeCard = ({ creative }: PaidCreativeCardProps) => {
   };
 
   const getStatusLabel = (status: string | null) => {
-    switch (status) {
+    const s = status?.toLowerCase();
+    switch (s) {
       case "active":
         return "Actif";
       case "paused":
@@ -85,12 +87,14 @@ export const PaidCreativeCard = ({ creative }: PaidCreativeCardProps) => {
     toast.info("Fonctionnalité d'archivage à implémenter");
   };
 
+  const imageUrl = creative.thumbnail_url || creative.media_url;
+
   return (
     <Card className="bg-card/50 border-border/50 overflow-hidden hover:bg-card/80 transition-all duration-200 group">
       <div className="relative aspect-square bg-secondary/30 overflow-hidden">
-        {creative.thumbnail_url && !imageError ? (
+        {imageUrl && !imageError ? (
           <img
-            src={creative.thumbnail_url}
+            src={imageUrl}
             alt={creative.creative_name || "Création publicitaire"}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImageError(true)}
