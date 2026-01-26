@@ -50,3 +50,12 @@ verify_jwt = false
 
 [functions.generate-market-watch-document]
 verify_jwt = false
+
+[functions.meta-auth-init]
+verify_jwt = false
+
+[functions.meta-oauth-callback]
+verify_jwt = false
+
+[functions.meta-get-connections]
+verify_jwt = false

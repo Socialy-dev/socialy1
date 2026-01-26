@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useGmailConnections } from "@/hooks/useGmailConnections";
+import { useMetaConnections } from "@/hooks/useMetaConnections";
 
 type TabType = "identity" | "company" | "memory" | "contact" | "integrations";
 
@@ -60,10 +61,19 @@ const Profile = () => {
     connections: gmailConnections,
     isLoading: isLoadingGmail,
     connectGmail,
-    isConnecting,
+    isConnecting: isConnectingGmail,
     disconnectGmail,
-    isDisconnecting,
+    isDisconnecting: isDisconnectingGmail,
   } = useGmailConnections();
+
+  const {
+    connections: metaConnections,
+    isLoading: isLoadingMeta,
+    connectMeta,
+    isConnecting: isConnectingMeta,
+    disconnectMeta,
+    isDisconnecting: isDisconnectingMeta,
+  } = useMetaConnections();
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -73,9 +83,15 @@ const Profile = () => {
     
     const success = searchParams.get("success");
     const error = searchParams.get("error");
+    const accountsCount = searchParams.get("accounts");
     
     if (success === "gmail_connected") {
       toast.success("Compte Gmail connecté avec succès !");
+      setSearchParams({});
+    }
+    
+    if (success === "meta_connected") {
+      toast.success(`Meta Ads connecté avec succès ! ${accountsCount || ""} compte(s) publicitaire(s) trouvé(s)`);
       setSearchParams({});
     }
     
@@ -612,10 +628,10 @@ const Profile = () => {
                     </div>
                     <Button
                       onClick={() => connectGmail()}
-                      disabled={isConnecting}
+                      disabled={isConnectingGmail}
                       className="h-10 rounded-xl"
                     >
-                      {isConnecting ? (
+                      {isConnectingGmail ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         "Connecter"
@@ -642,10 +658,80 @@ const Profile = () => {
                       <Button
                         variant="outline"
                         onClick={() => disconnectGmail(connection.id)}
-                        disabled={isDisconnecting}
+                        disabled={isDisconnectingGmail}
                         className="h-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        {isDisconnecting ? (
+                        {isDisconnectingGmail ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          "Déconnecter"
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/30 hover:bg-secondary/50 transition-all border border-transparent hover:border-border/30">
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: "#1877F215" }}
+                      >
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#1877F2">
+                          <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Meta Ads</p>
+                        {metaConnections.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                            <p className="text-sm text-muted-foreground">
+                              {metaConnections.length} compte{metaConnections.length > 1 ? "s" : ""} connecté{metaConnections.length > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Non connecté</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => connectMeta()}
+                      disabled={isConnectingMeta}
+                      className="h-10 rounded-xl"
+                    >
+                      {isConnectingMeta ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Connecter"
+                      )}
+                    </Button>
+                  </div>
+
+                  {metaConnections.map((connection) => (
+                    <div
+                      key={connection.id}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-[#1877F2]/5 border border-[#1877F2]/20"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-[#1877F2]/10 flex items-center justify-center">
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
+                            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{connection.user_name || connection.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {connection.ad_account_ids?.length || 0} compte(s) pub · Connecté le {new Date(connection.connected_at).toLocaleDateString("fr-FR")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => disconnectMeta(connection.id)}
+                        disabled={isDisconnectingMeta}
+                        className="h-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        {isDisconnectingMeta ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           "Déconnecter"
