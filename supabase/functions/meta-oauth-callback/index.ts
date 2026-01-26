@@ -40,8 +40,8 @@ serve(async (req) => {
       });
     };
 
-    const successRedirect = (adAccountCount: number) => {
-      const redirectUrl = `${frontendUrl}/profile?tab=integrations&success=meta_connected&accounts=${adAccountCount}`;
+    const successRedirect = (connectionId: string, adAccountCount: number) => {
+      const redirectUrl = `${frontendUrl}/profile?tab=integrations&success=meta_pending&connection_id=${connectionId}&accounts=${adAccountCount}`;
       return new Response(null, {
         status: 302,
         headers: { Location: redirectUrl },
@@ -222,7 +222,7 @@ serve(async (req) => {
 
     const tokenExpiry = new Date(Date.now() + longLivedExpiry * 1000).toISOString();
 
-    const { error: upsertError } = await supabase
+    const { data: upsertData, error: upsertError } = await supabase
       .from("meta_connections")
       .upsert(
         {
@@ -230,7 +230,7 @@ serve(async (req) => {
           user_id: user_id,
           access_token: longLivedToken,
           token_expiry: tokenExpiry,
-          ad_account_ids: adAccountIds,
+          ad_account_ids: [],
           ad_account_details: adAccountDetails,
           business_id: businessId,
           user_name: userInfo.name,
@@ -239,15 +239,17 @@ serve(async (req) => {
           is_active: true,
         },
         { onConflict: "organization_id,email" }
-      );
+      )
+      .select("id")
+      .single();
 
     if (upsertError) {
       console.error("Database error:", upsertError);
       return errorRedirect("Échec de la sauvegarde de la connexion");
     }
 
-    console.log(`Meta Ads connected successfully for ${userInfo.name} in org ${org_id} with ${adAccountIds.length} ad accounts`);
-    return successRedirect(adAccountIds.length);
+    console.log(`Meta Ads connected successfully for ${userInfo.name} in org ${org_id} with ${adAccountIds.length} ad accounts available`);
+    return successRedirect(upsertData.id, adAccountIds.length);
   } catch (error) {
     console.error("Meta callback error:", error);
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://socialy1.lovable.app";
