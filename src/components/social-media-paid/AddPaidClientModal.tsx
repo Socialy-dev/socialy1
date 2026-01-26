@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { useMetaConnections } from "@/hooks/useMetaConnections";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Link2 } from "lucide-react";
 
 interface AddPaidClientModalProps {
   isOpen: boolean;
@@ -31,9 +33,14 @@ const initialPlatforms: PlatformConfig[] = [
 
 export const AddPaidClientModal = ({ isOpen, onClose }: AddPaidClientModalProps) => {
   const { effectiveOrgId } = useAuth();
+  const { connections } = useMetaConnections();
   const [clientName, setClientName] = useState("");
   const [platforms, setPlatforms] = useState<PlatformConfig[]>(initialPlatforms);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const availableMetaAccounts = connections.flatMap(
+    (conn) => conn.ad_account_ids?.map((id) => ({ id, userName: conn.user_name })) || []
+  );
 
   const handlePlatformToggle = (platformId: string) => {
     setPlatforms((prev) =>
@@ -159,14 +166,43 @@ export const AddPaidClientModal = ({ isOpen, onClose }: AddPaidClientModalProps)
                     </Label>
                   </div>
                   {platform.enabled && (
-                    <Input
-                      placeholder={`ID compte ${platform.label}`}
-                      value={platform.accountId}
-                      onChange={(e) =>
-                        handleAccountIdChange(platform.id, e.target.value)
-                      }
-                      className="ml-6"
-                    />
+                    <div className="ml-6 space-y-2">
+                      {platform.id === "meta" && availableMetaAccounts.length > 0 ? (
+                        <div className="space-y-2">
+                          <Select
+                            value={platform.accountId}
+                            onValueChange={(value) => handleAccountIdChange(platform.id, value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner un compte détecté" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableMetaAccounts.map((acc) => (
+                                <SelectItem key={acc.id} value={acc.id}>
+                                  <div className="flex items-center gap-2">
+                                    <Link2 className="w-3 h-3" />
+                                    <span>{acc.id}</span>
+                                    <span className="text-muted-foreground text-xs">({acc.userName})</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder="Ou entrer manuellement"
+                            value={platform.accountId}
+                            onChange={(e) => handleAccountIdChange(platform.id, e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                      ) : (
+                        <Input
+                          placeholder={`ID compte ${platform.label}`}
+                          value={platform.accountId}
+                          onChange={(e) => handleAccountIdChange(platform.id, e.target.value)}
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
