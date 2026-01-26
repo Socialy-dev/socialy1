@@ -876,6 +876,65 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_connections: {
+        Row: {
+          access_token: string
+          ad_account_ids: string[] | null
+          business_id: string | null
+          connected_at: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          last_synced_at: string | null
+          organization_id: string
+          token_expiry: string | null
+          updated_at: string | null
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          access_token: string
+          ad_account_ids?: string[] | null
+          business_id?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          organization_id: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          access_token?: string
+          ad_account_ids?: string[] | null
+          business_id?: string | null
+          connected_at?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          organization_id?: string
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_connections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_articles: {
         Row: {
           article_date: string | null
