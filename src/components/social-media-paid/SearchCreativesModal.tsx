@@ -7,20 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, ExternalLink } from "lucide-react";
 
 interface SearchCreativesModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const COUNTRIES = [
-  { value: "FR", label: "France" },
-  { value: "US", label: "États-Unis" },
-  { value: "GB", label: "Royaume-Uni" },
-  { value: "DE", label: "Allemagne" },
-  { value: "ES", label: "Espagne" },
-];
 
 const MEDIA_TYPES = [
   { value: "all", label: "Tous les types" },
@@ -28,16 +20,30 @@ const MEDIA_TYPES = [
   { value: "video", label: "Vidéo" },
 ];
 
+const META_ADS_LIBRARY_URL = "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=FR&is_targeted_country=false&media_type=all&search_type=page&sort_data[direction]=desc&sort_data[mode]=total_impressions&source=fb-logo&view_all_page_id=434174436675167";
+
 export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalProps) => {
   const { effectiveOrgId, user } = useAuth();
-  const [keyword, setKeyword] = useState("");
-  const [country, setCountry] = useState("FR");
+  const [metaUrl, setMetaUrl] = useState("");
   const [mediaType, setMediaType] = useState("all");
   const [isSearching, setIsSearching] = useState(false);
+  const [urlError, setUrlError] = useState("");
+
+  const validateUrl = (url: string): boolean => {
+    if (!url.trim()) {
+      setUrlError("Veuillez entrer une URL");
+      return false;
+    }
+    if (!url.includes("facebook.com/ads/library")) {
+      setUrlError("L'URL doit provenir de Meta Ads Library");
+      return false;
+    }
+    setUrlError("");
+    return true;
+  };
 
   const handleSearch = async () => {
-    if (!keyword.trim()) {
-      toast.error("Veuillez entrer un mot-clé");
+    if (!validateUrl(metaUrl)) {
       return;
     }
 
@@ -51,8 +57,7 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
     try {
       const { data, error } = await supabase.functions.invoke("search-creatives", {
         body: {
-          keyword: keyword.trim(),
-          country,
+          meta_url: metaUrl.trim(),
           media_type: mediaType,
           organization_id: effectiveOrgId,
           user_id: user?.id,
@@ -72,15 +77,22 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
   };
 
   const handleClose = () => {
-    setKeyword("");
-    setCountry("FR");
+    setMetaUrl("");
     setMediaType("all");
+    setUrlError("");
     onClose();
+  };
+
+  const handleUrlChange = (value: string) => {
+    setMetaUrl(value);
+    if (urlError) {
+      validateUrl(value);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
@@ -88,31 +100,45 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="keyword">Mot-clé</Label>
-            <Input
-              id="keyword"
-              placeholder="Nike, Adidas, Apple..."
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
+        <div className="space-y-5 py-4">
+          <div className="rounded-xl bg-muted/50 p-4 space-y-3">
+            <p className="text-sm font-medium text-foreground">
+              1. Accédez à Meta Ads Library
+            </p>
+            <Button
+              variant="outline"
+              className="w-full gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white border-0"
+              onClick={() => window.open(META_ADS_LIBRARY_URL, "_blank")}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Ouvrir Meta Ads Library
+            </Button>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              2. Cherchez votre marque (ex: Nike, Apple, SFR...)
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">
+              3. Copiez l'URL complète de la page
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Pays</Label>
-            <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COUNTRIES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>
-                    {c.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="meta-url">URL Meta Ads Library</Label>
+            <Input
+              id="meta-url"
+              placeholder="https://www.facebook.com/ads/library/?..."
+              value={metaUrl}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              className={urlError ? "border-destructive" : ""}
+            />
+            {urlError && (
+              <p className="text-xs text-destructive">{urlError}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -134,7 +160,7 @@ export const SearchCreativesModal = ({ isOpen, onClose }: SearchCreativesModalPr
 
         <Button
           onClick={handleSearch}
-          disabled={isSearching || !keyword.trim()}
+          disabled={isSearching || !metaUrl.trim()}
           className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
         >
           {isSearching ? (
