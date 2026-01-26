@@ -113,6 +113,10 @@ export const useMetaConnections = () => {
     },
   });
 
+  const refetch = () => {
+    queryClient.invalidateQueries({ queryKey: ["meta-connections", effectiveOrgId] });
+  };
+
   return {
     connections,
     isLoading,
@@ -121,5 +125,6 @@ export const useMetaConnections = () => {
     isConnecting: connectMeta.isPending,
     disconnectMeta: disconnectMeta.mutate,
     isDisconnecting: disconnectMeta.isPending,
+    refetch,
   };
 };

@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useGmailConnections } from "@/hooks/useGmailConnections";
 import { useMetaConnections } from "@/hooks/useMetaConnections";
+import { MetaAccountSelectionModal } from "@/components/integrations/MetaAccountSelectionModal";
 
 type TabType = "identity" | "company" | "memory" | "contact" | "integrations";
 
@@ -49,6 +50,11 @@ const tabs: TabItem[] = [
   { id: "integrations", label: "Intégrations", icon: Link2 },
 ];
 
+interface PendingMetaConnection {
+  connectionId: string;
+  allAccounts: Array<{ id: string; name: string; business_name: string }>;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -56,6 +62,8 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabType>("identity");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingMetaConnection, setPendingMetaConnection] = useState<PendingMetaConnection | null>(null);
+  const [showMetaSelectionModal, setShowMetaSelectionModal] = useState(false);
   
   const {
     connections: gmailConnections,
@@ -73,6 +81,7 @@ const Profile = () => {
     isConnecting: isConnectingMeta,
     disconnectMeta,
     isDisconnecting: isDisconnectingMeta,
+    refetch: refetchMetaConnections,
   } = useMetaConnections();
 
   useEffect(() => {
@@ -84,10 +93,37 @@ const Profile = () => {
     const success = searchParams.get("success");
     const error = searchParams.get("error");
     const accountsCount = searchParams.get("accounts");
+    const connectionId = searchParams.get("connection_id");
     
     if (success === "gmail_connected") {
       toast.success("Compte Gmail connecté avec succès !");
       setSearchParams({});
+    }
+    
+    if (success === "meta_pending" && connectionId) {
+      const fetchPendingConnection = async () => {
+        const { data, error: fetchError } = await supabase
+          .from("meta_connections")
+          .select("id, ad_account_details")
+          .eq("id", connectionId)
+          .single();
+        
+        if (fetchError || !data) {
+          toast.error("Erreur lors de la récupération des comptes");
+          setSearchParams({});
+          return;
+        }
+        
+        const allAccounts = (data.ad_account_details as Array<{ id: string; name: string; business_name: string }>) || [];
+        setPendingMetaConnection({
+          connectionId: data.id,
+          allAccounts,
+        });
+        setShowMetaSelectionModal(true);
+        setSearchParams({ tab: "integrations" });
+      };
+      
+      fetchPendingConnection();
     }
     
     if (success === "meta_connected") {
@@ -854,6 +890,19 @@ const Profile = () => {
       <main className="max-w-6xl mx-auto px-6 py-8">
         {renderTabContent()}
       </main>
+
+      <MetaAccountSelectionModal
+        isOpen={showMetaSelectionModal}
+        onClose={() => {
+          setShowMetaSelectionModal(false);
+          setPendingMetaConnection(null);
+        }}
+        pendingConnectionId={pendingMetaConnection?.connectionId || null}
+        allAccounts={pendingMetaConnection?.allAccounts || []}
+        onSuccess={() => {
+          refetchMetaConnections();
+        }}
+      />
     </div>
   );
 };
