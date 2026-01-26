@@ -151,22 +151,30 @@ serve(async (req) => {
       return errorRedirect("Échec de la récupération des informations utilisateur");
     }
 
-    const adAccountsResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name&access_token=${longLivedToken}`
-    );
-
-    const adAccountsData = await adAccountsResponse.json();
-    
     let adAccountIds: string[] = [];
     let businessId: string | null = null;
+    let nextUrl: string | null = `https://graph.facebook.com/v21.0/me/adaccounts?fields=account_id,name,account_status,business_name&limit=100&access_token=${longLivedToken}`;
 
-    if (adAccountsResponse.ok && adAccountsData.data) {
-      adAccountIds = adAccountsData.data.map((acc: any) => {
-        const accountId = acc.account_id;
-        return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
-      });
-      console.log("Ad Account IDs fetched:", adAccountIds);
+    while (nextUrl) {
+      const response: Response = await fetch(nextUrl);
+      const data: { data?: Array<{ account_id: string }>; paging?: { next?: string }; error?: unknown } = await response.json();
+
+      if (response.ok && data.data) {
+        const pageIds = data.data.map((acc) => {
+          const accountId = acc.account_id;
+          return accountId.startsWith("act_") ? accountId : `act_${accountId}`;
+        });
+        adAccountIds = [...adAccountIds, ...pageIds];
+        console.log(`Fetched ${pageIds.length} ad accounts (total: ${adAccountIds.length})`);
+
+        nextUrl = data.paging?.next || null;
+      } else {
+        console.error("Error fetching ad accounts page:", data);
+        break;
+      }
     }
+
+    console.log("Total Ad Account IDs fetched:", adAccountIds.length, adAccountIds);
 
     const tokenExpiry = new Date(Date.now() + longLivedExpiry * 1000).toISOString();
 
