@@ -20,6 +20,7 @@ export interface PinterestCreative {
   creator_url: string | null;
   dominant_color: string | null;
   pinterest_created_at: string | null;
+  storage_path: string | null;
   created_at: string;
   updated_at: string;
 }

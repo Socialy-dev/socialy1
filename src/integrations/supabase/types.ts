@@ -2837,6 +2837,7 @@ export type Database = {
           pinterest_created_at: string | null
           pinterest_id: string
           pinterest_link: string
+          storage_path: string | null
           thumbnail_url: string | null
           title: string | null
           type: string
@@ -2857,6 +2858,7 @@ export type Database = {
           pinterest_created_at?: string | null
           pinterest_id: string
           pinterest_link: string
+          storage_path?: string | null
           thumbnail_url?: string | null
           title?: string | null
           type?: string
@@ -2877,6 +2879,7 @@ export type Database = {
           pinterest_created_at?: string | null
           pinterest_id?: string
           pinterest_link?: string
+          storage_path?: string | null
           thumbnail_url?: string | null
           title?: string | null
           type?: string
