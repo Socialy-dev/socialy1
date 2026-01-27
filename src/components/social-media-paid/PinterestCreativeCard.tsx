@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, ExternalLink, Play, Image as ImageIcon, Trash2, User, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import type { PinterestCreative } from "@/hooks/usePinterestCreatives";
 
 interface PinterestCreativeCardProps {
@@ -14,8 +15,23 @@ interface PinterestCreativeCardProps {
 export const PinterestCreativeCard = ({ creative, onDelete }: PinterestCreativeCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
-  const imageUrl = creative.thumbnail_url || creative.download_url;
+  useEffect(() => {
+    const getSignedUrl = async () => {
+      if (creative.storage_path) {
+        const { data } = await supabase.storage
+          .from("pinterest_creatives")
+          .createSignedUrl(creative.storage_path, 3600);
+        if (data?.signedUrl) {
+          setSignedUrl(data.signedUrl);
+        }
+      }
+    };
+    getSignedUrl();
+  }, [creative.storage_path]);
+
+  const imageUrl = signedUrl || creative.thumbnail_url || creative.download_url;
   const isVideo = creative.type === "video";
 
   const formatNumber = (num: number) => {
