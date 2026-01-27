@@ -409,7 +409,7 @@ export const MarchePublicView = () => {
         </div>
         
         <div className="flex gap-2 flex-wrap">
-          <Button variant={viewMode === "dismissed" ? "default" : "outline"} size="sm" onClick={() => setViewMode("dismissed")} className="rounded-full">
+          <Button variant={viewMode === "dismissed" ? "default" : "outline"} size="sm" onClick={() => setViewMode(viewMode === "dismissed" ? "all" : "dismissed")} className="rounded-full">
             Masqués
           </Button>
           <div className="h-6 w-px bg-border mx-1" />
@@ -464,6 +464,9 @@ export const MarchePublicView = () => {
                       {marche.titre || "Sans titre"}
                     </h3>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {viewMode === "dismissed" && <Badge className="bg-muted text-muted-foreground border-0 text-xs font-semibold uppercase tracking-wide px-2 py-0.5">
+                          Masqué
+                        </Badge>}
                       {isNew && <Badge className="bg-emerald-500 text-white border-0 text-xs font-semibold uppercase tracking-wide px-2 py-0.5 animate-pulse shadow-lg shadow-emerald-500/30">
                           NEW
                         </Badge>}
