@@ -375,12 +375,7 @@ export const MarchePublicView = () => {
             </div>
             <span className="text-sm text-muted-foreground">Mes favoris</span>
           </div>
-          <div className="flex items-center justify-between">
-            <p className="text-3xl font-bold text-foreground">{myFavoritesCount}</p>
-            {myFavoritesCount > 0 && <Badge className="bg-amber-500 text-white border-0">
-                {viewMode === "selected" ? "Voir tout" : "Voir"}
-              </Badge>}
-          </div>
+          <p className="text-3xl font-bold text-foreground">{myFavoritesCount}</p>
         </div>
 
         <div className={cn("rounded-2xl p-5 border cursor-pointer transition-all duration-300", viewMode === "team" ? "bg-gradient-to-br from-violet-500/20 to-violet-500/10 border-violet-500/40 ring-2 ring-violet-500/30" : "bg-gradient-to-br from-violet-500/10 to-violet-500/5 border-violet-500/20 hover:border-violet-500/40")} onClick={() => setViewMode(viewMode === "team" ? "all" : "team")}>
@@ -390,14 +385,9 @@ export const MarchePublicView = () => {
             </div>
             <span className="text-sm text-muted-foreground">Favoris équipe</span>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold text-foreground">{teamFavoritesCount}</p>
-              {teamMembersCount > 0 && <p className="text-xs text-muted-foreground mt-1">par {teamMembersCount} membre{teamMembersCount > 1 ? "s" : ""}</p>}
-            </div>
-            {teamFavoritesCount > 0 && <Badge className="bg-violet-500 text-white border-0">
-                {viewMode === "team" ? "Voir tout" : "Voir"}
-              </Badge>}
+          <div>
+            <p className="text-3xl font-bold text-foreground">{teamFavoritesCount}</p>
+            {teamMembersCount > 0 && <p className="text-xs text-muted-foreground mt-1">par {teamMembersCount} membre{teamMembersCount > 1 ? "s" : ""}</p>}
           </div>
         </div>
       </div>
