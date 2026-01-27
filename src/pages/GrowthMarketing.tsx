@@ -372,7 +372,7 @@ const GrowthMarketing = () => {
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-foreground">
                 {activeMainTab === "marche-public"
-                  ? "Marché Public"
+                  ? "Marchés publics"
                   : linkedinSubTab === "generation"
                     ? "Génération de contenu"
                     : linkedinSubTab === "comment"
