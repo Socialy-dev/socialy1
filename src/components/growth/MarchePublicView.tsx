@@ -327,15 +327,27 @@ export const MarchePublicView = () => {
   }
   return <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
+        <div 
+          className={cn(
+            "rounded-2xl p-5 border cursor-pointer transition-all duration-300",
+            viewMode === "all" 
+              ? "bg-gradient-to-br from-primary/20 to-primary/10 border-primary/40 ring-2 ring-primary/30" 
+              : "bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/40"
+          )}
+          onClick={() => setViewMode("all")}
+        >
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-sm text-muted-foreground">Tous
-          </span>
+            <span className="text-sm text-muted-foreground">Tous</span>
           </div>
-          <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-3xl font-bold text-foreground">{stats.total}</p>
+            <Badge className={cn("border-0", viewMode === "all" ? "bg-primary text-primary-foreground" : "bg-primary/20 text-primary")}>
+              {viewMode === "all" ? "Actif" : "Voir"}
+            </Badge>
+          </div>
         </div>
 
         <div className={cn("rounded-2xl p-5 border cursor-pointer transition-all duration-300", viewMode === "nouveaux" ? "bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 border-emerald-500/40 ring-2 ring-emerald-500/30" : "bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40")} onClick={() => setViewMode(viewMode === "nouveaux" ? "all" : "nouveaux")}>
@@ -397,17 +409,6 @@ export const MarchePublicView = () => {
         </div>
         
         <div className="flex gap-2 flex-wrap">
-          <Button variant={viewMode === "all" ? "default" : "outline"} size="sm" onClick={() => setViewMode("all")} className="rounded-full">
-            Tous
-          </Button>
-          <Button variant={viewMode === "selected" ? "default" : "outline"} size="sm" onClick={() => setViewMode("selected")} className={cn("rounded-full gap-1", viewMode === "selected" && "bg-amber-500 hover:bg-amber-600")}>
-            <Star className="w-3 h-3" />
-            Favoris ({myFavoritesCount})
-          </Button>
-          <Button variant={viewMode === "team" ? "default" : "outline"} size="sm" onClick={() => setViewMode("team")} className={cn("rounded-full gap-1", viewMode === "team" && "bg-violet-500 hover:bg-violet-600")}>
-            <Users className="w-3 h-3" />
-            Équipe ({teamFavoritesCount})
-          </Button>
           <Button variant={viewMode === "dismissed" ? "default" : "outline"} size="sm" onClick={() => setViewMode("dismissed")} className="rounded-full">
             Masqués
           </Button>
