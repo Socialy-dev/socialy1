@@ -2821,6 +2821,77 @@ export type Database = {
           },
         ]
       }
+      pinterest_creatives: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          creator_name: string | null
+          creator_url: string | null
+          description: string | null
+          dominant_color: string | null
+          download_url: string | null
+          id: string
+          is_promoted: boolean | null
+          likes: number | null
+          organization_id: string
+          pinterest_created_at: string | null
+          pinterest_id: string
+          pinterest_link: string
+          thumbnail_url: string | null
+          title: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          creator_name?: string | null
+          creator_url?: string | null
+          description?: string | null
+          dominant_color?: string | null
+          download_url?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          likes?: number | null
+          organization_id: string
+          pinterest_created_at?: string | null
+          pinterest_id: string
+          pinterest_link: string
+          thumbnail_url?: string | null
+          title?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          creator_name?: string | null
+          creator_url?: string | null
+          description?: string | null
+          dominant_color?: string | null
+          download_url?: string | null
+          id?: string
+          is_promoted?: boolean | null
+          likes?: number | null
+          organization_id?: string
+          pinterest_created_at?: string | null
+          pinterest_id?: string
+          pinterest_link?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinterest_creatives_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
