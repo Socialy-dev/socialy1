@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -19,7 +20,7 @@
     --sidebar-foreground: 0 0% 100%;
 
     /* Primary */
-    --primary: 252 85% 60%;
+    --primary: 240 53% 53%;
     --primary-foreground: 0 0% 100%;
 
     /* Success */
