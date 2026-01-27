@@ -2,8 +2,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Plus, Sparkles, Upload, Search } from "lucide-react";
 import { useCreativeLibraryInspirations } from "@/hooks/useCreativeLibraryInspirations";
+import { usePinterestCreatives } from "@/hooks/usePinterestCreatives";
 import { PaidPlatformFilter } from "./PaidPlatformFilter";
 import { InspirationCard } from "./InspirationCard";
+import { PinterestCreativeCard } from "./PinterestCreativeCard";
 import { AddInspirationModal } from "./AddInspirationModal";
 import { SearchCreativesModal } from "./SearchCreativesModal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,10 +21,10 @@ export const PaidCreativeLibraryView = () => {
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   const {
-    inspirations: scrapedInspirations,
-    isLoading: scrapedLoading,
-    deleteInspiration: deleteScraped,
-  } = useCreativeLibraryInspirations("scraped", selectedPlatform === "all" ? "all" : selectedPlatform);
+    creatives: pinterestCreatives,
+    isLoading: pinterestLoading,
+    deleteCreative: deletePinterest,
+  } = usePinterestCreatives();
 
   const {
     inspirations: manualInspirations,
@@ -30,12 +32,12 @@ export const PaidCreativeLibraryView = () => {
     deleteInspiration: deleteManual,
   } = useCreativeLibraryInspirations("manual", selectedPlatform === "all" ? "all" : selectedPlatform);
 
-  const handleDeleteInspiration = (id: string) => {
-    if (activeSection === "scraped") {
-      deleteScraped.mutate(id);
-    } else {
-      deleteManual.mutate(id);
-    }
+  const handleDeletePinterest = (id: string) => {
+    deletePinterest.mutate(id);
+  };
+
+  const handleDeleteManual = (id: string) => {
+    deleteManual.mutate(id);
   };
 
   return (
@@ -71,37 +73,47 @@ export const PaidCreativeLibraryView = () => {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-3">
-              <PaidPlatformFilter selectedPlatform={selectedPlatform} onSelect={setSelectedPlatform} />
             </div>
             <Button
               onClick={() => setShowSearchModal(true)}
-              className="gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+              className="gap-2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700"
             >
               <Search className="w-4 h-4" />
               Rechercher des créas
             </Button>
           </div>
 
-          {scrapedLoading ? (
+          {pinterestLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <Skeleton key={i} className="h-80 rounded-2xl" />
+                <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />
               ))}
             </div>
-          ) : scrapedInspirations.length === 0 ? (
+          ) : pinterestCreatives.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
-                <Sparkles className="w-10 h-10 text-primary" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-rose-500/20 to-pink-500/10 flex items-center justify-center mb-6">
+                <Sparkles className="w-10 h-10 text-rose-500" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Aucune création scrapée</h3>
-              <p className="text-sm text-muted-foreground max-w-md">
-                Les créations publicitaires scrapées depuis Meta Ads Library, Google Ads etc. apparaîtront ici.
+              <h3 className="text-xl font-semibold text-foreground mb-2">Aucune création Pinterest</h3>
+              <p className="text-sm text-muted-foreground max-w-md mb-6">
+                Recherchez des créations sur Pinterest pour les ajouter à votre librairie.
               </p>
+              <Button
+                onClick={() => setShowSearchModal(true)}
+                className="gap-2 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700"
+              >
+                <Search className="w-4 h-4" />
+                Rechercher des créas
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {scrapedInspirations.map((inspiration) => (
-                <InspirationCard key={inspiration.id} inspiration={inspiration} onDelete={handleDeleteInspiration} />
+              {pinterestCreatives.map((creative) => (
+                <PinterestCreativeCard 
+                  key={creative.id} 
+                  creative={creative} 
+                  onDelete={handleDeletePinterest} 
+                />
               ))}
             </div>
           )}
@@ -141,7 +153,7 @@ export const PaidCreativeLibraryView = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {manualInspirations.map((inspiration) => (
-                <InspirationCard key={inspiration.id} inspiration={inspiration} onDelete={handleDeleteInspiration} />
+                <InspirationCard key={inspiration.id} inspiration={inspiration} onDelete={handleDeleteManual} />
               ))}
             </div>
           )}
