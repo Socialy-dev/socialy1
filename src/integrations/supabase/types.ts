@@ -105,6 +105,7 @@ export type Database = {
           client_id: string
           client_name: string | null
           created_at: string
+          detected_language: string | null
           hidden: boolean
           id: string
           link: string
@@ -118,6 +119,7 @@ export type Database = {
           thumbnail: string | null
           thumbnail_small: string | null
           title: string | null
+          title_fr: string | null
           updated_at: string
         }
         Insert: {
@@ -127,6 +129,7 @@ export type Database = {
           client_id: string
           client_name?: string | null
           created_at?: string
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link: string
@@ -140,6 +143,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
+          title_fr?: string | null
           updated_at?: string
         }
         Update: {
@@ -149,6 +153,7 @@ export type Database = {
           client_id?: string
           client_name?: string | null
           created_at?: string
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link?: string
@@ -162,6 +167,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
+          title_fr?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -239,6 +245,7 @@ export type Database = {
           competitor_id: string
           competitor_name: string | null
           created_at: string
+          detected_language: string | null
           hidden: boolean
           id: string
           link: string
@@ -252,6 +259,7 @@ export type Database = {
           thumbnail: string | null
           thumbnail_small: string | null
           title: string
+          title_fr: string | null
           updated_at: string
         }
         Insert: {
@@ -261,6 +269,7 @@ export type Database = {
           competitor_id: string
           competitor_name?: string | null
           created_at?: string
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link: string
@@ -274,6 +283,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title: string
+          title_fr?: string | null
           updated_at?: string
         }
         Update: {
@@ -283,6 +293,7 @@ export type Database = {
           competitor_id?: string
           competitor_name?: string | null
           created_at?: string
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link?: string
@@ -296,6 +307,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string
+          title_fr?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -829,6 +841,7 @@ export type Database = {
           authors: string | null
           created_at: string
           created_by: string | null
+          detected_language: string | null
           hidden: boolean
           id: string
           link: string
@@ -844,6 +857,7 @@ export type Database = {
           thumbnail: string | null
           thumbnail_small: string | null
           title: string | null
+          title_fr: string | null
           updated_at: string
         }
         Insert: {
@@ -852,6 +866,7 @@ export type Database = {
           authors?: string | null
           created_at?: string
           created_by?: string | null
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link: string
@@ -867,6 +882,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
+          title_fr?: string | null
           updated_at?: string
         }
         Update: {
@@ -875,6 +891,7 @@ export type Database = {
           authors?: string | null
           created_at?: string
           created_by?: string | null
+          detected_language?: string | null
           hidden?: boolean
           id?: string
           link?: string
@@ -890,6 +907,7 @@ export type Database = {
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
+          title_fr?: string | null
           updated_at?: string
         }
         Relationships: []
