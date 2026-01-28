@@ -2358,21 +2358,29 @@ const RelationsPresse = () => {
                           <div className="flex items-center min-w-0">
                             {journalist.media ? (
                               <button
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.stopPropagation();
-                                  if (journalist.source_article_id && journalist.source_type) {
-                                    if (journalist.source_type === "organization") {
-                                      setActiveSubTab("socialy");
-                                    } else if (journalist.source_type === "competitor") {
-                                      setActiveSubTab("concurrent");
-                                    }
+                                  if (!journalist.source_article_id || !journalist.source_type) return;
+                                  
+                                  const table = journalist.source_type === "organization" 
+                                    ? "organization_articles" 
+                                    : "competitor_articles";
+                                  
+                                  const { data } = await supabase
+                                    .from(table)
+                                    .select("link")
+                                    .eq("id", journalist.source_article_id)
+                                    .single();
+                                  
+                                  if (data?.link) {
+                                    window.open(data.link, "_blank", "noopener,noreferrer");
                                   }
                                 }}
                                 className={cn(
                                   "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full transition-all",
                                   journalist.source_article_id && "hover:from-blue-500/25 hover:to-indigo-500/25 cursor-pointer"
                                 )}
-                                title={journalist.source_article_id ? `Voir l'article de ${journalist.media}` : journalist.media}
+                                title={journalist.source_article_id ? `Ouvrir l'article de ${journalist.media}` : journalist.media}
                               >
                                 <Newspaper className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{journalist.media}</span>
