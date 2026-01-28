@@ -585,19 +585,6 @@ const RelationsPresse = () => {
     if (wordInputRef.current) wordInputRef.current.value = "";
   };
 
-  const filteredArticles = (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles)
-    .filter((a) => competitorLanguageFilter === "all" || a.detected_language === competitorLanguageFilter);
-
-  const competitorLanguageCounts = {
-    all: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).length,
-    fr: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "fr").length,
-    en: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "en").length,
-  };
-
-  const selectedAgencyName = selectedAgency
-    ? agencies.find((a) => a.id === selectedAgency)?.name
-    : "Tous les concurrents";
-
   const [showAddSocialyModal, setShowAddSocialyModal] = useState(false);
   const [showAddCompetitorModal, setShowAddCompetitorModal] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
@@ -637,7 +624,20 @@ const RelationsPresse = () => {
   const [clientLanguageFilter, setClientLanguageFilter] = useState<LanguageFilterValue>("all");
   const [veilleLanguageFilter, setVeilleLanguageFilter] = useState<LanguageFilterValue>("all");
 
-  const filteredClientArticles = (selectedClientFilter 
+  const filteredArticles = (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles)
+    .filter((a) => competitorLanguageFilter === "all" || a.detected_language === competitorLanguageFilter);
+
+  const competitorLanguageCounts = {
+    all: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).length,
+    fr: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "fr").length,
+    en: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "en").length,
+  };
+
+  const selectedAgencyName = selectedAgency
+    ? agencies.find((a) => a.id === selectedAgency)?.name
+    : "Tous les concurrents";
+
+  const filteredClientArticles = (selectedClientFilter
     ? clientArticles.filter((a) => a.client_id === selectedClientFilter) 
     : clientArticles
   ).filter((a) => clientLanguageFilter === "all" || a.detected_language === clientLanguageFilter);
