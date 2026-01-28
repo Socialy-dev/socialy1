@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import { cn } from "@/lib/utils";
+import { capitalizeFullName, getInitials } from "@/lib/text-utils";
 import {
   Users2,
   UserCircle,
@@ -118,6 +119,7 @@ interface Journalist {
   linkedin: string | null;
   notes: string | null;
   source_type: string | null;
+  source_article_id: string | null;
   competitor_name: string | null;
   enrichment_status: string | null;
   selected: boolean;
@@ -2338,11 +2340,7 @@ const RelationsPresse = () => {
                               journalist.enrichment_status === "processing" ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                               ) : (
-                                journalist.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .slice(0, 2)
+                                getInitials(journalist.name)
                               )}
                             </div>
                             {(journalist.enrichment_status === "pending" ||
@@ -2354,18 +2352,32 @@ const RelationsPresse = () => {
                           </div>
 
                           <div className="flex items-center min-w-0">
-                            <span className="font-semibold text-foreground truncate">{journalist.name}</span>
+                            <span className="font-semibold text-foreground truncate">{capitalizeFullName(journalist.name)}</span>
                           </div>
 
                           <div className="flex items-center min-w-0">
                             {journalist.media ? (
-                              <span
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full"
-                                title={journalist.media}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (journalist.source_article_id && journalist.source_type) {
+                                    if (journalist.source_type === "organization") {
+                                      setActiveSubTab("socialy");
+                                    } else if (journalist.source_type === "competitor") {
+                                      setActiveSubTab("concurrent");
+                                    }
+                                  }
+                                }}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 to-indigo-500/15 text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20 max-w-full transition-all",
+                                  journalist.source_article_id && "hover:from-blue-500/25 hover:to-indigo-500/25 cursor-pointer"
+                                )}
+                                title={journalist.source_article_id ? `Voir l'article de ${journalist.media}` : journalist.media}
                               >
                                 <Newspaper className="w-3 h-3 flex-shrink-0" />
                                 <span className="truncate">{journalist.media}</span>
-                              </span>
+                                {journalist.source_article_id && <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-60" />}
+                              </button>
                             ) : (
                               <span className="text-sm text-muted-foreground/50">—</span>
                             )}
