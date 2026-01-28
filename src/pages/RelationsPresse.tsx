@@ -2297,10 +2297,60 @@ const RelationsPresse = () => {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="w-3 h-3 text-muted-foreground/60 cursor-help" />
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!effectiveOrgId) return;
+                                  
+                                  const mediaWithoutSpecialty = journalists
+                                    .filter(j => j.media && !j.media_specialty)
+                                    .map(j => j.media!.trim())
+                                    .filter((m, i, arr) => arr.indexOf(m) === i);
+                                  
+                                  if (mediaWithoutSpecialty.length === 0) {
+                                    toast({
+                                      title: "Aucun média à enrichir",
+                                      description: "Tous les médias ont déjà une spécialité",
+                                    });
+                                    return;
+                                  }
+                                  
+                                  try {
+                                    const { data: { session } } = await supabase.auth.getSession();
+                                    const response = await fetch(
+                                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-media-specialty`,
+                                      {
+                                        method: "POST",
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          "Authorization": `Bearer ${session?.access_token}`,
+                                        },
+                                        body: JSON.stringify({ organization_id: effectiveOrgId }),
+                                      }
+                                    );
+                                    
+                                    if (response.ok) {
+                                      toast({
+                                        title: "Enrichissement lancé",
+                                        description: `${mediaWithoutSpecialty.length} média(s) envoyé(s) pour analyse`,
+                                      });
+                                    } else {
+                                      throw new Error("Erreur lors de l'envoi");
+                                    }
+                                  } catch (error) {
+                                    toast({
+                                      title: "Erreur",
+                                      description: "Impossible de lancer l'enrichissement",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                                className="w-2.5 h-2.5 rounded-full bg-primary/60 hover:bg-primary hover:scale-125 transition-all duration-200 cursor-pointer"
+                                title="Enrichir les spécialités des médias"
+                              />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Spécialité du média (Tech, Mode, Business...)</p>
+                              <p>Cliquer pour enrichir les spécialités des médias</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

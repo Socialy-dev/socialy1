@@ -2,10 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const MIN_MEDIA_THRESHOLD = 10;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,115 +16,114 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    let organizationIds: string[] = [];
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getUser(token);
+      
+      if (claimsError || !claimsData?.user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    let organizationId: string | null = null;
 
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
       const body = await req.json().catch(() => ({}));
       if (body.organization_id) {
-        organizationIds = [body.organization_id];
+        organizationId = body.organization_id;
       }
     }
 
-    if (organizationIds.length === 0) {
-      const { data: orgs, error: orgsError } = await supabaseAdmin
-        .from("organizations")
-        .select("id");
-
-      if (orgsError) {
-        console.error("Error fetching organizations:", orgsError);
-        return new Response(
-          JSON.stringify({ error: orgsError.message }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      organizationIds = (orgs || []).map((o: { id: string }) => o.id);
+    if (!organizationId) {
+      return new Response(
+        JSON.stringify({ error: "organization_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    console.log(`Processing ${organizationIds.length} organization(s)...`);
+    console.log(`Processing organization: ${organizationId}`);
 
-    const results: Array<{ organization_id: string; status: string; media_count?: number }> = [];
+    const { data: journalists, error: journalistsError } = await supabaseAdmin
+      .from("journalists")
+      .select("media")
+      .eq("organization_id", organizationId)
+      .not("media", "is", null)
+      .is("media_specialty", null);
 
-    for (const orgId of organizationIds) {
-      const { data: journalists, error: journalistsError } = await supabaseAdmin
-        .from("journalists")
-        .select("media")
-        .eq("organization_id", orgId)
-        .not("media", "is", null)
-        .is("media_specialty", null);
-
-      if (journalistsError) {
-        console.error(`Error for org ${orgId}:`, journalistsError);
-        results.push({ organization_id: orgId, status: "error" });
-        continue;
-      }
-
-      const uniqueMediaSet = new Set<string>();
-      (journalists || []).forEach((j: { media: string | null }) => {
-        if (j.media && j.media.trim()) {
-          uniqueMediaSet.add(j.media.trim());
-        }
-      });
-
-      const uniqueMedia = Array.from(uniqueMediaSet);
-
-      if (uniqueMedia.length < MIN_MEDIA_THRESHOLD) {
-        console.log(`Org ${orgId}: ${uniqueMedia.length} media < ${MIN_MEDIA_THRESHOLD} threshold, skipping`);
-        results.push({ 
-          organization_id: orgId, 
-          status: "below_threshold", 
-          media_count: uniqueMedia.length 
-        });
-        continue;
-      }
-
-      console.log(`Org ${orgId}: ${uniqueMedia.length} media >= ${MIN_MEDIA_THRESHOLD}, sending to webhook...`);
-
-      const webhookUrl = Deno.env.get("N8N_MEDIA_SPECIALTY_WEBHOOK_URL");
-      if (!webhookUrl) {
-        console.error("N8N_MEDIA_SPECIALTY_WEBHOOK_URL not configured");
-        results.push({ organization_id: orgId, status: "webhook_not_configured" });
-        continue;
-      }
-
-      const payload = {
-        organization_id: orgId,
-        media_names: uniqueMedia,
-        total_count: uniqueMedia.length,
-        timestamp: new Date().toISOString(),
-      };
-
-      const webhookResponse = await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!webhookResponse.ok) {
-        const errorText = await webhookResponse.text();
-        console.error(`Webhook error for org ${orgId}:`, errorText);
-        results.push({ organization_id: orgId, status: "webhook_failed" });
-        continue;
-      }
-
-      console.log(`✅ Org ${orgId}: sent ${uniqueMedia.length} media names to webhook`);
-      results.push({ 
-        organization_id: orgId, 
-        status: "sent", 
-        media_count: uniqueMedia.length 
-      });
+    if (journalistsError) {
+      console.error("Error fetching journalists:", journalistsError);
+      return new Response(
+        JSON.stringify({ error: journalistsError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const sentCount = results.filter(r => r.status === "sent").length;
-    const skippedCount = results.filter(r => r.status === "below_threshold").length;
+    const uniqueMediaSet = new Set<string>();
+    (journalists || []).forEach((j: { media: string | null }) => {
+      if (j.media && j.media.trim()) {
+        uniqueMediaSet.add(j.media.trim());
+      }
+    });
+
+    const uniqueMedia = Array.from(uniqueMediaSet);
+
+    if (uniqueMedia.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "No media without specialty found",
+          media_count: 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Found ${uniqueMedia.length} unique media without specialty`);
+
+    const webhookUrl = Deno.env.get("N8N_MEDIA_SPECIALTY_WEBHOOK_URL");
+    if (!webhookUrl) {
+      console.error("N8N_MEDIA_SPECIALTY_WEBHOOK_URL not configured");
+      return new Response(
+        JSON.stringify({ error: "Webhook not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const payload = {
+      organization_id: organizationId,
+      media_names: uniqueMedia,
+      total_count: uniqueMedia.length,
+      timestamp: new Date().toISOString(),
+    };
+
+    const webhookResponse = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!webhookResponse.ok) {
+      const errorText = await webhookResponse.text();
+      console.error("Webhook error:", errorText);
+      return new Response(
+        JSON.stringify({ error: "Webhook call failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`✅ Sent ${uniqueMedia.length} media names to webhook`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Processed ${organizationIds.length} org(s): ${sentCount} sent, ${skippedCount} below threshold`,
-        threshold: MIN_MEDIA_THRESHOLD,
-        results,
+        message: `Sent ${uniqueMedia.length} media names for enrichment`,
+        media_count: uniqueMedia.length,
+        media_names: uniqueMedia,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
