@@ -42,6 +42,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { CreateCommuniqueModal } from "@/components/presse/CreateCommuniqueModal";
+import { LanguageFilter, type LanguageFilterValue } from "@/components/presse/LanguageFilter";
 import { MarketWatchDocumentModal } from "@/components/presse/MarketWatchDocumentModal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,8 @@ interface Article {
   competitor_name: string | null;
   competitor_id: string;
   hidden?: boolean;
+  detected_language?: string | null;
+  title_fr?: string | null;
 }
 
 interface OrganizationArticle {
@@ -79,6 +82,8 @@ interface OrganizationArticle {
   snippet: string | null;
   hidden?: boolean;
   search_topic?: string | null;
+  detected_language?: string | null;
+  title_fr?: string | null;
 }
 
 interface ClientArticle {
@@ -94,6 +99,8 @@ interface ClientArticle {
   client_name: string | null;
   client_id: string;
   hidden?: boolean;
+  detected_language?: string | null;
+  title_fr?: string | null;
 }
 
 interface Agency {
@@ -578,7 +585,14 @@ const RelationsPresse = () => {
     if (wordInputRef.current) wordInputRef.current.value = "";
   };
 
-  const filteredArticles = selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles;
+  const filteredArticles = (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles)
+    .filter((a) => competitorLanguageFilter === "all" || a.detected_language === competitorLanguageFilter);
+
+  const competitorLanguageCounts = {
+    all: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).length,
+    fr: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "fr").length,
+    en: (selectedAgency ? articles.filter((a) => a.competitor_id === selectedAgency) : articles).filter((a) => a.detected_language === "en").length,
+  };
 
   const selectedAgencyName = selectedAgency
     ? agencies.find((a) => a.id === selectedAgency)?.name
@@ -618,6 +632,32 @@ const RelationsPresse = () => {
   const [selectedVeilleSource, setSelectedVeilleSource] = useState<string | null>(null);
   const [showVeilleManager, setShowVeilleManager] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
+  
+  const [competitorLanguageFilter, setCompetitorLanguageFilter] = useState<LanguageFilterValue>("all");
+  const [clientLanguageFilter, setClientLanguageFilter] = useState<LanguageFilterValue>("all");
+  const [veilleLanguageFilter, setVeilleLanguageFilter] = useState<LanguageFilterValue>("all");
+
+  const filteredClientArticles = (selectedClientFilter 
+    ? clientArticles.filter((a) => a.client_id === selectedClientFilter) 
+    : clientArticles
+  ).filter((a) => clientLanguageFilter === "all" || a.detected_language === clientLanguageFilter);
+
+  const clientLanguageCounts = {
+    all: (selectedClientFilter ? clientArticles.filter((a) => a.client_id === selectedClientFilter) : clientArticles).length,
+    fr: (selectedClientFilter ? clientArticles.filter((a) => a.client_id === selectedClientFilter) : clientArticles).filter((a) => a.detected_language === "fr").length,
+    en: (selectedClientFilter ? clientArticles.filter((a) => a.client_id === selectedClientFilter) : clientArticles).filter((a) => a.detected_language === "en").length,
+  };
+
+  const filteredVeilleArticles = (selectedVeilleSource 
+    ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource) 
+    : veilleArticles
+  ).filter((a) => veilleLanguageFilter === "all" || a.detected_language === veilleLanguageFilter);
+
+  const veilleLanguageCounts = {
+    all: (selectedVeilleSource ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource) : veilleArticles).length,
+    fr: (selectedVeilleSource ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource) : veilleArticles).filter((a) => a.detected_language === "fr").length,
+    en: (selectedVeilleSource ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource) : veilleArticles).filter((a) => a.detected_language === "en").length,
+  };
 
   const { 
     document: marketWatchDocument, 
@@ -1801,6 +1841,11 @@ const RelationsPresse = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
+                    <LanguageFilter 
+                      value={competitorLanguageFilter} 
+                      onChange={setCompetitorLanguageFilter}
+                      counts={competitorLanguageCounts}
+                    />
                     {isOrgAdmin && hiddenCompetitorArticles.length > 0 && (
                       <Button
                         variant={showHiddenCompetitor ? "default" : "outline"}
@@ -2521,6 +2566,11 @@ const RelationsPresse = () => {
                   </div>
 
                   <div className="flex items-center gap-3">
+                    <LanguageFilter 
+                      value={clientLanguageFilter} 
+                      onChange={setClientLanguageFilter}
+                      counts={clientLanguageCounts}
+                    />
                     {isOrgAdmin && hiddenClientArticles.length > 0 && (
                       <Button
                         variant={showHiddenClient ? "default" : "outline"}
@@ -2555,19 +2605,7 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {
-                        (selectedClientFilter
-                          ? clientArticles.filter((a) => a.client_id === selectedClientFilter)
-                          : clientArticles
-                        ).length
-                      }{" "}
-                      article
-                      {(selectedClientFilter
-                        ? clientArticles.filter((a) => a.client_id === selectedClientFilter)
-                        : clientArticles
-                      ).length !== 1
-                        ? "s"
-                        : ""}
+                      {filteredClientArticles.length} article{filteredClientArticles.length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -2775,6 +2813,11 @@ const RelationsPresse = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-3">
+                    <LanguageFilter 
+                      value={veilleLanguageFilter} 
+                      onChange={setVeilleLanguageFilter}
+                      counts={veilleLanguageCounts}
+                    />
                     {isOrgAdmin && hiddenVeilleArticles.length > 0 && (
                       <Button
                         variant={showHiddenVeille ? "default" : "outline"}
@@ -2817,19 +2860,7 @@ const RelationsPresse = () => {
                       Ajouter
                     </Button>
                     <span className="text-sm font-medium text-muted-foreground bg-secondary/50 px-4 py-2 rounded-lg">
-                      {
-                        (selectedVeilleSource
-                          ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
-                          : veilleArticles
-                        ).length
-                      }{" "}
-                      article
-                      {(selectedVeilleSource
-                        ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
-                        : veilleArticles
-                      ).length !== 1
-                        ? "s"
-                        : ""}
+                      {filteredVeilleArticles.length} article{filteredVeilleArticles.length !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -2920,15 +2951,9 @@ const RelationsPresse = () => {
                       </div>
                     ))}
                   </div>
-                ) : (selectedVeilleSource
-                    ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
-                    : veilleArticles
-                  ).length > 0 ? (
+                ) : filteredVeilleArticles.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {(selectedVeilleSource
-                      ? veilleArticles.filter((a) => a.search_topic === selectedVeilleSource)
-                      : veilleArticles
-                    ).map((article) => (
+                    {filteredVeilleArticles.map((article) => (
                       <div
                         key={article.id}
                         className="group relative flex gap-4 p-4 bg-secondary/40 hover:bg-secondary/70 rounded-2xl transition-all duration-300 border border-transparent hover:border-primary/20 hover:shadow-lg cursor-pointer"
