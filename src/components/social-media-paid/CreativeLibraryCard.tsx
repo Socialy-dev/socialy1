@@ -1,8 +1,8 @@
-import { Eye, MousePointer, Zap, ExternalLink, Play, Image as ImageIcon } from "lucide-react";
+import { Eye, MousePointer, Zap, ExternalLink, Play } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 
 interface Creative {
   id: string;
@@ -24,7 +24,7 @@ interface CreativeLibraryCardProps {
 }
 
 export const CreativeLibraryCard = ({ creative }: CreativeLibraryCardProps) => {
-  const [imageError, setImageError] = useState(false);
+  const isVideo = creative.format?.toLowerCase().includes("video");
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -47,30 +47,21 @@ export const CreativeLibraryCard = ({ creative }: CreativeLibraryCardProps) => {
   };
 
   const imageUrl = creative.thumbnail_url || creative.media_url;
-  const isVideo = creative.format?.toLowerCase().includes("video");
 
   return (
     <Card className="group relative overflow-hidden bg-card/50 border-border/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1">
       <div className="relative aspect-square overflow-hidden bg-muted/30">
-        {imageUrl && !imageError ? (
-          <>
-            <img
-              src={imageUrl}
-              alt={creative.creative_name || "Creative"}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              onError={() => setImageError(true)}
-            />
-            {isVideo && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <Play className="w-6 h-6 text-primary ml-1" />
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/20">
-            <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+        <ImageWithFallback
+          src={imageUrl}
+          alt={creative.creative_name || "Creative"}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          isVideo={isVideo}
+        />
+        {isVideo && imageUrl && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play className="w-6 h-6 text-primary ml-1" />
+            </div>
           </div>
         )}
         

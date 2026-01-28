@@ -17,6 +17,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Platform, platformsConfig } from "./PlatformDropdown";
 import { CrossPlatformEngagementChart } from "./analytics/CrossPlatformEngagementChart";
 import { CrossPlatformDistributionChart } from "./analytics/CrossPlatformDistributionChart";
@@ -538,17 +539,12 @@ export const AllPlatformsView = () => {
                 )}
               >
                 <div className="relative aspect-[9/16]">
-                  {post.video_cover_url ? (
-                    <img
-                      src={post.video_cover_url}
-                      alt="TikTok"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center">
-                      <Video className="w-12 h-12 text-muted-foreground/50" />
-                    </div>
-                  )}
+                  <ImageWithFallback
+                    src={post.video_cover_url}
+                    alt="TikTok"
+                    className="w-full h-full object-cover"
+                    isVideo={true}
+                  />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
@@ -630,17 +626,12 @@ export const AllPlatformsView = () => {
                 )}
               >
                 <div className="relative aspect-square">
-                  {post.image_url || post.video_url ? (
-                    <img
-                      src={post.image_url || post.video_url || ""}
-                      alt="Facebook"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center">
-                      <Facebook className="w-12 h-12 text-muted-foreground/50" />
-                    </div>
-                  )}
+                  <ImageWithFallback
+                    src={post.image_url || post.video_url}
+                    alt="Facebook"
+                    className="w-full h-full object-cover"
+                    isVideo={post.post_type?.toLowerCase() === "video"}
+                  />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
@@ -729,19 +720,12 @@ export const AllPlatformsView = () => {
                 )}
               >
                 <div className="relative aspect-video">
-                  {post.media_thumbnail || post.media_url ? (
-                    <img
-                      src={post.media_thumbnail || post.media_url || ""}
-                      alt="LinkedIn"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-[#0A66C2]/20 to-blue-500/20 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 text-muted-foreground/50">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                    </div>
-                  )}
+                  <ImageWithFallback
+                    src={post.media_thumbnail || post.media_url}
+                    alt="LinkedIn"
+                    className="w-full h-full object-cover"
+                    isVideo={false}
+                  />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
@@ -837,17 +821,12 @@ export const AllPlatformsView = () => {
                   )}
                 >
                   <div className="relative aspect-square">
-                    {postImage ? (
-                      <img
-                        src={postImage}
-                        alt="Instagram"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center">
-                        <InstagramIcon />
-                      </div>
-                    )}
+                    <ImageWithFallback
+                      src={postImage}
+                      alt="Instagram"
+                      className="w-full h-full object-cover"
+                      isVideo={post.content_type === 'video' || post.content_type === 'Reel'}
+                    />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 

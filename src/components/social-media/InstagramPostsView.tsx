@@ -22,6 +22,7 @@ import {
   AtSign
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -338,17 +339,12 @@ export const InstagramPostsView = () => {
                 )}
               >
                 <div className="relative aspect-square bg-muted overflow-hidden">
-                  {postImage ? (
-                    <img
-                      src={postImage}
-                      alt="Instagram post"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20">
-                      <ImageIcon className="w-12 h-12 text-muted-foreground/50" />
-                    </div>
-                  )}
+                  <ImageWithFallback
+                    src={postImage}
+                    alt="Instagram post"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    isVideo={post.is_video || post.content_type === 'video' || post.content_type === 'Reel'}
+                  />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 

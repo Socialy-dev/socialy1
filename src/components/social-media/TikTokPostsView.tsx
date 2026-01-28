@@ -26,6 +26,7 @@ import {
   Search
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -388,17 +389,12 @@ export const TikTokPostsView = () => {
               )}
             >
               <div className="relative aspect-[9/12] bg-muted overflow-hidden">
-                {post.video_cover_url ? (
-                  <img
-                    src={post.video_cover_url}
-                    alt="Video cover"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500/20 to-purple-500/20">
-                    <Video className="w-12 h-12 text-muted-foreground/50" />
-                  </div>
-                )}
+                <ImageWithFallback
+                  src={post.video_cover_url}
+                  alt="Video cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  isVideo={true}
+                />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
