@@ -1,112 +1,142 @@
-import { 
-  getCorsHeaders, 
-  validateAuthAndOrg, 
-  createErrorResponse, 
-  createSuccessResponse,
-  getServiceClient 
-} from "../_shared/security-helper.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const MIN_MEDIA_THRESHOLD = 10;
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get("Origin");
-  const corsHeaders = getCorsHeaders(origin);
-
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    const { organization_id } = await req.json();
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    if (!organization_id) {
-      return createErrorResponse("Missing organization_id", 400, corsHeaders);
-    }
+    let organizationIds: string[] = [];
 
-    const validation = await validateAuthAndOrg(authHeader, organization_id);
-    if (!validation.success) {
-      return createErrorResponse(validation.error!, validation.status!, corsHeaders);
-    }
-
-    const serviceClient = getServiceClient();
-
-    const { data: journalists, error: journalistsError } = await serviceClient
-      .from("journalists")
-      .select("media")
-      .eq("organization_id", organization_id)
-      .not("media", "is", null)
-      .is("media_specialty", null);
-
-    if (journalistsError) {
-      console.error("Error fetching journalists:", journalistsError);
-      return createErrorResponse(journalistsError.message, 500, corsHeaders);
-    }
-
-    if (!journalists || journalists.length === 0) {
-      return createSuccessResponse({ 
-        message: "No new media to enrich",
-        media_count: 0 
-      }, corsHeaders);
-    }
-
-    const uniqueMediaSet = new Set<string>();
-    journalists.forEach((j: { media: string | null }) => {
-      if (j.media && j.media.trim()) {
-        uniqueMediaSet.add(j.media.trim());
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const body = await req.json().catch(() => ({}));
+      if (body.organization_id) {
+        organizationIds = [body.organization_id];
       }
-    });
-
-    const uniqueMedia = Array.from(uniqueMediaSet);
-
-    if (uniqueMedia.length === 0) {
-      return createSuccessResponse({ 
-        message: "No valid media names found",
-        media_count: 0 
-      }, corsHeaders);
     }
 
-    console.log(`Found ${uniqueMedia.length} unique media without specialty for org ${organization_id}`);
+    if (organizationIds.length === 0) {
+      const { data: orgs, error: orgsError } = await supabaseAdmin
+        .from("organizations")
+        .select("id");
 
-    const webhookUrl = Deno.env.get("N8N_MEDIA_SPECIALTY_WEBHOOK_URL");
-    if (!webhookUrl) {
-      console.error("N8N_MEDIA_SPECIALTY_WEBHOOK_URL not configured");
-      return createErrorResponse("Webhook URL not configured", 500, corsHeaders);
+      if (orgsError) {
+        console.error("Error fetching organizations:", orgsError);
+        return new Response(
+          JSON.stringify({ error: orgsError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      organizationIds = (orgs || []).map((o: { id: string }) => o.id);
     }
 
-    const payload = {
-      organization_id,
-      user_id: validation.user!.id,
-      media_names: uniqueMedia,
-      total_count: uniqueMedia.length,
-      timestamp: new Date().toISOString(),
-    };
+    console.log(`Processing ${organizationIds.length} organization(s)...`);
 
-    console.log(`Sending ${uniqueMedia.length} media names to webhook...`);
+    const results: Array<{ organization_id: string; status: string; media_count?: number }> = [];
 
-    const webhookResponse = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    for (const orgId of organizationIds) {
+      const { data: journalists, error: journalistsError } = await supabaseAdmin
+        .from("journalists")
+        .select("media")
+        .eq("organization_id", orgId)
+        .not("media", "is", null)
+        .is("media_specialty", null);
 
-    if (!webhookResponse.ok) {
-      const errorText = await webhookResponse.text();
-      console.error("Webhook error:", errorText);
-      return createErrorResponse("Webhook call failed", 502, corsHeaders);
+      if (journalistsError) {
+        console.error(`Error for org ${orgId}:`, journalistsError);
+        results.push({ organization_id: orgId, status: "error" });
+        continue;
+      }
+
+      const uniqueMediaSet = new Set<string>();
+      (journalists || []).forEach((j: { media: string | null }) => {
+        if (j.media && j.media.trim()) {
+          uniqueMediaSet.add(j.media.trim());
+        }
+      });
+
+      const uniqueMedia = Array.from(uniqueMediaSet);
+
+      if (uniqueMedia.length < MIN_MEDIA_THRESHOLD) {
+        console.log(`Org ${orgId}: ${uniqueMedia.length} media < ${MIN_MEDIA_THRESHOLD} threshold, skipping`);
+        results.push({ 
+          organization_id: orgId, 
+          status: "below_threshold", 
+          media_count: uniqueMedia.length 
+        });
+        continue;
+      }
+
+      console.log(`Org ${orgId}: ${uniqueMedia.length} media >= ${MIN_MEDIA_THRESHOLD}, sending to webhook...`);
+
+      const webhookUrl = Deno.env.get("N8N_MEDIA_SPECIALTY_WEBHOOK_URL");
+      if (!webhookUrl) {
+        console.error("N8N_MEDIA_SPECIALTY_WEBHOOK_URL not configured");
+        results.push({ organization_id: orgId, status: "webhook_not_configured" });
+        continue;
+      }
+
+      const payload = {
+        organization_id: orgId,
+        media_names: uniqueMedia,
+        total_count: uniqueMedia.length,
+        timestamp: new Date().toISOString(),
+      };
+
+      const webhookResponse = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error(`Webhook error for org ${orgId}:`, errorText);
+        results.push({ organization_id: orgId, status: "webhook_failed" });
+        continue;
+      }
+
+      console.log(`✅ Org ${orgId}: sent ${uniqueMedia.length} media names to webhook`);
+      results.push({ 
+        organization_id: orgId, 
+        status: "sent", 
+        media_count: uniqueMedia.length 
+      });
     }
 
-    const webhookData = await webhookResponse.json().catch(() => ({}));
+    const sentCount = results.filter(r => r.status === "sent").length;
+    const skippedCount = results.filter(r => r.status === "below_threshold").length;
 
-    return createSuccessResponse({
-      success: true,
-      message: `Sent ${uniqueMedia.length} unique media names for specialty enrichment`,
-      media_count: uniqueMedia.length,
-      media_names: uniqueMedia,
-      webhook_response: webhookData,
-    }, corsHeaders);
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Processed ${organizationIds.length} org(s): ${sentCount} sent, ${skippedCount} below threshold`,
+        threshold: MIN_MEDIA_THRESHOLD,
+        results,
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
 
   } catch (error: unknown) {
     console.error("Error in notify-media-specialty:", error);
     const message = error instanceof Error ? error.message : "Internal server error";
-    return createErrorResponse(message, 500, corsHeaders);
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
