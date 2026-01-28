@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ImageIcon, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getMediaSignedUrl } from "@/lib/media-storage";
 
 interface ImageWithFallbackProps {
   src: string | null | undefined;
@@ -9,6 +10,8 @@ interface ImageWithFallbackProps {
   fallbackClassName?: string;
   isVideo?: boolean;
   dominantColor?: string | null;
+  storagePath?: string | null;
+  storageBucket?: string;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -20,16 +23,38 @@ export const ImageWithFallback = ({
   fallbackClassName,
   isVideo = false,
   dominantColor,
+  storagePath,
+  storageBucket = "media_assets",
   onLoad,
   onError,
 }: ImageWithFallbackProps) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
 
   useEffect(() => {
     setHasError(false);
     setIsLoading(true);
-  }, [src]);
+
+    const resolveUrl = async () => {
+      if (storagePath) {
+        const signedUrl = await getMediaSignedUrl(storagePath);
+        if (signedUrl) {
+          setResolvedSrc(signedUrl);
+        } else {
+          setResolvedSrc(src || null);
+        }
+      } else {
+        setResolvedSrc(src || null);
+      }
+      
+      if (!storagePath && !src) {
+        setIsLoading(false);
+      }
+    };
+
+    resolveUrl();
+  }, [src, storagePath, storageBucket]);
 
   const handleError = () => {
     setHasError(true);
@@ -46,7 +71,7 @@ export const ImageWithFallback = ({
     ? { backgroundColor: dominantColor }
     : undefined;
 
-  if (!src || hasError) {
+  if (!resolvedSrc || hasError) {
     return (
       <div
         className={cn(
@@ -82,7 +107,7 @@ export const ImageWithFallback = ({
         </div>
       )}
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         className={cn(className, isLoading && "opacity-0")}
         onError={handleError}

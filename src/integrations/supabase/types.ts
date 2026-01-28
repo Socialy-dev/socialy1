@@ -109,10 +109,12 @@ export type Database = {
           id: string
           link: string
           organization_id: string
+          original_thumbnail: string | null
           position: number | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
+          storage_path: string | null
           thumbnail: string | null
           thumbnail_small: string | null
           title: string | null
@@ -129,10 +131,12 @@ export type Database = {
           id?: string
           link: string
           organization_id: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
@@ -149,10 +153,12 @@ export type Database = {
           id?: string
           link?: string
           organization_id?: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
@@ -237,10 +243,12 @@ export type Database = {
           id: string
           link: string
           organization_id: string
+          original_thumbnail: string | null
           position: number | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
+          storage_path: string | null
           thumbnail: string | null
           thumbnail_small: string | null
           title: string
@@ -257,10 +265,12 @@ export type Database = {
           id?: string
           link: string
           organization_id: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title: string
@@ -277,10 +287,12 @@ export type Database = {
           id?: string
           link?: string
           organization_id?: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string
@@ -821,12 +833,14 @@ export type Database = {
           id: string
           link: string
           organization_id: string
+          original_thumbnail: string | null
           position: number | null
           search_topic: string | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
           status: string
+          storage_path: string | null
           thumbnail: string | null
           thumbnail_small: string | null
           title: string | null
@@ -842,12 +856,14 @@ export type Database = {
           id?: string
           link: string
           organization_id: string
+          original_thumbnail?: string | null
           position?: number | null
           search_topic?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
           status?: string
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
@@ -863,12 +879,14 @@ export type Database = {
           id?: string
           link?: string
           organization_id?: string
+          original_thumbnail?: string | null
           position?: number | null
           search_topic?: string | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
           status?: string
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string | null
@@ -948,10 +966,12 @@ export type Database = {
           id: string
           link: string
           organization_id: string
+          original_thumbnail: string | null
           position: number | null
           snippet: string | null
           source_icon: string | null
           source_name: string | null
+          storage_path: string | null
           thumbnail: string | null
           thumbnail_small: string | null
           title: string
@@ -966,10 +986,12 @@ export type Database = {
           id?: string
           link: string
           organization_id: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title: string
@@ -984,10 +1006,12 @@ export type Database = {
           id?: string
           link?: string
           organization_id?: string
+          original_thumbnail?: string | null
           position?: number | null
           snippet?: string | null
           source_icon?: string | null
           source_name?: string | null
+          storage_path?: string | null
           thumbnail?: string | null
           thumbnail_small?: string | null
           title?: string
@@ -1329,6 +1353,7 @@ export type Database = {
           image_url: string | null
           likes_count: number | null
           organization_id: string
+          original_image_url: string | null
           page_id: string | null
           page_name: string | null
           page_profile_pic: string | null
@@ -1340,6 +1365,7 @@ export type Database = {
           posted_at: string | null
           scraped_at: string | null
           shares_count: number | null
+          storage_path: string | null
           updated_at: string
           video_url: string | null
           views_count: number | null
@@ -1356,6 +1382,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number | null
           organization_id: string
+          original_image_url?: string | null
           page_id?: string | null
           page_name?: string | null
           page_profile_pic?: string | null
@@ -1367,6 +1394,7 @@ export type Database = {
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           updated_at?: string
           video_url?: string | null
           views_count?: number | null
@@ -1383,6 +1411,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number | null
           organization_id?: string
+          original_image_url?: string | null
           page_id?: string | null
           page_name?: string | null
           page_profile_pic?: string | null
@@ -1394,6 +1423,7 @@ export type Database = {
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           updated_at?: string
           video_url?: string | null
           views_count?: number | null
@@ -1438,11 +1468,13 @@ export type Database = {
           logo_url: string | null
           mentions: string[] | null
           organization_id: string
+          original_image_url: string | null
           post_id: string | null
           post_url: string
           posted_at: string | null
           posts_count: number | null
           profile_picture_url: string | null
+          storage_path: string | null
           updated_at: string
           video_duration: string | null
           video_play_count: number | null
@@ -1471,11 +1503,13 @@ export type Database = {
           logo_url?: string | null
           mentions?: string[] | null
           organization_id: string
+          original_image_url?: string | null
           post_id?: string | null
           post_url: string
           posted_at?: string | null
           posts_count?: number | null
           profile_picture_url?: string | null
+          storage_path?: string | null
           updated_at?: string
           video_duration?: string | null
           video_play_count?: number | null
@@ -1504,11 +1538,13 @@ export type Database = {
           logo_url?: string | null
           mentions?: string[] | null
           organization_id?: string
+          original_image_url?: string | null
           post_id?: string | null
           post_url?: string
           posted_at?: string | null
           posts_count?: number | null
           profile_picture_url?: string | null
+          storage_path?: string | null
           updated_at?: string
           video_duration?: string | null
           video_play_count?: number | null
@@ -1561,6 +1597,7 @@ export type Database = {
           media_type: string | null
           media_url: string | null
           organization_id: string
+          original_media_url: string | null
           post_id: string
           post_type: string | null
           post_url: string
@@ -1568,6 +1605,7 @@ export type Database = {
           posted_relative: string | null
           reposts_count: number | null
           scraped_at: string | null
+          storage_path: string | null
           support_count: number | null
           timestamp: number | null
           total_reactions: number | null
@@ -1602,6 +1640,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           organization_id: string
+          original_media_url?: string | null
           post_id: string
           post_type?: string | null
           post_url: string
@@ -1609,6 +1648,7 @@ export type Database = {
           posted_relative?: string | null
           reposts_count?: number | null
           scraped_at?: string | null
+          storage_path?: string | null
           support_count?: number | null
           timestamp?: number | null
           total_reactions?: number | null
@@ -1643,6 +1683,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           organization_id?: string
+          original_media_url?: string | null
           post_id?: string
           post_type?: string | null
           post_url?: string
@@ -1650,6 +1691,7 @@ export type Database = {
           posted_relative?: string | null
           reposts_count?: number | null
           scraped_at?: string | null
+          storage_path?: string | null
           support_count?: number | null
           timestamp?: number | null
           total_reactions?: number | null
@@ -1700,10 +1742,12 @@ export type Database = {
           music_id: string | null
           music_name: string | null
           organization_id: string
+          original_cover_url: string | null
           post_id: string
           posted_at: string | null
           scraped_at: string | null
           shares_count: number | null
+          storage_path: string | null
           text_language: string | null
           tiktok_url: string
           updated_at: string
@@ -1739,10 +1783,12 @@ export type Database = {
           music_id?: string | null
           music_name?: string | null
           organization_id: string
+          original_cover_url?: string | null
           post_id: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           text_language?: string | null
           tiktok_url: string
           updated_at?: string
@@ -1778,10 +1824,12 @@ export type Database = {
           music_id?: string | null
           music_name?: string | null
           organization_id?: string
+          original_cover_url?: string | null
           post_id?: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           text_language?: string | null
           tiktok_url?: string
           updated_at?: string
@@ -1818,6 +1866,7 @@ export type Database = {
           image_url: string | null
           likes_count: number | null
           organization_id: string
+          original_image_url: string | null
           page_id: string | null
           page_name: string | null
           page_profile_pic: string | null
@@ -1829,6 +1878,7 @@ export type Database = {
           posted_at: string | null
           scraped_at: string | null
           shares_count: number | null
+          storage_path: string | null
           updated_at: string
           video_url: string | null
           views_count: number | null
@@ -1842,6 +1892,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number | null
           organization_id: string
+          original_image_url?: string | null
           page_id?: string | null
           page_name?: string | null
           page_profile_pic?: string | null
@@ -1853,6 +1904,7 @@ export type Database = {
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           updated_at?: string
           video_url?: string | null
           views_count?: number | null
@@ -1866,6 +1918,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number | null
           organization_id?: string
+          original_image_url?: string | null
           page_id?: string | null
           page_name?: string | null
           page_profile_pic?: string | null
@@ -1877,6 +1930,7 @@ export type Database = {
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           updated_at?: string
           video_url?: string | null
           views_count?: number | null
@@ -1911,11 +1965,13 @@ export type Database = {
           logo_url: string | null
           mentions: string[] | null
           organization_id: string
+          original_image_url: string | null
           post_id: string | null
           post_url: string
           posted_at: string | null
           posts_count: number | null
           profile_picture_url: string | null
+          storage_path: string | null
           updated_at: string
           video_duration: string | null
           video_play_count: number | null
@@ -1941,11 +1997,13 @@ export type Database = {
           logo_url?: string | null
           mentions?: string[] | null
           organization_id: string
+          original_image_url?: string | null
           post_id?: string | null
           post_url: string
           posted_at?: string | null
           posts_count?: number | null
           profile_picture_url?: string | null
+          storage_path?: string | null
           updated_at?: string
           video_duration?: string | null
           video_play_count?: number | null
@@ -1971,11 +2029,13 @@ export type Database = {
           logo_url?: string | null
           mentions?: string[] | null
           organization_id?: string
+          original_image_url?: string | null
           post_id?: string | null
           post_url?: string
           posted_at?: string | null
           posts_count?: number | null
           profile_picture_url?: string | null
+          storage_path?: string | null
           updated_at?: string
           video_duration?: string | null
           video_play_count?: number | null
@@ -2018,6 +2078,7 @@ export type Database = {
           media_type: string | null
           media_url: string | null
           organization_id: string
+          original_media_url: string | null
           post_id: string
           post_type: string | null
           post_url: string
@@ -2025,6 +2086,7 @@ export type Database = {
           posted_relative: string | null
           reposts_count: number | null
           scraped_at: string | null
+          storage_path: string | null
           support_count: number | null
           timestamp: number | null
           total_reactions: number | null
@@ -2056,6 +2118,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           organization_id: string
+          original_media_url?: string | null
           post_id: string
           post_type?: string | null
           post_url: string
@@ -2063,6 +2126,7 @@ export type Database = {
           posted_relative?: string | null
           reposts_count?: number | null
           scraped_at?: string | null
+          storage_path?: string | null
           support_count?: number | null
           timestamp?: number | null
           total_reactions?: number | null
@@ -2094,6 +2158,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           organization_id?: string
+          original_media_url?: string | null
           post_id?: string
           post_type?: string | null
           post_url?: string
@@ -2101,6 +2166,7 @@ export type Database = {
           posted_relative?: string | null
           reposts_count?: number | null
           scraped_at?: string | null
+          storage_path?: string | null
           support_count?: number | null
           timestamp?: number | null
           total_reactions?: number | null
@@ -2141,10 +2207,12 @@ export type Database = {
           music_id: string | null
           music_name: string | null
           organization_id: string
+          original_cover_url: string | null
           post_id: string
           posted_at: string | null
           scraped_at: string | null
           shares_count: number | null
+          storage_path: string | null
           text_language: string | null
           tiktok_url: string
           updated_at: string
@@ -2177,10 +2245,12 @@ export type Database = {
           music_id?: string | null
           music_name?: string | null
           organization_id: string
+          original_cover_url?: string | null
           post_id: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           text_language?: string | null
           tiktok_url: string
           updated_at?: string
@@ -2213,10 +2283,12 @@ export type Database = {
           music_id?: string | null
           music_name?: string | null
           organization_id?: string
+          original_cover_url?: string | null
           post_id?: string
           posted_at?: string | null
           scraped_at?: string | null
           shares_count?: number | null
+          storage_path?: string | null
           text_language?: string | null
           tiktok_url?: string
           updated_at?: string
