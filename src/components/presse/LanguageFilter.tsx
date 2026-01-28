@@ -1,4 +1,4 @@
-import { Globe, Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
@@ -43,8 +43,8 @@ export function LanguageFilter({ value, onChange, counts }: LanguageFilterProps)
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-secondary/60 border border-border rounded-lg hover:border-primary/40 transition-all duration-200 text-sm"
       >
-        <Globe className="w-4 h-4 text-primary" />
-        <span className="font-medium">{selectedOption.flag} {selectedOption.label}</span>
+        <span className="text-base">{selectedOption.flag}</span>
+        <span className="font-medium">{selectedOption.label}</span>
         <ChevronDown
           className={cn(
             "w-3 h-3 text-muted-foreground transition-transform duration-200",
@@ -64,24 +64,20 @@ export function LanguageFilter({ value, onChange, counts }: LanguageFilterProps)
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                  "w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left",
                   value === option.value
                     ? "bg-primary/10 text-primary"
                     : "text-foreground hover:bg-secondary"
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{option.flag}</span>
-                  <span>{option.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {counts && (
-                    <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                      {counts[option.value]}
-                    </span>
-                  )}
-                  {value === option.value && <Check className="w-4 h-4" />}
-                </div>
+                <span className="text-base">{option.flag}</span>
+                <span className="flex-1">{option.label}</span>
+                {counts && (
+                  <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                    {counts[option.value]}
+                  </span>
+                )}
+                {value === option.value && <Check className="w-4 h-4 shrink-0" />}
               </button>
             ))}
           </div>
