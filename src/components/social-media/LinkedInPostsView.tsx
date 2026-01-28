@@ -23,6 +23,7 @@ import {
   Repeat2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -279,17 +280,12 @@ export const LinkedInPostsView = () => {
               )}
             >
               <div className="relative aspect-video bg-muted overflow-hidden">
-                {post.media_url || post.media_thumbnail ? (
-                  <img
-                    src={post.media_thumbnail || post.media_url || ""}
-                    alt="Post media"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0A66C2]/20 to-blue-500/20">
-                    <Linkedin className="w-12 h-12 text-muted-foreground/50" />
-                  </div>
-                )}
+                <ImageWithFallback
+                  src={post.media_thumbnail || post.media_url}
+                  alt="Post media"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  isVideo={post.media_type?.toLowerCase() === "video"}
+                />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 

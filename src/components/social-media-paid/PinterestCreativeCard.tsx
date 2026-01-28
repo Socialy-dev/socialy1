@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Heart, ExternalLink, Play, Image as ImageIcon, Trash2, User, Sparkles } from "lucide-react";
+import { Heart, ExternalLink, Play, Trash2, User, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import type { PinterestCreative } from "@/hooks/usePinterestCreatives";
 
 interface PinterestCreativeCardProps {
@@ -13,7 +14,6 @@ interface PinterestCreativeCardProps {
 }
 
 export const PinterestCreativeCard = ({ creative, onDelete }: PinterestCreativeCardProps) => {
-  const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
@@ -50,25 +50,18 @@ export const PinterestCreativeCard = ({ creative, onDelete }: PinterestCreativeC
         className="relative aspect-[3/4] overflow-hidden bg-muted/30"
         style={creative.dominant_color ? { backgroundColor: creative.dominant_color } : undefined}
       >
-        {imageUrl && !imageError ? (
-          <>
-            <img
-              src={imageUrl}
-              alt={creative.alt_text || creative.title || "Pinterest creative"}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              onError={() => setImageError(true)}
-            />
-            {isVideo && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <Play className="w-6 h-6 text-primary ml-1" />
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/20">
-            <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+        <ImageWithFallback
+          src={imageUrl}
+          alt={creative.alt_text || creative.title || "Pinterest creative"}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          isVideo={isVideo}
+          dominantColor={creative.dominant_color}
+        />
+        {isVideo && imageUrl && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play className="w-6 h-6 text-primary ml-1" />
+            </div>
           </div>
         )}
 
