@@ -1,0 +1,54 @@
+{
+    "name": "Hello World Example",
+    "nodes": [
+        {
+            "parameters": {},
+            "name": "When clicking 'Execute Workflow'",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "2d1b7b7f-1b1b-4b1b-8b1b-1b1b1b1b1b1b"
+        },
+        {
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "message",
+                            "value": "👋 Hello from Antigravity! This is your first workflow."
+                        },
+                        {
+                            "name": "timestamp",
+                            "value": "={{ $now }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Set Data",
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 2,
+            "position": [
+                470,
+                300
+            ],
+            "id": "3d1b7b7f-1b1b-4b1b-8b1b-1b1b1b1b1b1b"
+        }
+    ],
+    "connections": {
+        "When clicking 'Execute Workflow'": {
+            "main": [
+                [
+                    {
+                        "node": "Set Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

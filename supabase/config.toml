@@ -1,0 +1,67 @@
+project_id = "lypodfdlpbpjdsswmsni"
+
+[functions.send-invitation-email]
+verify_jwt = false
+
+[functions.generate-embedding]
+verify_jwt = false
+
+[functions.enrich-article]
+verify_jwt = false
+
+[functions.notify-new-competitor]
+verify_jwt = false
+
+[functions.add-market-topic]
+verify_jwt = false
+
+[functions.notify-new-journalist]
+verify_jwt = false
+
+[functions.notify-new-client]
+verify_jwt = false
+
+[functions.create-communique]
+verify_jwt = false
+
+[functions.generate-linkedin-post]
+verify_jwt = false
+
+[functions.journalist-enrichment-worker]
+verify_jwt = false
+
+[functions.fetch-organization-articles]
+verify_jwt = false
+
+[functions.get-team-marche-selections]
+verify_jwt = false
+
+[functions.gmail-auth-init]
+verify_jwt = false
+
+[functions.gmail-oauth-callback]
+verify_jwt = false
+
+[functions.gmail-refresh-token]
+verify_jwt = false
+
+[functions.gmail-read-emails]
+verify_jwt = false
+
+[functions.generate-market-watch-document]
+verify_jwt = false
+
+[functions.meta-auth-init]
+verify_jwt = false
+
+[functions.meta-oauth-callback]
+verify_jwt = false
+
+[functions.meta-get-connections]
+verify_jwt = false
+
+[functions.search-creatives]
+verify_jwt = false
+
+[functions.notify-media-specialty]
+verify_jwt = false

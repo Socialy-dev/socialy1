@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Main backgrounds - Light, clean, airy */
+    --background: 220 14% 96%;
+    --foreground: 222 47% 11%;
+
+    /* Cards - Pure white with soft border */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 0 0% 100%;
+
+    /* Primary */
+    --primary: 252 85% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Success */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Danger */
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    /* Secondary/Muted */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 220 13% 91%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent colors */
+    --accent-purple: 252 85% 60%;
+    --accent-blue: 199 89% 48%;
+    --accent-yellow: 38 92% 50%;
+
+    /* UI Elements */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --border: 220 13% 91%;
+    --input: 0 0% 100%;
+    --ring: 252 85% 60%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Main backgrounds - Deep, rich, "Smartly" dark */
+    --background: 222 47% 3%;
+    /* #04060b - Very dark blue/black */
+    --foreground: 210 40% 98%;
+
+    /* Cards - Slightly lighter than bg */
+    --card: 222 47% 6%;
+    /* #080c14 */
+    --card-foreground: 210 40% 98%;
+
+    /* Sidebar - Same as card or slightly darker to blend */
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+
+    /* Primary - More vibrant for dark mode */
+    --primary: 252 100% 68%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Success */
+    --success: 142 70% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Danger */
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    /* Secondary/Muted */
+    --secondary: 217 33% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    /* UI Elements */
+    --popover: 222 47% 6%;
+    --popover-foreground: 210 40% 98%;
+    --border: 217 33% 15%;
+    --input: 217 33% 15%;
+    --ring: 252 100% 68%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+
+  /* Modern card with elevated shadow */
+  .glass-card {
+    @apply bg-card rounded-2xl border border-border/50;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark .glass-card {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(145deg, hsl(var(--card)), hsl(222 47% 8%));
+  }
+
+  .glass-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px);
+  }
+
+  .dark .glass-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Stat card specifics */
+  .stat-card {
+    @apply bg-card rounded-2xl p-6 relative overflow-hidden border border-border/50;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark .stat-card {
+    background: linear-gradient(145deg, hsl(var(--card)), hsl(222 47% 8%));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 20px -5px rgb(0 0 0 / 0.1);
+  }
+
+  .dark .stat-card:hover {
+    box-shadow: 0 12px 20px -5px rgb(0 0 0 / 0.4);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .sidebar-transition {
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .content-transition {
+    transition: margin-left 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent-blue bg-clip-text text-transparent;
+  }
+}
