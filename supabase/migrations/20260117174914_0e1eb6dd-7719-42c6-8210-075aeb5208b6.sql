@@ -1,1 +1,0 @@
-DELETE FROM pgmq.q_journalist_enrichment WHERE message->'payload'->>'journalist_id' IS NULL;

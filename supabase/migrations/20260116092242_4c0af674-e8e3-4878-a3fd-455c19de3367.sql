@@ -1,3 +1,0 @@
-ALTER TABLE public.market_watch_topics DROP CONSTRAINT market_watch_topics_organization_id_name_key;
-
-ALTER TABLE public.market_watch_topics ADD CONSTRAINT market_watch_topics_organization_id_link_key UNIQUE (organization_id, link);
